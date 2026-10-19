@@ -262,7 +262,7 @@ static inline void game_round_end_print_hand_reward(int hand_y_offset)
         game_round_end_extend_black_panel_down(hand_y);
 
         tte_printf(
-            "#{P:%lu,%d; cx:0x%X000}%d #{cx:0x%X000}Hands",
+            "#{P:%lu,%d; cx:0x%X000}%d #{cx:0x%X000}Руки",
             ROUND_END_REWARD_TEXT_X,
             hand_y * TILE_SIZE,
             TTE_BLUE_PB,
@@ -298,7 +298,7 @@ static inline void game_round_end_print_interest_reward(int interest_y_offset)
         game_round_end_extend_black_panel_down(interest_y);
 
         tte_printf(
-            "#{P:%lu,%d; cx:0x%X000}%d #{cx:0x%X000}Interest",
+            "#{P:%lu,%d; cx:0x%X000}%d #{cx:0x%X000}Процент",
             ROUND_END_REWARD_TEXT_X,
             interest_y * TILE_SIZE,
             TTE_YELLOW_PB,
@@ -394,7 +394,7 @@ static void game_round_end_display_cashout()
 
         bool omit_space = cashout_amount >= 10;
         tte_printf(
-            "#{P:%d, %d; cx:0x%X000}Cash Out:%s$%d",
+            "#{P:%d, %d; cx:0x%X000}Забрать:%s$%d",
             CASHOUT_TEXT_RECT.left,
             CASHOUT_TEXT_RECT.top,
             TTE_WHITE_PB,

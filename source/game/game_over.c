@@ -53,8 +53,8 @@ static const Rect     BEST_HAND_SCORE_RECT            = {126,  64, 166,  72};
 static const Rect     MOST_PLAYED_HAND_RECT           = {112,  80, 168,  88};
 static const BG_POINT SEED_VALUE_POS                  = {112,  96};
 
-static const BG_POINT NEW_RUN_BTN_TEXT_POS            = { 48, 112};
-static const BG_POINT MAIN_MENU_BTN_TEXT_POS          = {120, 112};
+static const BG_POINT NEW_RUN_BTN_TEXT_POS            = { 52, 112};
+static const BG_POINT MAIN_MENU_BTN_TEXT_POS          = {132, 112};
 // clang-format on
 
 static const u32 GAME_OVER_ANIM_FRAMES = 17;
@@ -278,13 +278,13 @@ void game_over_on_update(void)
 
         // Buttons' text
         tte_printf(
-            "#{P:%d,%d; cx:0x%X000}New Run",
+            "#{P:%d,%d; cx:0x%X000}Заново",
             NEW_RUN_BTN_TEXT_POS.x,
             NEW_RUN_BTN_TEXT_POS.y,
             TTE_WHITE_PB
         );
         tte_printf(
-            "#{P:%d,%d; cx:0x%X000}Main Menu",
+            "#{P:%d,%d; cx:0x%X000}В меню",
             MAIN_MENU_BTN_TEXT_POS.x,
             MAIN_MENU_BTN_TEXT_POS.y,
             TTE_WHITE_PB

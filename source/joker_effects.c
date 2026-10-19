@@ -173,68 +173,68 @@ REGISTER_JOKER_EFFECT_FUNC(sock_and_buskin_joker_effect)
 const JokerInfo joker_registry[] = 
 {
     // Spritesheet 0
-    { "Joker",            COMMON_JOKER,    2, false, default_joker_desc,          default_joker_effect              }, // DEFAULT_JOKER_ID = 0
-    { "Abstract Joker",   COMMON_JOKER,    4, false, abstract_joker_desc,         abstract_joker_effect             }, // 1
-    { "Half Joker",       COMMON_JOKER,    5, false, half_joker_desc,             half_joker_effect                 }, // 2
-    { "Misprint",         COMMON_JOKER,    4, true,  misprint_joker_desc,         misprint_joker_effect             }, // 3
-    { "Scary Face",       COMMON_JOKER,    4, false, scary_face_joker_desc,       scary_face_joker_effect           }, // 4
-    { "Sock and Buskin",  UNCOMMON_JOKER,  6, false, sock_and_buskin_joker_desc,  sock_and_buskin_joker_effect      }, // 5
-    { "Acrobat",          UNCOMMON_JOKER,  6, false, acrobat_joker_desc,          acrobat_joker_effect              }, // 6
-    { "Fibonacci",        UNCOMMON_JOKER,  8, false, fibonnaci_joker_desc,        fibonnaci_joker_effect            }, // 7
-    { "Scholar",          COMMON_JOKER,    4, false, scholar_joker_desc,          scholar_joker_effect              }, // 8
-    { "Crafty Joker",     COMMON_JOKER,    4, false, crafty_joker_desc,           crafty_joker_effect               }, // 9
-    { "Droll Joker",      COMMON_JOKER,    4, false, droll_joker_desc,            droll_joker_effect                }, // 10
-    { "Raised Fist",      COMMON_JOKER,    5, false, raised_fist_joker_desc,      raised_fist_joker_effect          }, // 11
-    { "Reserved Parking", COMMON_JOKER,    6, false, reserved_parking_joker_desc, reserved_parking_joker_effect     }, // 12
-    { "Business Card",    COMMON_JOKER,    4, false, business_card_joker_desc,    business_card_joker_effect        }, // 13
-    { "Hanging Chad",     COMMON_JOKER,    4, false, hanging_chad_joker_desc,     hanging_chad_joker_effect         }, // 14
-    { "Joker Stencil",    UNCOMMON_JOKER,  8, false, stencil_joker_desc,          stencil_joker_effect              }, // 15
-    { "Banner",           COMMON_JOKER,    5, false, banner_joker_desc,           banner_joker_effect               }, // 16
-    { "Shoot the Moon",   COMMON_JOKER,    5, false, shoot_the_moon_joker_desc,   shoot_the_moon_joker_effect,      }, // 17
+    { "Джокер",            COMMON_JOKER,    2, false, default_joker_desc,          default_joker_effect              }, // DEFAULT_JOKER_ID = 0
+    { "Абстрактный",   COMMON_JOKER,    4, false, abstract_joker_desc,         abstract_joker_effect             }, // 1
+    { "Полу-Джокер",       COMMON_JOKER,    5, false, half_joker_desc,             half_joker_effect                 }, // 2
+    { "Опечатка",         COMMON_JOKER,    4, true,  misprint_joker_desc,         misprint_joker_effect             }, // 3
+    { "Страшное лицо",       COMMON_JOKER,    4, false, scary_face_joker_desc,       scary_face_joker_effect           }, // 4
+    { "Комедия и драма",  UNCOMMON_JOKER,  6, false, sock_and_buskin_joker_desc,  sock_and_buskin_joker_effect      }, // 5
+    { "Акробат",          UNCOMMON_JOKER,  6, false, acrobat_joker_desc,          acrobat_joker_effect              }, // 6
+    { "Фибоначчи",        UNCOMMON_JOKER,  8, false, fibonnaci_joker_desc,        fibonnaci_joker_effect            }, // 7
+    { "Учёный",          COMMON_JOKER,    4, false, scholar_joker_desc,          scholar_joker_effect              }, // 8
+    { "Ловкий Джокер",     COMMON_JOKER,    4, false, crafty_joker_desc,           crafty_joker_effect               }, // 9
+    { "Забавный Джокер",      COMMON_JOKER,    4, false, droll_joker_desc,            droll_joker_effect                }, // 10
+    { "Поднятый кулак",      COMMON_JOKER,    5, false, raised_fist_joker_desc,      raised_fist_joker_effect          }, // 11
+    { "Парковка", COMMON_JOKER,    6, false, reserved_parking_joker_desc, reserved_parking_joker_effect     }, // 12
+    { "Визитка",    COMMON_JOKER,    4, false, business_card_joker_desc,    business_card_joker_effect        }, // 13
+    { "Висячий Чед",     COMMON_JOKER,    4, false, hanging_chad_joker_desc,     hanging_chad_joker_effect         }, // 14
+    { "Трафарет",    UNCOMMON_JOKER,  8, false, stencil_joker_desc,          stencil_joker_effect              }, // 15
+    { "Знамя",           COMMON_JOKER,    5, false, banner_joker_desc,           banner_joker_effect               }, // 16
+    { "Достать луну",   COMMON_JOKER,    5, false, shoot_the_moon_joker_desc,   shoot_the_moon_joker_effect,      }, // 17
     // Spritesheet 1 
-    { "Greedy Joker",     COMMON_JOKER,    5, false, greedy_joker_desc,           greedy_joker_effect               }, // 18
-    { "Lusty Joker",      COMMON_JOKER,    5, false, lusty_joker_desc,            lusty_joker_effect                }, // 19
+    { "Жадный Джокер",     COMMON_JOKER,    5, false, greedy_joker_desc,           greedy_joker_effect               }, // 18
+    { "Похотливый Джокер",      COMMON_JOKER,    5, false, lusty_joker_desc,            lusty_joker_effect                }, // 19
     // Spritesheet 2
-    { "Wrathful Joker",   COMMON_JOKER,    5, false, wrathful_joker_desc,         wrathful_joker_effect             }, // 20
-    { "Gluttonous Joker", COMMON_JOKER,    5, false, gluttonous_joker_desc,       gluttonous_joker_effect           }, // 21
+    { "Гневный Джокер",   COMMON_JOKER,    5, false, wrathful_joker_desc,         wrathful_joker_effect             }, // 20
+    { "Прожорливый Джокер", COMMON_JOKER,    5, false, gluttonous_joker_desc,       gluttonous_joker_effect           }, // 21
     // Spritesheet 3
-    { "Crazy Joker",      COMMON_JOKER,    4, false, crazy_joker_desc,            crazy_joker_effect                }, // 22
-    { "Mad Joker",        COMMON_JOKER,    4, false, mad_joker_desc,              mad_joker_effect                  }, // 23
-    { "Clever Joker",     COMMON_JOKER,    4, false, clever_joker_desc,           clever_joker_effect               }, // 24
-    { "Devious Joker",    COMMON_JOKER,    4, false, devious_joker_desc,          devious_joker_effect              }, // 25
-    { "Even Steven",      COMMON_JOKER,    4, false, even_steven_joker_desc,      even_steven_joker_effect          }, // 26
+    { "Безумный Джокер",      COMMON_JOKER,    4, false, crazy_joker_desc,            crazy_joker_effect                }, // 22
+    { "Бешеный Джокер",        COMMON_JOKER,    4, false, mad_joker_desc,              mad_joker_effect                  }, // 23
+    { "Умный Джокер",     COMMON_JOKER,    4, false, clever_joker_desc,           clever_joker_effect               }, // 24
+    { "Коварный Джокер",    COMMON_JOKER,    4, false, devious_joker_desc,          devious_joker_effect              }, // 25
+    { "Чётный Стивен",      COMMON_JOKER,    4, false, even_steven_joker_desc,      even_steven_joker_effect          }, // 26
     // Spritesheet 4
-    { "Blackboard",       UNCOMMON_JOKER,  6, false, blackboard_joker_desc,       blackboard_joker_effect           }, // 27
-    { "Mystic Summit",    COMMON_JOKER,    5, false, mystic_summit_joker_desc,    mystic_summit_joker_effect        }, // 28
-    { "Walkie Talkie",    COMMON_JOKER,    4, false, walkie_talkie_joker_desc,    walkie_talkie_joker_effect        }, // 29
-    { "Zany Joker",       COMMON_JOKER,    4, false, zany_joker_desc,             zany_joker_effect                 }, // 30
-    { "Wily Joker",       COMMON_JOKER,    4, false, wily_joker_desc,             wily_joker_effect                 }, // 31
+    { "Доска",       UNCOMMON_JOKER,  6, false, blackboard_joker_desc,       blackboard_joker_effect           }, // 27
+    { "Мистический пик",    COMMON_JOKER,    5, false, mystic_summit_joker_desc,    mystic_summit_joker_effect        }, // 28
+    { "Рация",    COMMON_JOKER,    4, false, walkie_talkie_joker_desc,    walkie_talkie_joker_effect        }, // 29
+    { "Чудной Джокер",       COMMON_JOKER,    4, false, zany_joker_desc,             zany_joker_effect                 }, // 30
+    { "Лукавый Джокер",       COMMON_JOKER,    4, false, wily_joker_desc,             wily_joker_effect                 }, // 31
     // Spritesheet 5
-    { "Sly Joker",        COMMON_JOKER,    3, false, sly_joker_desc,              sly_joker_effect                  }, // 32
-    { "Jolly Joker",      COMMON_JOKER,    3, false, jolly_joker_desc,            jolly_joker_effect                }, // 33
-    { "Blue Joker",       COMMON_JOKER,    5, false, blue_joker_desc,             blue_joker_effect                 }, // 34
-    { "Odd Todd",         COMMON_JOKER,    4, false, odd_todd_joker_desc,         odd_todd_joker_effect             }, // 35
+    { "Хитрый Джокер",        COMMON_JOKER,    3, false, sly_joker_desc,              sly_joker_effect                  }, // 32
+    { "Весёлый Джокер",      COMMON_JOKER,    3, false, jolly_joker_desc,            jolly_joker_effect                }, // 33
+    { "Синий Джокер",       COMMON_JOKER,    5, false, blue_joker_desc,             blue_joker_effect                 }, // 34
+    { "Нечётный Тодд",         COMMON_JOKER,    4, false, odd_todd_joker_desc,         odd_todd_joker_effect             }, // 35
     // Spritesheet 6
-    { "The Duo",          RARE_JOKER,      8, false, the_duo_joker_desc,          the_duo_joker_effect              }, // 36
-    { "The Trio",         RARE_JOKER,      8, false, the_trio_joker_desc,         the_trio_joker_effect             }, // 37
-    { "The Order",        RARE_JOKER,      8, false, the_order_joker_desc,        the_order_joker_effect            }, // 38
-    { "The Tribe",        RARE_JOKER,      8, false, the_tribe_joker_desc,        the_tribe_joker_effect            }, // 39
+    { "Дуэт",          RARE_JOKER,      8, false, the_duo_joker_desc,          the_duo_joker_effect              }, // 36
+    { "Трио",         RARE_JOKER,      8, false, the_trio_joker_desc,         the_trio_joker_effect             }, // 37
+    { "Порядок",        RARE_JOKER,      8, false, the_order_joker_desc,        the_order_joker_effect            }, // 38
+    { "Племя",        RARE_JOKER,      8, false, the_tribe_joker_desc,        the_tribe_joker_effect            }, // 39
     // Spritesheet 7
-    { "The Family",       RARE_JOKER,      8, false, the_family_joker_desc,       the_family_joker_effect           }, // 40
-    { "Brainstorm",       RARE_JOKER,     10, false, brainstorm_joker_desc,       blueprint_brainstorm_joker_effect }, // 41 Brainstorm
+    { "Семья",       RARE_JOKER,      8, false, the_family_joker_desc,       the_family_joker_effect           }, // 40
+    { "Мозговой штурм",       RARE_JOKER,     10, false, brainstorm_joker_desc,       blueprint_brainstorm_joker_effect }, // 41 Brainstorm
     // Spritesheet 8
-    { "Smiley Face",      COMMON_JOKER,    4, false, smiley_face_joker_desc,      smiley_face_joker_effect          }, // 42
-    { "Bull",             UNCOMMON_JOKER,  6, false, bull_joker_desc,             bull_joker_effect                 }, // 43
+    { "Смайлик",      COMMON_JOKER,    4, false, smiley_face_joker_desc,      smiley_face_joker_effect          }, // 42
+    { "Бык",             UNCOMMON_JOKER,  6, false, bull_joker_desc,             bull_joker_effect                 }, // 43
     // Individual Jokers (for now :3)
-    { "Photograph",       COMMON_JOKER,    5, false, photograph_joker_desc,       photograph_joker_effect,          }, // 44
-    { "Hack",             UNCOMMON_JOKER,  6, false, hack_joker_desc,             hack_joker_effect                 }, // 45
-    { "Pareidolia",       UNCOMMON_JOKER,  5, false, pareidolia_joker_desc,       joker_effect_noop                 }, // 46 Pareidolia
-    { "Bootstraps",       UNCOMMON_JOKER,  7, false, bootstraps_joker_desc,       bootstraps_joker_effect           }, // 47
-    { "Shortcut",         UNCOMMON_JOKER,  7, false, shortcut_joker_desc,         joker_effect_noop,                }, // 48 Shortcut
-    { "Dusk",             UNCOMMON_JOKER,  5, false, dusk_joker_desc,             dusk_joker_effect                 }, // 49
-    { "Four Fingers",     UNCOMMON_JOKER,  7, false, four_fingers_joker_desc,     joker_effect_noop,                }, // 50 Four Fingers
-    { "Seltzer",          UNCOMMON_JOKER,  6, false, seltzer_joker_desc,          seltzer_joker_effect,             }, // 51
-    { "Blueprint",        RARE_JOKER,     10, false, blueprint_joker_desc,        blueprint_brainstorm_joker_effect }, // 52 Blueprint
+    { "Фотография",       COMMON_JOKER,    5, false, photograph_joker_desc,       photograph_joker_effect,          }, // 44
+    { "Халтура",             UNCOMMON_JOKER,  6, false, hack_joker_desc,             hack_joker_effect                 }, // 45
+    { "Парейдолия",       UNCOMMON_JOKER,  5, false, pareidolia_joker_desc,       joker_effect_noop                 }, // 46 Pareidolia
+    { "Самоподъём",       UNCOMMON_JOKER,  7, false, bootstraps_joker_desc,       bootstraps_joker_effect           }, // 47
+    { "Короткий путь",         UNCOMMON_JOKER,  7, false, shortcut_joker_desc,         joker_effect_noop,                }, // 48 Shortcut
+    { "Сумерки",             UNCOMMON_JOKER,  5, false, dusk_joker_desc,             dusk_joker_effect                 }, // 49
+    { "Четыре пальца",     UNCOMMON_JOKER,  7, false, four_fingers_joker_desc,     joker_effect_noop,                }, // 50 Four Fingers
+    { "Сельтерская",          UNCOMMON_JOKER,  6, false, seltzer_joker_desc,          seltzer_joker_effect,             }, // 51
+    { "Чертёж",        RARE_JOKER,     10, false, blueprint_joker_desc,        blueprint_brainstorm_joker_effect }, // 52 Blueprint
 
     // The following jokers don't have sprites yet,
     // uncomment them when their sprites are added.
@@ -263,127 +263,104 @@ size_t get_joker_registry_size(void)
 
 static int default_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] = TTE_RED_TAG "+4 " TTE_BLACK_TAG "Mult";
+    static const char desc[] = TTE_RED_TAG "+4 " TTE_BLACK_TAG "множ.";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int greedy_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] =
-        TTE_BLACK_TAG "Played cards with " TTE_DIAMOND_TAG TTE_BLACK_TAG "suit give " TTE_RED_TAG
-                      "+3 " TTE_BLACK_TAG "Mult when scored";
+    static const char desc[] = TTE_BLACK_TAG "Сыгранные карты масти " TTE_YELLOW_TAG "Бубны " TTE_BLACK_TAG "дают " TTE_RED_TAG "+3 " TTE_BLACK_TAG "множ. при подсчёте";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int lusty_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] =
-        TTE_BLACK_TAG "Played cards with " TTE_HEART_TAG TTE_BLACK_TAG "suit give " TTE_RED_TAG
-                      "+3 " TTE_BLACK_TAG "Mult when scored";
+    static const char desc[] = TTE_BLACK_TAG "Сыгранные карты масти " TTE_RED_TAG "Червы " TTE_BLACK_TAG "дают " TTE_RED_TAG "+3 " TTE_BLACK_TAG "множ. при подсчёте";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int wrathful_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] =
-        TTE_BLACK_TAG "Played cards with " TTE_SPADE_TAG TTE_BLACK_TAG "suit give " TTE_RED_TAG
-                      "+3 " TTE_BLACK_TAG "Mult when scored";
+    static const char desc[] = TTE_BLACK_TAG "Сыгранные карты масти " TTE_DARK_BLUE_TAG "Пики " TTE_BLACK_TAG "дают " TTE_RED_TAG "+3 " TTE_BLACK_TAG "множ. при подсчёте";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int gluttonous_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] =
-        TTE_BLACK_TAG "Played cards with " TTE_CLUB_TAG TTE_BLACK_TAG "suit give " TTE_RED_TAG
-                      "+3 " TTE_BLACK_TAG "Mult when scored";
+    static const char desc[] = TTE_BLACK_TAG "Сыгранные карты масти " TTE_DARK_GREEN_TAG "Трефы " TTE_BLACK_TAG "дают " TTE_RED_TAG "+3 " TTE_BLACK_TAG "множ. при подсчёте";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int jolly_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] =
-        TTE_RED_TAG "+8 " TTE_BLACK_TAG "Mult if played hand contains a " TTE_YELLOW_TAG "Pair";
+    static const char desc[] = TTE_RED_TAG "+8 " TTE_BLACK_TAG "множ., если в сыгранной руке есть " TTE_YELLOW_TAG "Пара";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int zany_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] = TTE_RED_TAG
-        "+12 " TTE_BLACK_TAG "Mult if played hand contains a " TTE_YELLOW_TAG "Three of a Kind";
+    static const char desc[] = TTE_RED_TAG "+12 " TTE_BLACK_TAG "множ., если в сыгранной руке есть " TTE_YELLOW_TAG "Тройка";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int mad_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] = TTE_RED_TAG
-        "+10 " TTE_BLACK_TAG "Mult if played hand contains a " TTE_YELLOW_TAG "Two Pair";
+    static const char desc[] = TTE_RED_TAG "+10 " TTE_BLACK_TAG "множ., если в сыгранной руке есть " TTE_YELLOW_TAG "Две пары";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int crazy_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] = TTE_RED_TAG
-        "+12 " TTE_BLACK_TAG "Mult if played hand contains a " TTE_YELLOW_TAG "Straight";
+    static const char desc[] = TTE_RED_TAG "+12 " TTE_BLACK_TAG "множ., если в сыгранной руке есть " TTE_YELLOW_TAG "Стрит";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int droll_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] =
-        TTE_RED_TAG "+10 " TTE_BLACK_TAG "Mult if played hand contains a " TTE_YELLOW_TAG "Flush";
+    static const char desc[] = TTE_RED_TAG "+10 " TTE_BLACK_TAG "множ., если в сыгранной руке есть " TTE_YELLOW_TAG "Флеш";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int sly_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] =
-        TTE_BLUE_TAG "+50 " TTE_BLACK_TAG "Chips if played hand contains a " TTE_YELLOW_TAG "Pair";
+    static const char desc[] = TTE_BLUE_TAG "+50 " TTE_BLACK_TAG "фишек, если в сыгранной руке есть " TTE_YELLOW_TAG "Пара";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int wily_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] = TTE_BLUE_TAG
-        "+100 " TTE_BLACK_TAG "Chips if played hand contains a " TTE_YELLOW_TAG "Three of a Kind";
+    static const char desc[] = TTE_BLUE_TAG "+100 " TTE_BLACK_TAG "фишек, если в сыгранной руке есть " TTE_YELLOW_TAG "Тройка";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int clever_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] = TTE_BLUE_TAG
-        "+80 " TTE_BLACK_TAG "Chips if played hand contains a " TTE_YELLOW_TAG "Two Pair";
+    static const char desc[] = TTE_BLUE_TAG "+80 " TTE_BLACK_TAG "фишек, если в сыгранной руке есть " TTE_YELLOW_TAG "Две пары";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int devious_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] = TTE_BLUE_TAG
-        "+100 " TTE_BLACK_TAG "Chips if played hand contains a " TTE_YELLOW_TAG "Straight";
+    static const char desc[] = TTE_BLUE_TAG "+100 " TTE_BLACK_TAG "фишек, если в сыгранной руке есть " TTE_YELLOW_TAG "Стрит";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int crafty_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] =
-        TTE_BLUE_TAG "+80 " TTE_BLACK_TAG "Chips if played hand contains a " TTE_YELLOW_TAG "Flush";
+    static const char desc[] = TTE_BLUE_TAG "+80 " TTE_BLACK_TAG "фишек, если в сыгранной руке есть " TTE_YELLOW_TAG "Флеш";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int half_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] =
-        TTE_RED_TAG "+20 " TTE_BLACK_TAG "Mult if played hand contains " TTE_YELLOW_TAG
-                    "3 " TTE_BLACK_TAG "or fewer cards";
+    static const char desc[] = TTE_RED_TAG "+20 " TTE_BLACK_TAG "множ., если в сыгранной руке " TTE_YELLOW_TAG "3 " TTE_BLACK_TAG "карты или меньше";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int stencil_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc_format[] =
-        TTE_RED_TAG "X1 " TTE_BLACK_TAG
-                    "Mult for each empty Joker slot Joker Stencil included\n\n(Now " TTE_RED_TAG
-                    "X%ld " TTE_BLACK_TAG "Mult)";
-    const u32 desc_max_size = 130;
+    static const char desc_format[] = TTE_RED_TAG "X1 " TTE_BLACK_TAG "множ. за каждый пустой слот Джокера, включая Трафарет\n\n(Сейчас " TTE_RED_TAG "X%ld " TTE_BLACK_TAG "множ.)";
+    const u32 desc_max_size = 220;
 
     List* jokers = get_jokers_list();
     u32 stencil_bonus = MAX_JOKERS_HELD_SIZE - list_get_len(jokers);
@@ -405,59 +382,45 @@ static int stencil_joker_desc(Joker* joker, Rect dest_rect)
 static int misprint_joker_desc(Joker* joker, Rect dest_rect)
 {
     // TODO: print glitchy desc with occasional next card reveal
-    char desc[] = TTE_YELLOW_TAG "Random" TTE_BLACK_TAG " Mult between " TTE_RED_TAG
-                                 "+0" TTE_BLACK_TAG " and " TTE_RED_TAG "+23";
+    char desc[] = TTE_YELLOW_TAG "Случайный " TTE_BLACK_TAG "множитель от " TTE_RED_TAG "+0" TTE_BLACK_TAG " до " TTE_RED_TAG "+23";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int walkie_talkie_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] =
-        TTE_BLACK_TAG "Each played " TTE_YELLOW_TAG "10 " TTE_BLACK_TAG "or " TTE_YELLOW_TAG
-                      "4 " TTE_BLACK_TAG "gives " TTE_BLUE_TAG "+10 " TTE_BLACK_TAG
-                      "Chips and " TTE_RED_TAG "+4 " TTE_BLACK_TAG "Mult when scored";
+    static const char desc[] = TTE_BLACK_TAG "Каждые сыгранные " TTE_YELLOW_TAG "10 " TTE_BLACK_TAG "или " TTE_YELLOW_TAG "4 " TTE_BLACK_TAG "дают " TTE_BLUE_TAG "+10 " TTE_BLACK_TAG "фишек и " TTE_RED_TAG "+4 " TTE_BLACK_TAG "множ. при подсчёте";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int fibonnaci_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] =
-        TTE_BLACK_TAG "Each played\n" TTE_YELLOW_TAG "Ace" TTE_BLACK_TAG ", " TTE_YELLOW_TAG
-                      "2" TTE_BLACK_TAG ", " TTE_YELLOW_TAG "3" TTE_BLACK_TAG ", " TTE_YELLOW_TAG
-                      "5" TTE_BLACK_TAG ", " TTE_YELLOW_TAG "8\n" TTE_BLACK_TAG "gives " TTE_RED_TAG
-                      "+8 " TTE_BLACK_TAG "Mult when scored";
+    static const char desc[] = TTE_BLACK_TAG "Каждый сыгранный " TTE_YELLOW_TAG "Туз" TTE_BLACK_TAG ", " TTE_YELLOW_TAG "2" TTE_BLACK_TAG ", " TTE_YELLOW_TAG "3" TTE_BLACK_TAG ", " TTE_YELLOW_TAG "5" TTE_BLACK_TAG ", " TTE_YELLOW_TAG "8 " TTE_BLACK_TAG "даёт " TTE_RED_TAG "+8 " TTE_BLACK_TAG "множ. при подсчёте";
 
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int banner_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] =
-        TTE_BLUE_TAG "+30 " TTE_BLACK_TAG "Chips for each remaining " TTE_YELLOW_TAG "discard";
+    static const char desc[] = TTE_BLUE_TAG "+30 " TTE_BLACK_TAG "фишек за каждый оставшийся " TTE_YELLOW_TAG "сброс";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int mystic_summit_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] = TTE_RED_TAG "+15 " TTE_BLACK_TAG "Mult when " TTE_YELLOW_TAG
-                                           "0 " TTE_BLACK_TAG "discards remaining ";
+    static const char desc[] = TTE_RED_TAG "+15 " TTE_BLACK_TAG "множ., когда осталось " TTE_YELLOW_TAG "0 " TTE_BLACK_TAG "сбросов";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int blackboard_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] = TTE_RED_TAG
-        "X3 " TTE_BLACK_TAG "Mult if all cards held in hand are " TTE_SPADE_TAG TTE_BLACK_TAG
-        "or " TTE_CLUB_TAG;
+    static const char desc[] = TTE_RED_TAG "X3 " TTE_BLACK_TAG "множ., если все карты в руке - " TTE_DARK_BLUE_TAG "пики " TTE_BLACK_TAG "или " TTE_DARK_GREEN_TAG "трефы";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int blue_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc_format[] =
-        TTE_BLUE_TAG "+2 " TTE_BLACK_TAG "Chips for each remaining card in " TTE_YELLOW_TAG
-                     "deck" TTE_BLACK_TAG "\n\n(Now " TTE_BLUE_TAG "+%ld" TTE_BLACK_TAG " Chips)";
-    const u32 desc_max_size = 139;
+    static const char desc_format[] = TTE_BLUE_TAG "+2 " TTE_BLACK_TAG "фишки за каждую карту, оставшуюся в " TTE_YELLOW_TAG "колоде" TTE_BLACK_TAG "\n\n(Сейчас " TTE_BLUE_TAG "+%ld" TTE_BLACK_TAG " фишек)";
+    const u32 desc_max_size = 220;
 
     u32 blue_bonus = (get_deck_top() + 1) * 2;
 
@@ -469,50 +432,38 @@ static int blue_joker_desc(Joker* joker, Rect dest_rect)
 
 static int raised_fist_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] =
-        TTE_BLACK_TAG "Adds " TTE_YELLOW_TAG "double" TTE_BLACK_TAG " the rank of " TTE_YELLOW_TAG
-                      "lowest" TTE_BLACK_TAG " ranked card held in hand to Mult";
+    static const char desc[] = TTE_BLACK_TAG "Добавляет к множителю " TTE_YELLOW_TAG "удвоенный" TTE_BLACK_TAG " ранг " TTE_YELLOW_TAG "младшей" TTE_BLACK_TAG " карты в руке";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int reserved_parking_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] = TTE_BLACK_TAG
-        "Each " TTE_YELLOW_TAG "face" TTE_BLACK_TAG " card held in hand has a " TTE_GREEN_TAG
-        "1 in 2" TTE_BLACK_TAG " chance to give " TTE_YELLOW_TAG "$1";
+    static const char desc[] = TTE_BLACK_TAG "Каждая " TTE_YELLOW_TAG "картинка" TTE_BLACK_TAG " в руке с шансом " TTE_GREEN_TAG "1 из 2" TTE_BLACK_TAG " даёт " TTE_YELLOW_TAG "$1";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int business_card_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] = TTE_BLACK_TAG
-        "Played " TTE_YELLOW_TAG "face" TTE_BLACK_TAG " cards have a " TTE_GREEN_TAG
-        "1 in 2" TTE_BLACK_TAG " chance to give " TTE_YELLOW_TAG "$2" TTE_BLACK_TAG " when scored";
+    static const char desc[] = TTE_BLACK_TAG "Сыгранные " TTE_YELLOW_TAG "картинки" TTE_BLACK_TAG " с шансом " TTE_GREEN_TAG "1 из 2" TTE_BLACK_TAG " дают " TTE_YELLOW_TAG "$2" TTE_BLACK_TAG " при подсчёте";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int scholar_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] = TTE_BLACK_TAG
-        "Played " TTE_YELLOW_TAG "Aces" TTE_BLACK_TAG " give " TTE_BLUE_TAG "+20" TTE_BLACK_TAG
-        " Chips and " TTE_RED_TAG "+4" TTE_BLACK_TAG " Mult when scored";
+    static const char desc[] = TTE_BLACK_TAG "Сыгранные " TTE_YELLOW_TAG "Тузы" TTE_BLACK_TAG " дают " TTE_BLUE_TAG "+20" TTE_BLACK_TAG " фишек и " TTE_RED_TAG "+4" TTE_BLACK_TAG " множ. при подсчёте";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int scary_face_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] =
-        TTE_BLACK_TAG "Played " TTE_YELLOW_TAG "face" TTE_BLACK_TAG " cards give " TTE_BLUE_TAG
-                      "+30" TTE_BLACK_TAG " Chips when scored";
+    static const char desc[] = TTE_BLACK_TAG "Сыгранные " TTE_YELLOW_TAG "картинки" TTE_BLACK_TAG " дают " TTE_BLUE_TAG "+30" TTE_BLACK_TAG " фишек при подсчёте";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int abstract_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc_format[] =
-        TTE_RED_TAG "+3" TTE_BLACK_TAG " Mult for each " TTE_YELLOW_TAG "Joker" TTE_BLACK_TAG
-                    " card\n\n(Now " TTE_RED_TAG "+%ld" TTE_BLACK_TAG " Mult)";
-    const u32 desc_max_size = 125;
+    static const char desc_format[] = TTE_RED_TAG "+3" TTE_BLACK_TAG " множ. за каждого " TTE_YELLOW_TAG "Джокера\n\n(Сейчас " TTE_RED_TAG "+%ld" TTE_BLACK_TAG " множ.)";
+    const u32 desc_max_size = 220;
 
     u32 abstract_bonus = list_get_len(get_jokers_list()) * 3;
 
@@ -524,10 +475,8 @@ static int abstract_joker_desc(Joker* joker, Rect dest_rect)
 
 static int bull_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc_format[] =
-        TTE_BLUE_TAG "+2" TTE_BLACK_TAG " Chips for each " TTE_YELLOW_TAG "$1" TTE_BLACK_TAG
-                     " you have\n\n(Now " TTE_BLUE_TAG "+%ld" TTE_BLACK_TAG " Chips)";
-    const u32 desc_max_size = 127;
+    static const char desc_format[] = TTE_BLUE_TAG "+2" TTE_BLACK_TAG " фишки за каждый " TTE_YELLOW_TAG "$1" TTE_BLACK_TAG " у вас\n\n(Сейчас " TTE_BLUE_TAG "+%ld" TTE_BLACK_TAG " фишек)";
+    const u32 desc_max_size = 220;
 
     u32 bull_bonus = (g_game_vars.money > 0) ? g_game_vars.money * 2 : 0;
 
@@ -539,84 +488,68 @@ static int bull_joker_desc(Joker* joker, Rect dest_rect)
 
 static int smiley_face_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] =
-        TTE_BLACK_TAG "Played " TTE_YELLOW_TAG "face" TTE_BLACK_TAG " cards give " TTE_RED_TAG
-                      "+5" TTE_BLACK_TAG " Mult when scored";
+    static const char desc[] = TTE_BLACK_TAG "Сыгранные " TTE_YELLOW_TAG "картинки" TTE_BLACK_TAG " дают " TTE_RED_TAG "+5" TTE_BLACK_TAG " множ. при подсчёте";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int even_steven_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] =
-        TTE_BLACK_TAG "Played cards with " TTE_YELLOW_TAG "even rank give " TTE_RED_TAG
-                      "+4" TTE_BLACK_TAG " Mult when scored\n(10, 8, 6, 4, 2)";
+    static const char desc[] = TTE_BLACK_TAG "Сыгранные карты " TTE_YELLOW_TAG "чётного ранга дают " TTE_RED_TAG "+4" TTE_BLACK_TAG " множ. при подсчёте\n(10, 8, 6, 4, 2)";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int odd_todd_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] =
-        TTE_BLACK_TAG "Played cards with " TTE_YELLOW_TAG "odd rank give " TTE_BLUE_TAG
-                      "+31" TTE_BLACK_TAG " Chips when scored\n(A, 9, 7, 5, 3)";
+    static const char desc[] = TTE_BLACK_TAG "Сыгранные карты " TTE_YELLOW_TAG "нечётного ранга дают " TTE_BLUE_TAG "+31" TTE_BLACK_TAG " фишек при подсчёте\n(Т, 9, 7, 5, 3)";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int acrobat_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] = TTE_RED_TAG "X3" TTE_BLACK_TAG " Mult on " TTE_YELLOW_TAG
-                                           "final hand" TTE_BLACK_TAG " of round";
+    static const char desc[] = TTE_RED_TAG "X3" TTE_BLACK_TAG " множ. на " TTE_YELLOW_TAG "последней руке" TTE_BLACK_TAG " раунда";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int hanging_chad_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] = TTE_BLACK_TAG "Retrigger " TTE_YELLOW_TAG "first" TTE_BLACK_TAG
-                                             " played card used in scoring " TTE_YELLOW_TAG
-                                             "2" TTE_BLACK_TAG " additional times ";
+    static const char desc[] = TTE_BLACK_TAG "Повторно срабатывает " TTE_YELLOW_TAG "первая" TTE_BLACK_TAG " сыгранная карта при подсчёте ещё " TTE_YELLOW_TAG "2" TTE_BLACK_TAG " раза";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int the_duo_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] =
-        TTE_RED_TAG "X2" TTE_BLACK_TAG " Mult if played hand contains a " TTE_YELLOW_TAG "Pair";
+    static const char desc[] = TTE_RED_TAG "X2" TTE_BLACK_TAG " множ., если в сыгранной руке есть " TTE_YELLOW_TAG "Пара";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int the_trio_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] = TTE_RED_TAG
-        "X3" TTE_BLACK_TAG " Mult if played hand contains a " TTE_YELLOW_TAG "Three of a Kind";
+    static const char desc[] = TTE_RED_TAG "X3" TTE_BLACK_TAG " множ., если в сыгранной руке есть " TTE_YELLOW_TAG "Тройка";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int the_family_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] = TTE_RED_TAG
-        "X4" TTE_BLACK_TAG " Mult if played hand contains a " TTE_YELLOW_TAG "Four of a Kind";
+    static const char desc[] = TTE_RED_TAG "X4" TTE_BLACK_TAG " множ., если в сыгранной руке есть " TTE_YELLOW_TAG "Каре";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int the_order_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] =
-        TTE_RED_TAG "X3" TTE_BLACK_TAG " Mult if played hand contains a " TTE_YELLOW_TAG "Straight";
+    static const char desc[] = TTE_RED_TAG "X3" TTE_BLACK_TAG " множ., если в сыгранной руке есть " TTE_YELLOW_TAG "Стрит";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int the_tribe_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] =
-        TTE_RED_TAG "X2" TTE_BLACK_TAG " Mult if played hand contains a " TTE_YELLOW_TAG "Flush";
+    static const char desc[] = TTE_RED_TAG "X2" TTE_BLACK_TAG " множ., если в сыгранной руке есть " TTE_YELLOW_TAG "Флеш";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int bootstraps_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc_format[] =
-        TTE_RED_TAG "+2" TTE_BLACK_TAG " Mult for every " TTE_YELLOW_TAG "$5" TTE_BLACK_TAG
-                    " you have\n\n(Now " TTE_RED_TAG "+%ld" TTE_BLACK_TAG " Mult)";
-    const u32 desc_max_size = 125;
+    static const char desc_format[] = TTE_RED_TAG "+2" TTE_BLACK_TAG " множ. за каждые " TTE_YELLOW_TAG "$5" TTE_BLACK_TAG " у вас\n\n(Сейчас " TTE_RED_TAG "+%ld" TTE_BLACK_TAG " множ.)";
+    const u32 desc_max_size = 220;
 
     u32 bootstrap_bonus = (g_game_vars.money > 0) ? (g_game_vars.money / 5) * 2 : 0;
 
@@ -628,54 +561,44 @@ static int bootstraps_joker_desc(Joker* joker, Rect dest_rect)
 
 static int shoot_the_moon_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] =
-        TTE_BLACK_TAG "Each " TTE_YELLOW_TAG "Queen" TTE_BLACK_TAG
-                      " held in hand gives " TTE_RED_TAG "+13" TTE_BLACK_TAG " Mult";
+    static const char desc[] = TTE_BLACK_TAG "Каждая " TTE_YELLOW_TAG "Дама" TTE_BLACK_TAG " в руке даёт " TTE_RED_TAG "+13" TTE_BLACK_TAG " множ.";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int photograph_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] =
-        TTE_BLACK_TAG "First played " TTE_YELLOW_TAG "face" TTE_BLACK_TAG " card gives " TTE_RED_TAG
-                      "X2" TTE_BLACK_TAG " Mult when scored";
+    static const char desc[] = TTE_BLACK_TAG "Первая сыгранная " TTE_YELLOW_TAG "картинка" TTE_BLACK_TAG " даёт " TTE_RED_TAG "X2" TTE_BLACK_TAG " множ. при подсчёте";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int dusk_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] = TTE_BLACK_TAG "Retrigger all played cards in " TTE_YELLOW_TAG
-                                             "final hand" TTE_BLACK_TAG " of the round";
+    static const char desc[] = TTE_BLACK_TAG "Повторно срабатывают все сыгранные карты на " TTE_YELLOW_TAG "последней руке" TTE_BLACK_TAG " раунда";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int brainstorm_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] =
-        TTE_BLACK_TAG "Copies ability of the leftmost " TTE_YELLOW_TAG "Joker";
+    static const char desc[] = TTE_BLACK_TAG "Копирует способность самого левого " TTE_YELLOW_TAG "Джокера";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int blueprint_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] =
-        TTE_BLACK_TAG "Copies ability of " TTE_YELLOW_TAG "Joker" TTE_BLACK_TAG " to the right";
+    static const char desc[] = TTE_BLACK_TAG "Копирует способность " TTE_YELLOW_TAG "Джокера" TTE_BLACK_TAG " справа";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int hack_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] = TTE_BLACK_TAG
-        "Retrigger each played " TTE_YELLOW_TAG "2" TTE_BLACK_TAG ", " TTE_YELLOW_TAG
-        "3" TTE_BLACK_TAG ", " TTE_YELLOW_TAG "4" TTE_BLACK_TAG ", or " TTE_YELLOW_TAG "5";
+    static const char desc[] = TTE_BLACK_TAG "Повторно срабатывает каждая сыгранная " TTE_YELLOW_TAG "2" TTE_BLACK_TAG ", " TTE_YELLOW_TAG "3" TTE_BLACK_TAG ", " TTE_YELLOW_TAG "4" TTE_BLACK_TAG " или " TTE_YELLOW_TAG "5";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int seltzer_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc_format[] = TTE_BLACK_TAG
-        "Retrigger all cards played for the next " TTE_YELLOW_TAG "%ld" TTE_BLACK_TAG " hands";
-    const u32 desc_max_size = 94;
+    static const char desc_format[] = TTE_BLACK_TAG "Повторно срабатывают все сыгранные карты ещё " TTE_YELLOW_TAG "%ld" TTE_BLACK_TAG " рук";
+    const u32 desc_max_size = 220;
 
     char desc[desc_max_size];
     snprintf(desc, desc_max_size, desc_format, joker->persistent_state);
@@ -685,32 +608,25 @@ static int seltzer_joker_desc(Joker* joker, Rect dest_rect)
 
 static int sock_and_buskin_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] =
-        TTE_BLACK_TAG "Retrigger all played " TTE_YELLOW_TAG "face" TTE_BLACK_TAG " cards";
+    static const char desc[] = TTE_BLACK_TAG "Повторно срабатывают все сыгранные " TTE_YELLOW_TAG "картинки";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int pareidolia_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] =
-        TTE_BLACK_TAG "All cards are considered " TTE_YELLOW_TAG "face" TTE_BLACK_TAG " cards";
+    static const char desc[] = TTE_BLACK_TAG "Все карты считаются " TTE_YELLOW_TAG "картинками";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int shortcut_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] =
-        TTE_BLACK_TAG "Allows " TTE_YELLOW_TAG "Straights" TTE_BLACK_TAG
-                      " to be made with gaps of " TTE_YELLOW_TAG "1 rank" TTE_BLACK_TAG
-                      "\n\n(ex: " TTE_YELLOW_TAG "10 8 6 5 3" TTE_BLACK_TAG ")";
+    static const char desc[] = TTE_BLACK_TAG "Позволяет собирать " TTE_YELLOW_TAG "Стриты" TTE_BLACK_TAG " с пропусками в " TTE_YELLOW_TAG "1 ранг" TTE_BLACK_TAG "\n\n(напр.: " TTE_YELLOW_TAG "10 8 6 5 3" TTE_BLACK_TAG ")";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int four_fingers_joker_desc(Joker* joker, Rect dest_rect)
 {
-    static const char desc[] =
-        TTE_BLACK_TAG "All " TTE_YELLOW_TAG "Flushes" TTE_BLACK_TAG " and " TTE_YELLOW_TAG
-                      "Straights" TTE_BLACK_TAG " can be made with 4 cards";
+    static const char desc[] = TTE_BLACK_TAG "Все " TTE_YELLOW_TAG "Флеши" TTE_BLACK_TAG " и " TTE_YELLOW_TAG "Стриты" TTE_BLACK_TAG " можно собрать из 4 карт";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
@@ -1546,7 +1462,7 @@ static u32 hanging_chad_joker_effect(
             if ((*joker_effect)->retrigger)
             {
                 *p_remaining_retriggers -= 1;
-                (*joker_effect)->message = "Again!";
+                (*joker_effect)->message = "Снова!";
                 effect_flags_ret = JOKER_EFFECT_FLAG_RETRIGGER | JOKER_EFFECT_FLAG_MESSAGE;
             }
             break;
@@ -1783,7 +1699,7 @@ static u32 dusk_joker_effect(
                 if ((*joker_effect)->retrigger)
                 {
                     *p_last_retriggered_index = get_scored_card_index();
-                    (*joker_effect)->message = "Again!";
+                    (*joker_effect)->message = "Снова!";
                     effect_flags_ret = JOKER_EFFECT_FLAG_RETRIGGER | JOKER_EFFECT_FLAG_MESSAGE;
                 }
             }
@@ -1914,7 +1830,7 @@ static u32 hack_joker_effect(
                     if ((*joker_effect)->retrigger)
                     {
                         *p_last_retriggered_index = get_scored_card_index();
-                        (*joker_effect)->message = "Again!";
+                        (*joker_effect)->message = "Снова!";
                         effect_flags_ret = JOKER_EFFECT_FLAG_RETRIGGER | JOKER_EFFECT_FLAG_MESSAGE;
                     }
                     break;
@@ -1960,7 +1876,7 @@ static u32 seltzer_joker_effect(
             if ((*joker_effect)->retrigger)
             {
                 *p_last_retriggered_idx = get_scored_card_index();
-                (*joker_effect)->message = "Again!";
+                (*joker_effect)->message = "Снова!";
                 effect_flags_ret = JOKER_EFFECT_FLAG_RETRIGGER | JOKER_EFFECT_FLAG_MESSAGE;
             }
             break;
@@ -1980,7 +1896,7 @@ static u32 seltzer_joker_effect(
             }
             else
             {
-                (*joker_effect)->message = "Drank!";
+                (*joker_effect)->message = "Выпито!";
                 (*joker_effect)->expire = true;
                 effect_flags_ret |= JOKER_EFFECT_FLAG_EXPIRE;
             }
@@ -2020,7 +1936,7 @@ static u32 sock_and_buskin_joker_effect(
             if ((*joker_effect)->retrigger)
             {
                 *p_last_retriggered_face_index = get_scored_card_index();
-                (*joker_effect)->message = "Again!";
+                (*joker_effect)->message = "Снова!";
                 effect_flags_ret = JOKER_EFFECT_FLAG_RETRIGGER | JOKER_EFFECT_FLAG_MESSAGE;
             }
             break;

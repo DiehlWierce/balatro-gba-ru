@@ -1,0 +1,81 @@
+# -*- coding: utf-8 -*-
+# markup: {R}{K}{Y}{B}{G}{DB}{DG} -> TTE tags
+NAMES = {
+"Joker":"Джокер","Abstract Joker":"Абстрактный","Half Joker":"Полу-Джокер","Misprint":"Опечатка",
+"Scary Face":"Страшное лицо","Sock and Buskin":"Комедия и драма","Acrobat":"Акробат","Fibonacci":"Фибоначчи",
+"Scholar":"Учёный","Crafty Joker":"Ловкий Джокер","Droll Joker":"Забавный Джокер","Raised Fist":"Поднятый кулак",
+"Reserved Parking":"Парковка","Business Card":"Визитка","Hanging Chad":"Висячий Чед","Joker Stencil":"Трафарет",
+"Banner":"Знамя","Shoot the Moon":"Достать луну","Greedy Joker":"Жадный Джокер","Lusty Joker":"Похотливый Джокер",
+"Wrathful Joker":"Гневный Джокер","Gluttonous Joker":"Прожорливый Джокер","Crazy Joker":"Безумный Джокер",
+"Mad Joker":"Бешеный Джокер","Clever Joker":"Умный Джокер","Devious Joker":"Коварный Джокер","Even Steven":"Чётный Стивен",
+"Blackboard":"Доска","Mystic Summit":"Мистический пик","Walkie Talkie":"Рация","Zany Joker":"Чудной Джокер",
+"Wily Joker":"Лукавый Джокер","Sly Joker":"Хитрый Джокер","Jolly Joker":"Весёлый Джокер","Blue Joker":"Синий Джокер",
+"Odd Todd":"Нечётный Тодд","The Duo":"Дуэт","The Trio":"Трио","The Order":"Порядок","The Tribe":"Племя","The Family":"Семья",
+"Brainstorm":"Мозговой штурм","Smiley Face":"Смайлик","Bull":"Бык","Photograph":"Фотография","Hack":"Халтура",
+"Pareidolia":"Парейдолия","Bootstraps":"Самоподъём","Shortcut":"Короткий путь","Dusk":"Сумерки","Four Fingers":"Четыре пальца",
+"Seltzer":"Сельтерская","Blueprint":"Чертёж",
+}
+D = {
+"default_joker_desc":"{R}+4 {K}множ.",
+"greedy_joker_desc":"{K}Сыгранные карты масти {Y}Бубны {K}дают {R}+3 {K}множ. при подсчёте",
+"lusty_joker_desc":"{K}Сыгранные карты масти {R}Червы {K}дают {R}+3 {K}множ. при подсчёте",
+"wrathful_joker_desc":"{K}Сыгранные карты масти {DB}Пики {K}дают {R}+3 {K}множ. при подсчёте",
+"gluttonous_joker_desc":"{K}Сыгранные карты масти {DG}Трефы {K}дают {R}+3 {K}множ. при подсчёте",
+"jolly_joker_desc":"{R}+8 {K}множ., если в сыгранной руке есть {Y}Пара",
+"zany_joker_desc":"{R}+12 {K}множ., если в сыгранной руке есть {Y}Тройка",
+"mad_joker_desc":"{R}+10 {K}множ., если в сыгранной руке есть {Y}Две пары",
+"crazy_joker_desc":"{R}+12 {K}множ., если в сыгранной руке есть {Y}Стрит",
+"droll_joker_desc":"{R}+10 {K}множ., если в сыгранной руке есть {Y}Флеш",
+"sly_joker_desc":"{B}+50 {K}фишек, если в сыгранной руке есть {Y}Пара",
+"wily_joker_desc":"{B}+100 {K}фишек, если в сыгранной руке есть {Y}Тройка",
+"clever_joker_desc":"{B}+80 {K}фишек, если в сыгранной руке есть {Y}Две пары",
+"devious_joker_desc":"{B}+100 {K}фишек, если в сыгранной руке есть {Y}Стрит",
+"crafty_joker_desc":"{B}+80 {K}фишек, если в сыгранной руке есть {Y}Флеш",
+"half_joker_desc":"{R}+20 {K}множ., если в сыгранной руке {Y}3 {K}карты или меньше",
+"stencil_joker_desc":"{R}X1 {K}множ. за каждый пустой слот Джокера, включая Трафарет\\n\\n(Сейчас {R}X%ld {K}множ.)",
+"misprint_joker_desc":"{Y}Случайный {K}множитель от {R}+0{K} до {R}+23",
+"walkie_talkie_joker_desc":"{K}Каждые сыгранные {Y}10 {K}или {Y}4 {K}дают {B}+10 {K}фишек и {R}+4 {K}множ. при подсчёте",
+"fibonnaci_joker_desc":"{K}Каждый сыгранный {Y}Туз{K}, {Y}2{K}, {Y}3{K}, {Y}5{K}, {Y}8 {K}даёт {R}+8 {K}множ. при подсчёте",
+"banner_joker_desc":"{B}+30 {K}фишек за каждый оставшийся {Y}сброс",
+"mystic_summit_joker_desc":"{R}+15 {K}множ., когда осталось {Y}0 {K}сбросов",
+"blackboard_joker_desc":"{R}X3 {K}множ., если все карты в руке - {DB}пики {K}или {DG}трефы",
+"blue_joker_desc":"{B}+2 {K}фишки за каждую карту, оставшуюся в {Y}колоде{K}\\n\\n(Сейчас {B}+%ld{K} фишек)",
+"raised_fist_joker_desc":"{K}Добавляет к множителю {Y}удвоенный{K} ранг {Y}младшей{K} карты в руке",
+"reserved_parking_joker_desc":"{K}Каждая {Y}картинка{K} в руке с шансом {G}1 из 2{K} даёт {Y}$1",
+"business_card_joker_desc":"{K}Сыгранные {Y}картинки{K} с шансом {G}1 из 2{K} дают {Y}$2{K} при подсчёте",
+"scholar_joker_desc":"{K}Сыгранные {Y}Тузы{K} дают {B}+20{K} фишек и {R}+4{K} множ. при подсчёте",
+"scary_face_joker_desc":"{K}Сыгранные {Y}картинки{K} дают {B}+30{K} фишек при подсчёте",
+"abstract_joker_desc":"{R}+3{K} множ. за каждого {Y}Джокера\\n\\n(Сейчас {R}+%ld{K} множ.)",
+"bull_joker_desc":"{B}+2{K} фишки за каждый {Y}$1{K} у вас\\n\\n(Сейчас {B}+%ld{K} фишек)",
+"smiley_face_joker_desc":"{K}Сыгранные {Y}картинки{K} дают {R}+5{K} множ. при подсчёте",
+"even_steven_joker_desc":"{K}Сыгранные карты {Y}чётного ранга дают {R}+4{K} множ. при подсчёте\\n(10, 8, 6, 4, 2)",
+"odd_todd_joker_desc":"{K}Сыгранные карты {Y}нечётного ранга дают {B}+31{K} фишек при подсчёте\\n(Т, 9, 7, 5, 3)",
+"acrobat_joker_desc":"{R}X3{K} множ. на {Y}последней руке{K} раунда",
+"hanging_chad_joker_desc":"{K}Повторно срабатывает {Y}первая{K} сыгранная карта при подсчёте ещё {Y}2{K} раза",
+"the_duo_joker_desc":"{R}X2{K} множ., если в сыгранной руке есть {Y}Пара",
+"the_trio_joker_desc":"{R}X3{K} множ., если в сыгранной руке есть {Y}Тройка",
+"the_family_joker_desc":"{R}X4{K} множ., если в сыгранной руке есть {Y}Каре",
+"the_order_joker_desc":"{R}X3{K} множ., если в сыгранной руке есть {Y}Стрит",
+"the_tribe_joker_desc":"{R}X2{K} множ., если в сыгранной руке есть {Y}Флеш",
+"bootstraps_joker_desc":"{R}+2{K} множ. за каждые {Y}$5{K} у вас\\n\\n(Сейчас {R}+%ld{K} множ.)",
+"shoot_the_moon_joker_desc":"{K}Каждая {Y}Дама{K} в руке даёт {R}+13{K} множ.",
+"photograph_joker_desc":"{K}Первая сыгранная {Y}картинка{K} даёт {R}X2{K} множ. при подсчёте",
+"dusk_joker_desc":"{K}Повторно срабатывают все сыгранные карты на {Y}последней руке{K} раунда",
+"brainstorm_joker_desc":"{K}Копирует способность самого левого {Y}Джокера",
+"blueprint_joker_desc":"{K}Копирует способность {Y}Джокера{K} справа",
+"hack_joker_desc":"{K}Повторно срабатывает каждая сыгранная {Y}2{K}, {Y}3{K}, {Y}4{K} или {Y}5",
+"seltzer_joker_desc":"{K}Повторно срабатывают все сыгранные карты ещё {Y}%ld{K} рук",
+"sock_and_buskin_joker_desc":"{K}Повторно срабатывают все сыгранные {Y}картинки",
+"pareidolia_joker_desc":"{K}Все карты считаются {Y}картинками",
+"shortcut_joker_desc":"{K}Позволяет собирать {Y}Стриты{K} с пропусками в {Y}1 ранг{K}\\n\\n(напр.: {Y}10 8 6 5 3{K})",
+"four_fingers_joker_desc":"{K}Все {Y}Флеши{K} и {Y}Стриты{K} можно собрать из 4 карт",
+}
+TAGS={'R':'TTE_RED_TAG','K':'TTE_BLACK_TAG','Y':'TTE_YELLOW_TAG','B':'TTE_BLUE_TAG','G':'TTE_GREEN_TAG','DB':'TTE_DARK_BLUE_TAG','DG':'TTE_DARK_GREEN_TAG'}
+import re
+def to_c(t):
+    parts=re.split(r'\{(R|K|Y|B|G|DB|DG)\}',t)
+    out=[]
+    for i,p in enumerate(parts):
+        if i%2==1: out.append(TAGS[p])
+        elif p: out.append('"%s"'%p)
+    return ' '.join(out)

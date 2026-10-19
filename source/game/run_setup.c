@@ -153,8 +153,8 @@ static const BG_POINT RUN_SETUP_DECK_DESC_TEXT_POS  = {80 , 56 };
 static const Rect     RUN_SETUP_DECK_NAME_DESC_RECT = {80 , 40 ,176, 96 };
 static const BG_POINT RUN_SETUP_SEED_FIELD_TEXT_POS = {96 , 40 };
 static const BG_POINT RUN_SETUP_SEED_DECK_TEXT_POS  = {152, 120};
-static const BG_POINT RUN_SETUP_PLAY_TEXT_POS       = {76 , 120};
-static const BG_POINT RUN_SETUP_BACK_TEXT_POS       = {104, 136};
+static const BG_POINT RUN_SETUP_PLAY_TEXT_POS       = {68 , 120};
+static const BG_POINT RUN_SETUP_BACK_TEXT_POS       = {100, 136};
 // clang-format on
 
 #pragma endregion
@@ -688,14 +688,14 @@ static void choose_deck_substate_init(void)
         RUN_SETUP_PLAY_TEXT_POS.x,
         RUN_SETUP_PLAY_TEXT_POS.y,
         TTE_WHITE_PB,
-        "PLAY"
+        "ИГРАТЬ"
     );
     tte_printf(
         "#{P:%d,%d; cx:0x%X000}%s",
         RUN_SETUP_BACK_TEXT_POS.x,
         RUN_SETUP_BACK_TEXT_POS.y,
         TTE_WHITE_PB,
-        "Back"
+        "Назад"
     );
 }
 
@@ -840,7 +840,7 @@ static void seed_keyboard_substate_init(void)
         RUN_SETUP_SEED_DECK_TEXT_POS.x,
         RUN_SETUP_SEED_DECK_TEXT_POS.y,
         TTE_WHITE_PB,
-        "Deck " // extra space after to clean potential "Seed" text
+        "Дека " // extra space after to clean potential "Сид" text
     );
 
     // Set buttons highlight
@@ -1140,7 +1140,7 @@ static inline void toggle_seed_enabled(bool enable)
         RUN_SETUP_SEED_DECK_TEXT_POS.x,
         RUN_SETUP_SEED_DECK_TEXT_POS.y,
         use_seed ? TTE_WHITE_PB : TTE_BLACK_PB,
-        " Seed" // Extra space before to clean potential "Deck" text
+        " Сид " // Extra spaces to clean potential "Дека" text
     );
 
     // Replace toggle button tiles with either checkmark of empty circle

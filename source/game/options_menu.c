@@ -194,8 +194,8 @@ static const u8       OPTIONS_SOUND_SLIDER_SEGMENT_LENGTH      = (OPTIONS_SOUND_
                                                                     / VOLUME_OPTION_MAX;
 
 // Values in pixels
-static const BG_POINT OPTIONS_GAME_SPEED_TEXT_POS        = { 82,  16};
-static const BG_POINT OPTIONS_CARD_SPRITES_TEXT_POS      = { 72,  48};
+static const BG_POINT OPTIONS_GAME_SPEED_TEXT_POS        = { 68,  16};
+static const BG_POINT OPTIONS_CARD_SPRITES_TEXT_POS      = { 88,  48};
 static const BG_POINT OPTIONS_MUSIC_VOLUME_TEXT_POS      = { 56,  80};
 static const BG_POINT OPTIONS_MUSIC_VALUE_TEXT_POS       = {160,  80};
 static const BG_POINT OPTIONS_SOUND_VOLUME_TEXT_POS      = { 56, 104};
@@ -365,32 +365,38 @@ void game_options_menu_change_background(void)
     GRIT_CPY(&se_mem[MAIN_BG_SBB], background_options_menu_gfxMap);
 
     tte_printf(
-        "#{P:%d,%d; cx:0x%X000}Game Speed",
+        "#{P:%d,%d; cx:0x%X000}Скорость игры",
         OPTIONS_GAME_SPEED_TEXT_POS.x,
         OPTIONS_GAME_SPEED_TEXT_POS.y,
         TTE_WHITE_PB
     );
     tte_printf(
-        "#{P:%d,%d; cx:0x%X000}Card Sprites",
+        "#{P:%d,%d; cx:0x%X000}Вид карт",
         OPTIONS_CARD_SPRITES_TEXT_POS.x,
         OPTIONS_CARD_SPRITES_TEXT_POS.y,
         TTE_WHITE_PB
     );
     tte_printf(
-        "#{P:%d,%d; cx:0x%X000}Music Volume",
+        "#{P:%d,%d; cx:0x%X000}Музыка",
         OPTIONS_MUSIC_VOLUME_TEXT_POS.x,
         OPTIONS_MUSIC_VOLUME_TEXT_POS.y,
         TTE_WHITE_PB
     );
     tte_printf(
-        "#{P:%d,%d; cx:0x%X000}Sound Volume",
+        "#{P:%d,%d; cx:0x%X000}Звук",
         OPTIONS_SOUND_VOLUME_TEXT_POS.x,
         OPTIONS_SOUND_VOLUME_TEXT_POS.y,
         TTE_WHITE_PB
     );
     tte_printf(
-        "#{P:%d,%d; cx:0x%X000}Save     Cancel",
-        OPTIONS_BACK_SAVE_TEXT_POS.x,
+        "#{P:%d,%d; cx:0x%X000}Сохр.",
+        OPTIONS_BACK_SAVE_TEXT_POS.x - 4,
+        OPTIONS_BACK_SAVE_TEXT_POS.y,
+        TTE_WHITE_PB
+    );
+    tte_printf(
+        "#{P:%d,%d; cx:0x%X000}Отмена",
+        OPTIONS_BACK_SAVE_TEXT_POS.x + 72,
         OPTIONS_BACK_SAVE_TEXT_POS.y,
         TTE_WHITE_PB
     );

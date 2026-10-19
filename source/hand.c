@@ -26,19 +26,19 @@ typedef struct
 
 static const HandValues HAND_BASE_VALUES[] = {
     {.chips = 0,   .mult = 0,  .display_name = NULL     }, // NONE
-    {.chips = 5,   .mult = 1,  .display_name = "Hi-Card"}, // HIGH_CARD
-    {.chips = 10,  .mult = 2,  .display_name = "Pair"   }, // PAIR
-    {.chips = 20,  .mult = 2,  .display_name = "2 Pair" }, // TWO_PAIR
-    {.chips = 30,  .mult = 3,  .display_name = "3 OAK"  }, // THREE_OF_A_KIND
-    {.chips = 30,  .mult = 4,  .display_name = "Strt"   }, // STRAIGHT
-    {.chips = 35,  .mult = 4,  .display_name = "Flush"  }, // FLUSH
-    {.chips = 40,  .mult = 4,  .display_name = "Full H" }, // FULL_HOUSE
-    {.chips = 60,  .mult = 7,  .display_name = "4 OAK"  }, // FOUR_OF_A_KIND
-    {.chips = 100, .mult = 8,  .display_name = "Strt F" }, // STRAIGHT_FLUSH
-    {.chips = 100, .mult = 8,  .display_name = "Royal F"}, // ROYAL_FLUSH
-    {.chips = 120, .mult = 12, .display_name = "5 OAK"  }, // FIVE_OF_A_KIND
-    {.chips = 140, .mult = 14, .display_name = "Flush H"}, // FLUSH_HOUSE
-    {.chips = 160, .mult = 16, .display_name = "Flush 5"}  // FLUSH_FIVE
+    {.chips = 5,   .mult = 1,  .display_name = "СТАРШАЯ"}, // HIGH_CARD
+    {.chips = 10,  .mult = 2,  .display_name = "ПАРА"   }, // PAIR
+    {.chips = 20,  .mult = 2,  .display_name = "2 ПАРЫ" }, // TWO_PAIR
+    {.chips = 30,  .mult = 3,  .display_name = "ТРОЙКА"  }, // THREE_OF_A_KIND
+    {.chips = 30,  .mult = 4,  .display_name = "СТРИТ"   }, // STRAIGHT
+    {.chips = 35,  .mult = 4,  .display_name = "ФЛЕШ"  }, // FLUSH
+    {.chips = 40,  .mult = 4,  .display_name = "ФУЛХАУС" }, // FULL_HOUSE
+    {.chips = 60,  .mult = 7,  .display_name = "КАРЕ"  }, // FOUR_OF_A_KIND
+    {.chips = 100, .mult = 8,  .display_name = "СТРИТ-Ф" }, // STRAIGHT_FLUSH
+    {.chips = 100, .mult = 8,  .display_name = "РОЯЛ-ФЛ"}, // ROYAL_FLUSH
+    {.chips = 120, .mult = 12, .display_name = "ПЯТЕРКА"  }, // FIVE_OF_A_KIND
+    {.chips = 140, .mult = 14, .display_name = "ФЛ-ХАУС"}, // FLUSH_HOUSE
+    {.chips = 160, .mult = 16, .display_name = "ФЛЕШ 5"}  // FLUSH_FIVE
 };
 
 // clang-format off

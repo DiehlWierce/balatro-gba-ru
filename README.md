@@ -1,3 +1,42 @@
+# Balatro GBA — русская версия
+
+Неофициальная русская локализация фанатского порта **Balatro для Game Boy Advance**
+([GBALATRO/balatro-gba](https://github.com/GBALATRO/balatro-gba), база — релиз **v0.2.3**).
+Скачать готовый ром: страница **Releases** этого репозитория.
+
+<p>
+<img src="docs/ru/menu.png" width="360"> <img src="docs/ru/deck.png" width="360">
+<img src="docs/ru/blind-select.png" width="360"> <img src="docs/ru/game.png" width="360">
+<img src="docs/ru/shop.png" width="360"> <img src="docs/ru/joker-desc.png" width="360">
+<img src="docs/ru/options.png" width="360"> <img src="docs/ru/game-over.png" width="360">
+</p>
+
+## Что переведено
+- весь интерфейс: меню, опции, выбор колоды, блайнды, раунд, конец раунда, лавка (магазин), экран победы и поражения;
+- названия комбинаций, колод и всех джокеров, описания джокеров, редкость;
+- заставка с предупреждением; надписи, нарисованные прямо в графике, перерисованы.
+
+Из-за размера тайла 8×8 часть подписей сокращена (МАЛ БЛ., СТРИТ-Ф, РОЯЛ-ФЛ, ФЛ-ХАУС, МАСТ, Круп). В графике джокеров остались английские слова на самих картинках (PAIR и т. п.).
+
+## Как устроено
+- шрифт расширен до 224 символов (кодировка CP1251), файл `font/gbalatro_sys8.png`;
+- в libtonc отключено декодирование UTF-8 для байтов ≥ 0x80, строки собираются с `-fexec-charset=CP1251`;
+- карта афинного фона перенесена из области шрифта (`AFFINE_BG_SBB 2 → 4`), иначе символы Ё/ё портились;
+- подписи в PNG перерисованы скриптами из `ru-tools/` (справочно, пути внутри скриптов привязаны к моей рабочей папке).
+
+Сборка — как в оригинальном проекте (см. English README ниже).
+
+## Важно
+Проект неофициальный и **не связан с LocalThunk и Playstack**. Покупайте оригинальную игру Balatro.
+
+---
+
+# English
+
+This branch (`ru-translation`) is a Russian localization of the Balatro GBA fan port (based on release v0.2.3). The original project README follows.
+
+---
+
 # Balatro-GBA
 
 [![Build Status](https://img.shields.io/github/actions/workflow/status/cellos51/balatro-gba/build_ci_workflow.yml?style=flat&logo=github&branch=main&label=Builds&labelColor=gray&color=default&maxAge=7200)](https://github.com/cellos51/balatro-gba/actions)

@@ -101,7 +101,7 @@ static const int SPRITESHEET_IDX_TO_STARTING_JOKER_ID[] = {
 
 // Lookup table of Joker Rarity strings. Used to display at the bottom of the description screen.
 static const char* JOKER_RARITY_STRINGS_LUT[MAX_RARITIES] = {
-    "Common", "Uncommon", "Rare", "Legendary"
+    "Обычный", "Необычный", "Редкий", "Легендарный"
 };
 // clang-format on
 

@@ -32,7 +32,7 @@
 #define MAIN_BG_CBB   1
 #define TTE_SBB       30
 #define TTE_CBB       0
-#define AFFINE_BG_SBB 2
+#define AFFINE_BG_SBB 4
 #define AFFINE_BG_CBB 2
 #define PAL_ROW_LEN   16
 #define NUM_PALETTES  16
