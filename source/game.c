@@ -440,9 +440,11 @@ int game_get_discards_per_round(void)
 int game_get_hand_size(void)
 {
     // The hand arrays hold MAX_HAND_SIZE cards: Jokers, Vouchers and Tags can't go past it
-    int hand_size =
-        joker_economy_limit(g_game_vars.base_hand_size, game_get_joker_bonus().hand_size, 1);
-    return hand_size > MAX_HAND_SIZE ? MAX_HAND_SIZE : hand_size;
+    return joker_economy_hand_size(
+        g_game_vars.base_hand_size,
+        game_get_joker_bonus().hand_size,
+        MAX_HAND_SIZE
+    );
 }
 
 bool game_can_afford(int price)

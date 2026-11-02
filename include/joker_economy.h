@@ -105,6 +105,15 @@ static inline int joker_economy_limit(int base, int bonus, int min_value)
 }
 
 /**
+ * @brief Hand size with the Joker bonus: at least 1 card, at most @p max_size (the hand arrays)
+ */
+static inline int joker_economy_hand_size(int base, int bonus, int max_size)
+{
+    int size = joker_economy_limit(base, bonus, 1);
+    return size > max_size ? max_size : size;
+}
+
+/**
  * @brief Interest paid at the end of the round
  *
  * Every To the Moon adds $1 to the $1 per $5, and raises the cap by the same factor.
