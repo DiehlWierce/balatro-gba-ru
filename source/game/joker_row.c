@@ -1,5 +1,6 @@
 #include "game/joker_row.h"
 
+#include "blind_effects.h"
 #include "consumable.h"
 #include "game.h"
 #include "game_variables.h"
@@ -109,6 +110,7 @@ static inline void sell_joker(int joker_idx)
     }
 
     Item* joker_object = (Item*)list_get_at_idx(owned_jokers_list, joker_idx);
+    blind_effects_on_joker_removed((JokerObject*)joker_object, true);
     item_sell(joker_object);
 
     remove_owned_joker(joker_idx);

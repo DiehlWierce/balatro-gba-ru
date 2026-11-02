@@ -2,6 +2,8 @@
 # usage: run.py scenarios/boss_round.txt OUT -D boss=<BlindType number>
 #   Hook 2, Ox 3, Wall 5, Arm 7, Psychic 10, Water 12, Manacle 14, Eye 15, Mouth 16,
 #   Serpent 18, Needle 20, Tooth 22, Flint 23, Vessel 27
+#   Visual ones: House 4, Wheel 6, Club 8, Fish 9, Goad 11, Window 13, Plant 17, Head 21,
+#   Mark 24, Bell 29 (Pillar 19: boss_pillar.txt; Acorn 25, Leaf 26, Heart 28: boss_jokers.txt)
 # Seed GBARU1, the forced Boss is shown on the Blind Select screen, then its round starts
 # directly. Plays 1 card, then 5 cards, discards 1 card, plays 1 card, with screenshots and values.
 

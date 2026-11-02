@@ -275,4 +275,15 @@ Item* joker_object_roll_new(enum RngSequence key);
 
 Sprite* joker_object_get_sprite(JokerObject* joker_object);
 
+/**
+ * @brief Shows the Joker face down (back of the run's Deck) or face up again (Amber Acorn).
+ *        A face down Joker still works.
+ */
+void joker_object_set_face_down(JokerObject* joker_object, bool face_down);
+
+/**
+ * @brief Gives the Joker a blurred "disabled" look, or removes it (Crimson Heart).
+ */
+void joker_object_set_disabled_look(JokerObject* joker_object, bool disabled);
+
 #endif // JOKER_H

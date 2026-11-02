@@ -4,6 +4,7 @@
 #include "affine_background_gfx.h"
 #include "audio_utils.h"
 #include "background_main_menu_gfx.h"
+#include "blind_effects.h"
 #include "button.h"
 #include "card.h"
 #include "consumable.h"
@@ -458,6 +459,7 @@ void remove_owned_joker(int owned_joker_idx)
 {
     // TODO: Extract to on_joker_removed() callback
     JokerObject* joker_object = list_get_at_idx(&s_owned_jokers_list, owned_joker_idx);
+    blind_effects_on_joker_removed(joker_object, false);
     // In case the player gets multiple Four Fingers Jokers,
     // and only reset the size when all of them have been removed
     if (joker_object->joker->id == FOUR_FINGERS_JOKER_ID)
