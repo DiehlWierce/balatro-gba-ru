@@ -60,6 +60,11 @@ void round_change_background_selecting(void);
 void round_change_background_playing(void);
 
 /**
+ * @brief Keeps the selection on a card of the hand after cards left it (Tarots).
+ */
+void round_fix_hand_selection(void);
+
+/**
  * @brief Round state initialization
  */
 void round_on_init(void);

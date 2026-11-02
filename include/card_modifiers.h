@@ -66,8 +66,10 @@ bool card_modifiers_on_round_won(Card* card, int last_hand_type, FIXED x, FIXED 
 /**
  * @brief Applies the effects of a discarded card (Purple seal: creates a Tarot).
  *
+ * @param x, y screen position of the card, where a created Tarot appears
+ *
  * @return true if the card had an effect
  */
-bool card_modifiers_on_discarded(Card* card);
+bool card_modifiers_on_discarded(Card* card, FIXED x, FIXED y);
 
 #endif // CARD_MODIFIERS_H

@@ -4,7 +4,7 @@
  * @brief Consumable cards (Planets, Tarots, Spectrals): Item implementation, owned consumables
  *        row, use and sell.
  *
- * Only Planets are implemented. Tarot and Spectral types are declared for the next waves.
+ * Planets and Tarots are implemented. Spectral cards are declared for the next waves.
  */
 #ifndef CONSUMABLE_H
 #define CONSUMABLE_H
@@ -13,6 +13,7 @@
 #include "item.h"
 #include "list.h"
 #include "random.h"
+#include "tarot_rules.h"
 
 #include <tonc.h>
 
@@ -23,11 +24,12 @@
 #define MAX_ACTIVE_CONSUMABLES 6
 
 #define PLANET_BUY_PRICE 3
+#define TAROT_BUY_PRICE  3
 
 enum ConsumableType
 {
     CONSUMABLE_TYPE_PLANET,
-    CONSUMABLE_TYPE_TAROT,    // Not implemented yet
+    CONSUMABLE_TYPE_TAROT,    // enum TarotType, see tarot_rules.h
     CONSUMABLE_TYPE_SPECTRAL, // Not implemented yet
     CONSUMABLE_TYPE_MAX
 };
@@ -59,7 +61,7 @@ typedef struct ConsumableObject
 {
     Item;
     u8 consumable_type; // enum ConsumableType
-    u8 id;              // enum PlanetType for Planets
+    u8 id;              // enum PlanetType for Planets, enum TarotType for Tarots
     s16 layer;          // Sprite layer within CONSUMABLE_SPRITE
 } ConsumableObject;
 
@@ -128,6 +130,37 @@ bool planet_is_rollable(enum PlanetType planet);
  * @return the Planet, PLANET_TYPE_MAX if none is rollable
  */
 enum PlanetType planet_roll(enum RngSequence key);
+
+/**
+ * @brief Rolls a random rollable Tarot.
+ *
+ * @return the Tarot, TAROT_TYPE_MAX if none is rollable
+ */
+enum TarotType tarot_roll(enum RngSequence key);
+
+/**
+ * @brief Whether the Tarot can be used now with the cards selected in the hand.
+ */
+bool tarot_can_use_now(enum TarotType tarot);
+
+/**
+ * @brief Creates a consumable and puts it in the owned row at once, if a slot is free.
+ *
+ * @param x, y screen position where it appears
+ *
+ * @return true if it was created
+ */
+bool consumable_create_owned(enum ConsumableType type, int id, FIXED x, FIXED y);
+
+/**
+ * @brief Creates a random Tarot in the owned row, if a slot is free (Purple seal).
+ */
+bool consumable_create_random_tarot(enum RngSequence key, FIXED x, FIXED y);
+
+/**
+ * @brief Forgets the last used consumable (The Fool), when a run starts.
+ */
+void consumables_forget_last_used(void);
 
 // Item API implementation, see item_funcs.c
 

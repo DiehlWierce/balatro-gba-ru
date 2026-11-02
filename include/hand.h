@@ -234,6 +234,14 @@ void reorder_card_sprites_layers(void);
  */
 void sort_cards(void);
 
+/**
+ * @brief Destroys the selected cards of the hand for good (The Hanged Man): they leave the deck.
+ *        The hand closes the gaps and nothing stays selected.
+ *
+ * @return the number of destroyed cards
+ */
+int hand_destroy_selected_cards(void);
+
 // Hand Contents Analysis
 
 /**

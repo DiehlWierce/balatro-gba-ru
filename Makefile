@@ -68,6 +68,12 @@ ifneq ($(strip $(DEBUG_BOSS)),)
 CFLAGS += -DDEBUG_FORCE_BOSS=$(DEBUG_BOSS)
 endif
 
+# Debug: lets the emulator poke a TarotType number into g_debug_give_tarot to get that Tarot.
+# Run `touch source/consumable.c` when changing it.
+ifneq ($(strip $(DEBUG_TAROT)),)
+CFLAGS += -DDEBUG_GIVE_TAROT
+endif
+
 # Debug: the two top Shop slots always roll these Joker IDs, e.g. make DEBUG_JOKER0=53 DEBUG_JOKER1=54.
 # Run `touch source/joker.c` when changing them.
 ifneq ($(strip $(DEBUG_JOKER0)),)

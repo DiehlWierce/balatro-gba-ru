@@ -1,0 +1,69 @@
+# Tarots, needs a debug build: touch source/consumable.c && make DEBUG_TAROT=1
+# Seed GBARU1, Small Blind round. Tarots are given with g_debug_give_tarot (TarotType numbers:
+# Fool 0, Hermit 9, Strength 11, Hanged Man 12, Death 13, Star 17, Tower 16).
+# Strength on 2 selected cards, then Death on 2 selected cards, screenshots in between.
+
+wait 460
+press START
+wait 60
+press A
+wait 60
+pokestr {sym:s_seed_str} GBARU1
+poke8 {sym:use_seed} 1
+press DOWN
+wait 10
+press A
+wait 120
+press A
+wait 240
+shot 00_round
+
+poke32 {sym:g_debug_give_tarot} 11
+wait 30
+poke32 {sym:g_debug_give_tarot} 13
+wait 90
+shot 01_two_tarots
+
+# Using without selected cards does nothing (the Tarot shakes)
+press UP
+wait 20
+press A
+wait 60
+shot 02_no_targets
+
+# Select the 2 leftmost cards, use Strength (first in the owned row): ranks go up by one
+press DOWN
+wait 20
+press LEFT
+press LEFT
+press LEFT
+press LEFT
+press LEFT
+press LEFT
+press LEFT
+wait 10
+press A
+press RIGHT
+press A
+wait 20
+shot 03_two_selected
+press UP
+wait 20
+press A
+wait 90
+shot 04_strength_used
+
+# Death: the left of the 2 selected cards becomes a copy of the right one
+# (using a Tarot moved the selection down to the hand, on the leftmost card): K and J become J, J
+press RIGHT
+press RIGHT
+press A
+press RIGHT
+press A
+wait 20
+shot 05_two_selected_for_death
+press UP
+wait 20
+press A
+wait 90
+shot 06_death_used

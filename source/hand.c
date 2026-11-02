@@ -393,6 +393,36 @@ void sort_cards(void)
     reorder_card_sprites_layers();
 }
 
+int hand_destroy_selected_cards(void)
+{
+    int nb_destroyed = 0;
+    int kept = 0;
+
+    for (int i = 0; i <= s_hand.hand_top; i++)
+    {
+        CardObject* card_object = s_hand.cards[i];
+        if (card_object != NULL && card_object_is_selected(card_object))
+        {
+            card_destroy(&card_object->card);
+            card_object_destroy(&card_object);
+            nb_destroyed++;
+        }
+        else
+        {
+            s_hand.cards[kept++] = card_object;
+        }
+    }
+
+    for (int i = kept; i <= s_hand.hand_top; i++)
+        s_hand.cards[i] = NULL;
+
+    s_hand.hand_top = kept - 1;
+    s_hand.hand_selections = 0;
+    reorder_card_sprites_layers();
+    compute_hand_value_info();
+    return nb_destroyed;
+}
+
 void hand_change_sort(bool to_sort_by_suit)
 {
     if (to_sort_by_suit != s_hand.sort_by_suit)

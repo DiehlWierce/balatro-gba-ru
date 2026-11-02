@@ -140,6 +140,11 @@ static void consumable_on_key_transit(
         selection_grid_move_selection_vert(selection_grid, SCREEN_DOWN);
         consumable_object_use(consumable_object);
     }
+    else if (key_released(KEY_CONFIRM) && consumables_can_be_used_now())
+    {
+        // Tarots need the right cards selected: show that it can't be used
+        sprite_object_shake((SpriteObject*)consumable_object, SFX_CARD_SELECT);
+    }
     else if (key_hit(KEY_SELL))
     {
         selection_grid_move_selection_vert(selection_grid, SCREEN_DOWN);
