@@ -269,6 +269,17 @@ static void test_steel_card_held_rounding(void)
     g_game_vars.mult = 0;
     assert(card_modifiers_on_held(&card));
     assert(g_game_vars.mult == 0);
+
+    // Near UINT32_MAX the mult saturates instead of wrapping around to 0
+    g_game_vars.mult = UINT32_MAX;
+    assert(card_modifiers_on_held(&card));
+    assert(g_game_vars.mult == UINT32_MAX);
+    g_game_vars.mult = UINT32_MAX - 1;
+    assert(card_modifiers_on_held(&card));
+    assert(g_game_vars.mult == UINT32_MAX);
+    g_game_vars.mult = 2863311530u; // 3 * mult / 2 just above UINT32_MAX
+    assert(card_modifiers_on_held(&card));
+    assert(g_game_vars.mult == UINT32_MAX);
 }
 
 static void test_non_steel_card_held_is_inert(void)
