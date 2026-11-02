@@ -17,7 +17,8 @@ void splash_screen_on_init(void)
 
     tte_printf("#{P:88,8; cx:0x%X000}ВНИМАНИЕ", TTE_WHITE_PB);
     tte_printf(
-        "#{P:8,24; cx:0x%X000}Этот проект НЕ одобрен \n и не связан с Playstack \n и LocalThunk.\n\n "
+        "#{P:8,24; cx:0x%X000}Этот проект НЕ одобрен \n и не связан с Playstack \n и "
+        "LocalThunk.\n\n "
         "Если вы заплатили за это, \n вас обманули. Вы должны \n потребовать возврат \n "
         "СРАЗУ ЖЕ. \n\n Единственный официальный \n источник игры: \n\n "
         "'github.com/\n  GBALATRO/balatro-gba'",

@@ -24,13 +24,10 @@ static const char DECK_NAMES[DECK_TYPE_MAX][DECK_NAME_LENGTH] = {
     "  Расписная  "
 };
 
-
-
 void print_deck_name(enum DeckType deck, BG_POINT pos)
 {
     tte_printf("#{P:%d,%d; cx:0x%X000}%s", pos.x, pos.y, TTE_WHITE_PB, DECK_NAMES[deck]);
 }
-
 
 /**
  * @brief Description lines of every Deck: 5 lines of 13 characters, each made of colored segments.
@@ -41,51 +38,51 @@ typedef struct
     const char* text;
 } DeckDescSegment;
 
-#define SEGS(...) (const DeckDescSegment[]){__VA_ARGS__, {0, NULL}}
+#define SEGS(...)             \
+    (const DeckDescSegment[]) \
+    {                         \
+        __VA_ARGS__,          \
+        {                     \
+            0, NULL           \
+        }                     \
+    }
 
 static const DeckDescSegment* const DECK_DESCRIPTIONS[DECK_TYPE_MAX][5] = {
     {
-        NULL,
-        SEGS({TTE_RED_PB, "+1 "}, {TTE_BLACK_PB, "сброс"}),
-        SEGS({TTE_BLACK_PB, "каждый раунд"}),
-        NULL,
-        NULL,
-    },
+     NULL, SEGS({TTE_RED_PB, "+1 "}, {TTE_BLACK_PB, "сброс"}),
+     SEGS({TTE_BLACK_PB, "каждый раунд"}),
+     NULL, NULL,
+     },
     {
-        NULL,
-        SEGS({TTE_BLUE_PB, "+1 "}, {TTE_BLACK_PB, "рука"}),
-        SEGS({TTE_BLACK_PB, "каждый раунд"}),
-        NULL,
-        NULL,
-    },
+     NULL, SEGS({TTE_BLUE_PB, "+1 "}, {TTE_BLACK_PB, "рука"}),
+     SEGS({TTE_BLACK_PB, "каждый раунд"}),
+     NULL, NULL,
+     },
     {
-        NULL,
-        SEGS({TTE_BLACK_PB, "Старт с"}),
-        SEGS({TTE_YELLOW_PB, "лишними $10"}),
-        NULL,
-        NULL,
-    },
+     NULL, SEGS({TTE_BLACK_PB, "Старт с"}),
+     SEGS({TTE_YELLOW_PB, "лишними $10"}),
+     NULL, NULL,
+     },
     {
-        SEGS({TTE_BLACK_PB, "Конец раунда:"}),
-        NULL,
-        SEGS({TTE_BLACK_PB, "-"}, {TTE_YELLOW_PB, "$2 "}, {TTE_BLACK_PB, "за "}, {TTE_RED_PB, "руку"}),
-        SEGS({TTE_BLACK_PB, "-"}, {TTE_YELLOW_PB, "$1 "}, {TTE_BLACK_PB, "за "}, {TTE_BLUE_PB, "сброс"}),
-        SEGS({TTE_BLACK_PB, "-Нет "}, {TTE_YELLOW_PB, "процента"}),
-    },
+     SEGS({TTE_BLACK_PB, "Конец раунда:"}),
+     NULL, SEGS({TTE_BLACK_PB, "-"}, {TTE_YELLOW_PB, "$2 "}, {TTE_BLACK_PB, "за "}, {TTE_RED_PB, "руку"}),
+     SEGS(
+        {TTE_BLACK_PB, "-"},
+     {TTE_YELLOW_PB, "$1 "},
+     {TTE_BLACK_PB, "за "},
+     {TTE_BLUE_PB, "сброс"}
+    ), SEGS({TTE_BLACK_PB, "-Нет "}, {TTE_YELLOW_PB, "процента"}),
+     },
     {
-        SEGS({TTE_YELLOW_PB, "+1 "}, {TTE_BLACK_PB, "слот Джок."}),
-        NULL,
-        SEGS({TTE_BLUE_PB, "-1 "}, {TTE_BLACK_PB, "рука"}),
-        SEGS({TTE_BLACK_PB, "каждый раунд"}),
-        NULL,
-    },
+     SEGS({TTE_YELLOW_PB, "+1 "}, {TTE_BLACK_PB, "слот Джок."}),
+     NULL, SEGS({TTE_BLUE_PB, "-1 "}, {TTE_BLACK_PB, "рука"}),
+     SEGS({TTE_BLACK_PB, "каждый раунд"}),
+     NULL, },
     {
-        NULL,
-        SEGS({TTE_YELLOW_PB, "+2 "}, {TTE_BLACK_PB, "к размеру"}),
-        SEGS({TTE_BLACK_PB, "руки"}),
-        SEGS({TTE_RED_PB, "-1 "}, {TTE_BLACK_PB, "слот Джок."}),
-        NULL,
-    },
+     NULL, SEGS({TTE_YELLOW_PB, "+2 "}, {TTE_BLACK_PB, "к размеру"}),
+     SEGS({TTE_BLACK_PB, "руки"}),
+     SEGS({TTE_RED_PB, "-1 "}, {TTE_BLACK_PB, "слот Джок."}),
+     NULL, },
 };
 
 void print_deck_description(enum DeckType deck, BG_POINT pos)
