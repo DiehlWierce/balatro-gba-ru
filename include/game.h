@@ -13,7 +13,7 @@
 
 // Capacities for arrays and screen layouts. The limits during a run are
 // g_game_vars.joker_slots and g_game_vars.shop_slots.
-#define MAX_JOKERS_HELD_SIZE 5 // This doesn't account for negatives right now.
+#define MAX_JOKERS_HELD_SIZE 6 // This doesn't account for negatives right now.
 #define MAX_SHOP_ITEMS       2
 
 // The maximum interest is g_game_vars.interest_cap

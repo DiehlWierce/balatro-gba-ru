@@ -146,6 +146,9 @@ void card_object_set_sprite(CardObject* card_object, s16 layer)
 
 void card_object_set_sprite_face_down(CardObject* card_object, enum DeckType deck, s16 layer)
 {
+    // Free the current sprite first: the new one uses the same OAM slot
+    sprite_object_set_sprite((SpriteObject*)card_object, NULL);
+
     int tile_index = sprite_get_tid(DECK_SPRITE, layer);
     memcpy32(
         &tile_mem[TILE_MEM_OBJ_CHARBLOCK0_IDX][tile_index],

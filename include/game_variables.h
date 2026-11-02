@@ -25,18 +25,19 @@
 #define DEFAULT_MUSIC_VOLUME VOLUME_OPTION_MAX
 #define DEFAULT_SOUND_VOLUME VOLUME_OPTION_MAX
 
-// Default per-round hands and discards of a run, before Deck/Voucher effects.
-// NOTE: MAX_DISCARDS still includes the +1 discard of the Red Deck (the only Deck for now).
+// Default per-round hands and discards of a run, before Deck/Voucher effects
 #define MAX_HANDS    4
-#define MAX_DISCARDS 4
+#define MAX_DISCARDS 3
 
 #define DEFAULT_HAND_SIZE 8
 
 // Default run limits, changed by Decks, Vouchers and Stakes
-#define DEFAULT_JOKER_SLOTS      5 // Must not exceed MAX_JOKERS_HELD_SIZE (game.h)
-#define DEFAULT_CONSUMABLE_SLOTS 2
-#define DEFAULT_SHOP_SLOTS       2 // Must not exceed MAX_SHOP_ITEMS (game.h)
-#define DEFAULT_INTEREST_CAP     5 // Maximum interest in $ at the end of a round
+#define DEFAULT_JOKER_SLOTS       5 // Must not exceed MAX_JOKERS_HELD_SIZE (game.h)
+#define DEFAULT_CONSUMABLE_SLOTS  2
+#define DEFAULT_SHOP_SLOTS        2 // Must not exceed MAX_SHOP_ITEMS (game.h)
+#define DEFAULT_INTEREST_CAP      5 // Maximum interest in $ at the end of a round
+#define DEFAULT_MONEY_PER_HAND    1 // $ per remaining hand at the end of a round
+#define DEFAULT_MONEY_PER_DISCARD 0 // $ per remaining discard at the end of a round
 
 #define DEFAULT_HAND_LEVEL 1
 
@@ -77,8 +78,10 @@ typedef struct
     s32 base_hand_size;     // Hand size restored at the end of each round
     s32 joker_slots;
     s32 consumable_slots;
-    s32 shop_slots;   // Number of items in the top row of the Shop
-    s32 interest_cap; // Maximum interest in $ at the end of a round
+    s32 shop_slots;        // Number of items in the top row of the Shop
+    s32 interest_cap;      // Maximum interest in $ at the end of a round
+    s32 money_per_hand;    // $ per remaining hand at the end of a round
+    s32 money_per_discard; // $ per remaining discard at the end of a round
     enum Stake stake;
 
     // Level of each poker hand, indexed by `hand_type - 1` like nb_played_hands
