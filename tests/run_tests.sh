@@ -22,3 +22,5 @@ run_test pool
 run_test util
 run_test hand_levels
 run_test card_rules
+run_test card_modifiers
+run_test voucher
