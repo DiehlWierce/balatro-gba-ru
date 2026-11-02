@@ -1,0 +1,97 @@
+# A8 batch 3: Stone Joker and Marble Joker forced into the Shop, needs: make DEBUG_JOKER0=88 DEBUG_JOKER1=89 (touch source/joker.c first).
+# Seed GBARU1: win the Small Blind (score forced), buy both with $500, descriptions, then the Big Blind:
+# Marble adds a Stone card to the deck, Stone Joker gives +25 chips for it. Play 1 hand of the 5 leftmost cards.
+
+wait 460
+press START
+wait 60
+press A
+wait 60
+pokestr {sym:s_seed_str} GBARU1
+poke8 {sym:use_seed} 1
+press DOWN
+wait 10
+press A
+wait 120
+press A
+wait 180
+poke32 {gv:score} 100000
+press A
+press L
+wait 1100
+press A
+wait 200
+poke32 {gv:money} 500
+shot 00_shop
+
+# Buy both Shop Jokers
+press RIGHT
+wait 20
+hold B
+wait 90
+shot 01_desc_first
+release B
+wait 20
+press A
+wait 60
+press RIGHT
+wait 20
+hold B
+wait 90
+shot 02_desc_second
+release B
+wait 20
+press A
+wait 60
+shot 03_bought
+
+# Next round, Big Blind
+press DOWN
+wait 20
+press LEFT
+wait 20
+press UP
+wait 20
+press A
+wait 200
+press RIGHT
+wait 20
+press A
+wait 200
+shot 04_round
+
+# Play one hand of the 5 leftmost cards, shots while it is scored
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+wait 10
+shot 05_selected
+press L
+wait 60
+shot 10_scoring
+wait 60
+shot 11_scoring
+wait 60
+shot 12_scoring
+wait 60
+shot 13_scoring
+wait 60
+shot 14_scoring
+wait 60
+shot 15_scoring
+wait 60
+shot 16_scoring
+wait 60
+shot 17_scoring
+wait 60
+shot 18_scoring
+wait 60
+shot 19_scoring
+wait 500
+shot 30_after_hand
