@@ -68,6 +68,15 @@ ifneq ($(strip $(DEBUG_BOSS)),)
 CFLAGS += -DDEBUG_FORCE_BOSS=$(DEBUG_BOSS)
 endif
 
+# Debug: the two top Shop slots always roll these Joker IDs, e.g. make DEBUG_JOKER0=53 DEBUG_JOKER1=54.
+# Run `touch source/joker.c` when changing them.
+ifneq ($(strip $(DEBUG_JOKER0)),)
+CFLAGS += -DTEST_JOKER_ID0=$(DEBUG_JOKER0)
+endif
+ifneq ($(strip $(DEBUG_JOKER1)),)
+CFLAGS += -DTEST_JOKER_ID1=$(DEBUG_JOKER1)
+endif
+
 CXXFLAGS	:=	$(CFLAGS) -fno-rtti -fno-exceptions
 
 ASFLAGS	:=	-g $(ARCH)
