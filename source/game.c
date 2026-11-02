@@ -35,6 +35,7 @@
 #include "timer.h"
 #include "tonc_memdef.h"
 #include "util.h"
+#include "voucher.h"
 
 #include <maxmod.h>
 #include <stdint.h>
@@ -195,6 +196,7 @@ void game_init()
     s_discarded_items_list = list_init();
     s_expired_jokers_list = list_init();
     consumables_init();
+    vouchers_reset();
     // TODO: Move this to an initialization of the play scoring states
 
     shop_reset();
@@ -303,12 +305,13 @@ static inline void discarded_items_update_loop(void)
 static inline void held_jokers_update_loop(void)
 {
     static const int SPACING_LUT[MAX_JOKERS_HELD_SIZE][MAX_JOKERS_HELD_SIZE] = {
-        {0,  0,   0,   0,   0,   0  },
-        {13, -13, 0,   0,   0,   0  },
-        {26, 0,   -26, 0,   0,   0  },
-        {39, 13,  -13, -39, 0,   0  },
-        {40, 20,  0,   -20, -40, 0  },
-        {45, 27,  9,   -9,  -27, -45}
+        {0,  0,   0,   0,   0,   0,   0  },
+        {13, -13, 0,   0,   0,   0,   0  },
+        {26, 0,   -26, 0,   0,   0,   0  },
+        {39, 13,  -13, -39, 0,   0,   0  },
+        {40, 20,  0,   -20, -40, 0,   0  },
+        {45, 27,  9,   -9,  -27, -45, 0  },
+        {45, 30,  15,  0,   -15, -30, -45}
     };
 
     FIXED hand_x = int2fx(HELD_JOKERS_POS.x);
@@ -585,7 +588,8 @@ bool card_is_face(Card* card)
 {
     // Card is a face card, or Pareidolia is present
     return (
-        card->rank == JACK || card->rank == QUEEN || card->rank == KING ||
+        card_effective_rank(card) == JACK || card_effective_rank(card) == QUEEN ||
+        card_effective_rank(card) == KING ||
         is_joker_owned(PAREIDOLIA_JOKER_ID)
     );
 }

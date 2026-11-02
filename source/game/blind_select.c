@@ -17,6 +17,7 @@
 #include "state_machine.h"
 #include "timer.h"
 #include "util.h"
+#include "voucher.h"
 
 #include <maxmod.h>
 
@@ -305,6 +306,17 @@ void increment_blind(enum BlindState increment_reason)
 
 static void blind_select_handle_input(void)
 {
+    // Director's Cut / Retcon: R pays to reroll the Boss Blind before facing it
+    if (key_hit(KEY_BOSS_REROLL) && voucher_can_reroll_boss() &&
+        g_game_vars.money >= VOUCHER_BOSS_REROLL_PRICE)
+    {
+        g_game_vars.money -= VOUCHER_BOSS_REROLL_PRICE;
+        display_money();
+        voucher_on_boss_rerolled();
+        blind_select_reroll_boss_from_menu();
+        return;
+    }
+
     selection_grid_process_input(&blind_select_selection_grid);
 }
 

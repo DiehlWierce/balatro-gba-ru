@@ -196,13 +196,13 @@ static bool boss_debuffs_card(enum BlindType blind, Card* card)
     switch (blind)
     {
         case BLIND_TYPE_CLUB:
-            return card->suit == CLUBS;
+            return card_has_suit(card, CLUBS);
         case BLIND_TYPE_GOAD:
-            return card->suit == SPADES;
+            return card_has_suit(card, SPADES);
         case BLIND_TYPE_WINDOW:
-            return card->suit == DIAMONDS;
+            return card_has_suit(card, DIAMONDS);
         case BLIND_TYPE_HEAD:
-            return card->suit == HEARTS;
+            return card_has_suit(card, HEARTS);
         case BLIND_TYPE_PLANT:
             return card_is_face(card);
         case BLIND_TYPE_PILLAR:

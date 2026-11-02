@@ -5,6 +5,7 @@ usage: run.py SCENARIO OUTDIR [--repo DIR] [--gbarun PATH] [-D NAME=VALUE ...]
 
 Placeholders in the scenario are replaced before running:
   {sym:NAME}      address of the ELF symbol NAME (static symbols too, e.g. s_seed_str)
+  {sym:NAME+N}    the same address plus N bytes (decimal)
   {gv:FIELD}      address of g_game_vars.FIELD (e.g. {gv:score}, {gv:money})
   {def:NAME}      VALUE given with -D NAME=VALUE (e.g. -D boss=20)
 
@@ -102,7 +103,8 @@ def main():
             offsets = game_vars_offsets(repo, fields)
             text = re.sub(r'\{gv:(\w+)\}',
                           lambda m: hex(syms['g_game_vars'] + offsets[m.group(1)]), text)
-        text = re.sub(r'\{sym:(\w+)\}', lambda m: hex(syms[m.group(1)]), text)
+        text = re.sub(r'\{sym:(\w+)(?:\+(\d+))?\}',
+                      lambda m: hex(syms[m.group(1)] + int(m.group(2) or 0)), text)
 
     os.makedirs(args.outdir, exist_ok=True)
     resolved = os.path.join(args.outdir, 'scenario.txt')

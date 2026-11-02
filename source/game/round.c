@@ -9,6 +9,7 @@
 #include "background_gfx.h"
 #include "blind_effects.h"
 #include "button.h"
+#include "card_modifiers.h"
 #include "game.h"
 #include "game/common_ui.h"
 #include "game/hand_levels_screen.h"
@@ -225,6 +226,8 @@ static int s_discard_top = -1;
 // Keeping track of cards scored
 static int s_scored_card_index = 0;
 static bool s_retrigger = false;
+static bool s_red_seal_retriggered = false; // The current scored card was retriggered by its seal
+static enum HandType s_last_played_hand_type = NONE; // For the Blue seals at the end of the round
 
 // Keeping track of what Jokers are scored at each step
 static ListItr s_joker_scored_itr;
@@ -340,8 +343,7 @@ static void get_played_distribution(u8 ranks_out[NUM_RANKS], u8 suits_out[NUM_SU
          */
         if (!s_played_hand[i])
             continue;
-        ranks_out[s_played_hand[i]->card->rank]++;
-        suits_out[s_played_hand[i]->card->suit]++;
+        card_add_to_distribution(s_played_hand[i]->card, ranks_out, suits_out);
     }
 }
 
@@ -473,6 +475,14 @@ static inline void round_execute_discard(void)
 
     BlindEventData blind_event_data = {.nb_cards = hand_get_nb_selected_cards()};
     blind_effects_trigger(BLIND_EVENT_ON_DISCARD, &blind_event_data);
+
+    // Seals of the discarded cards (Purple)
+    CardObject** hand = get_hand_array();
+    for (int i = 0; i <= get_hand_top(); i++)
+    {
+        if (card_object_is_selected(hand[i]) && card_modifiers_on_discarded(hand[i]->card))
+            card_object_shake(hand[i], SFX_CARD_SELECT);
+    }
 }
 
 /**
@@ -519,6 +529,7 @@ static inline void round_execute_play_hand(void)
     display_hands();
 
     g_game_vars.nb_played_hands[get_hand_type() - 1]++;
+    s_last_played_hand_type = get_hand_type();
 
     // Remember the Ante the played cards were played in (The Pillar)
     CardObject** hand = get_hand_array();
@@ -947,8 +958,14 @@ static inline void select_four_of_a_kind_cards_in_played_hand(void)
 
         for (int i = 0; i <= played_size; i++)
         {
-            if (s_played_hand[i]->card->rank != s_played_hand[(i + 1) % played_size]->card->rank &&
-                s_played_hand[i]->card->rank != s_played_hand[(i + 2) % played_size]->card->rank)
+            if (!cards_same_rank(
+                    s_played_hand[i]->card,
+                    s_played_hand[(i + 1) % played_size]->card
+                ) &&
+                !cards_same_rank(
+                    s_played_hand[i]->card,
+                    s_played_hand[(i + 2) % played_size]->card
+                ))
             {
                 unmatched_index = i;
                 break;
@@ -979,14 +996,14 @@ static inline void select_three_of_a_kind_cards_in_played_hand(void)
     {
         for (int j = i + 1; j <= s_played_top; j++)
         {
-            if (s_played_hand[i]->card->rank == s_played_hand[j]->card->rank)
+            if (cards_same_rank(s_played_hand[i]->card, s_played_hand[j]->card))
             {
                 card_object_set_selected(s_played_hand[i], true);
                 card_object_set_selected(s_played_hand[j], true);
 
                 for (int k = j + 1; k <= s_played_top; k++)
                 {
-                    if (s_played_hand[i]->card->rank == s_played_hand[k]->card->rank &&
+                    if (cards_same_rank(s_played_hand[i]->card, s_played_hand[k]->card) &&
                         !card_object_is_selected(s_played_hand[k]))
                     {
                         card_object_set_selected(s_played_hand[k], true);
@@ -1012,7 +1029,7 @@ static inline void select_two_pair_cards_in_played_hand(void)
     {
         for (int j = i + 1; j <= s_played_top; j++)
         {
-            if (s_played_hand[i]->card->rank == s_played_hand[j]->card->rank)
+            if (cards_same_rank(s_played_hand[i]->card, s_played_hand[j]->card))
             {
                 card_object_set_selected(s_played_hand[i], true);
                 card_object_set_selected(s_played_hand[j], true);
@@ -1029,7 +1046,7 @@ static inline void select_two_pair_cards_in_played_hand(void)
     {
         for (int j = i + 1; j <= s_played_top; j++)
         {
-            if (s_played_hand[i]->card->rank == s_played_hand[j]->card->rank &&
+            if (cards_same_rank(s_played_hand[i]->card, s_played_hand[j]->card) &&
                 !card_object_is_selected(s_played_hand[i]) &&
                 !card_object_is_selected(s_played_hand[j]))
             {
@@ -1048,7 +1065,7 @@ static inline void select_pair_cards_in_played_hand(void)
     {
         for (int j = i + 1; j <= s_played_top; j++)
         {
-            if (s_played_hand[i]->card->rank == s_played_hand[j]->card->rank)
+            if (cards_same_rank(s_played_hand[i]->card, s_played_hand[j]->card))
             {
                 card_object_set_selected(s_played_hand[i], true);
                 card_object_set_selected(s_played_hand[j], true);
@@ -1063,18 +1080,23 @@ static inline void select_pair_cards_in_played_hand(void)
 
 static inline void select_highcard_cards_in_played_hand(void)
 {
-    // find the card with the highest rank in the hand
-    int highest_rank_index = 0;
+    // find the card with the highest rank in the hand, Stone cards have no rank
+    int highest_rank_index = -1;
 
     for (int i = 0; i <= s_played_top; i++)
     {
-        if (s_played_hand[i]->card->rank > s_played_hand[highest_rank_index]->card->rank)
+        if (!card_has_rank(s_played_hand[i]->card))
+            continue;
+
+        if (highest_rank_index < 0 ||
+            s_played_hand[i]->card->rank > s_played_hand[highest_rank_index]->card->rank)
         {
             highest_rank_index = i;
         }
     }
 
-    card_object_set_selected(s_played_hand[highest_rank_index], true);
+    if (highest_rank_index >= 0)
+        card_object_set_selected(s_played_hand[highest_rank_index], true);
 }
 
 /**
@@ -1086,6 +1108,33 @@ static inline bool round_is_over(void)
 {
     return g_game_vars.hands == 0 ||
            g_game_vars.score >= blind_get_requirement(g_game_vars.current_blind, g_game_vars.ante);
+}
+
+/**
+ * @brief Effects of the cards held in hand when the round is won (Gold cards, Blue seals).
+ */
+static void round_apply_held_cards_round_won(void)
+{
+    if (g_game_vars.score < blind_get_requirement(g_game_vars.current_blind, g_game_vars.ante))
+        return;
+
+    CardObject** hand = get_hand_array();
+    bool money_changed = false;
+    for (int i = 0; i <= get_hand_top(); i++)
+    {
+        int money_before = g_game_vars.money;
+        if (card_modifiers_on_round_won(
+                hand[i]->card,
+                s_last_played_hand_type,
+                hand[i]->x,
+                hand[i]->y
+            ))
+            card_object_shake(hand[i], SFX_CARD_SELECT);
+        money_changed |= (g_game_vars.money != money_before);
+    }
+
+    if (money_changed)
+        display_money();
 }
 
 static inline void round_process_input_and_state(void)
@@ -1350,6 +1399,13 @@ static inline void select_cards_in_played_hand(void)
         case FLUSH_FIVE: // Select all played cards in the hand
             select_all_five_cards_in_played_hand();
             break;
+    }
+
+    // Stone cards always score
+    for (int i = 0; i <= s_played_top; i++)
+    {
+        if (s_played_hand[i]->card->enhancement == CARD_ENHANCEMENT_STONE)
+            card_object_set_selected(s_played_hand[i], true);
     }
 }
 
@@ -1818,6 +1874,38 @@ static inline bool play_before_scoring_cards_update(void)
 }
 
 /**
+ * @brief Prints what a scored card gave above it, at the current text position:
+ *        chips in blue, then mult in red and money in yellow when the card has them.
+ */
+static void print_card_score_result(const CardScoreResult* result)
+{
+    char buffer[INT_MAX_DIGITS + 3];
+
+    tte_set_special(TTE_BLUE_PB * TTE_SPECIAL_PB_MULT_OFFSET);
+    snprintf(buffer, sizeof(buffer), "+%d", result->chips);
+    tte_write(buffer);
+
+    if (result->xmult)
+    {
+        tte_set_special(TTE_RED_PB * TTE_SPECIAL_PB_MULT_OFFSET);
+        tte_write(" X2");
+    }
+    else if (result->mult > 0)
+    {
+        tte_set_special(TTE_RED_PB * TTE_SPECIAL_PB_MULT_OFFSET);
+        snprintf(buffer, sizeof(buffer), " +%d", result->mult);
+        tte_write(buffer);
+    }
+
+    if (result->money > 0)
+    {
+        tte_set_special(TTE_YELLOW_PB * TTE_SPECIAL_PB_MULT_OFFSET);
+        snprintf(buffer, sizeof(buffer), " $%d", result->money);
+        tte_write(buffer);
+    }
+}
+
+/**
  * @brief Score all played cards in order, then Jokers after each one.
  *
  * @return true if the Cards scoring loop has returned early.
@@ -1841,6 +1929,15 @@ static inline bool play_scoring_cards_update(void)
             // reuse these variables for held cards
             s_joker_scored_itr = list_itr_create(get_jokers_list());
             s_scored_card_index = get_hand_top();
+
+            // Steel cards held in hand multiply the mult
+            CardObject** held_cards = get_hand_array();
+            for (int i = 0; i <= get_hand_top(); i++)
+            {
+                if (card_modifiers_on_held(held_cards[i]->card))
+                    card_object_shake(held_cards[i], SFX_CARD_SELECT);
+            }
+            display_mult();
 
             play_state = PLAY_SCORING_HELD_CARDS;
 
@@ -1870,21 +1967,16 @@ static inline bool play_scoring_cards_update(void)
             // Offset of 1 tile to keep the text on the card
             tte_set_pos(fx2int(scored_card_object->x) + TILE_SIZE, SCORED_CARD_TEXT_Y);
 
-            // Set text color to blue from background memory
-            tte_set_special(TTE_BLUE_PB * TTE_SPECIAL_PB_MULT_OFFSET);
-
-            u8 card_value = card_get_value(scored_card_object->card);
-
-            // Write the score to a character buffer variable
-            char score_buffer[INT_MAX_DIGITS + 2]; // for '+' and null terminator
-            snprintf(score_buffer, sizeof(score_buffer), "+%hhu", card_value);
-            tte_write(score_buffer);
+            // Chips, enhancement and seal of the card
+            CardScoreResult card_result = card_modifiers_on_scored(scored_card_object->card);
+            print_card_score_result(&card_result);
 
             card_object_shake(scored_card_object, SFX_CHIPS_CARD);
 
-            // Relocated card scoring logic here
-            g_game_vars.chips = u32_protected_add(g_game_vars.chips, card_value);
             display_chips();
+            display_mult();
+            if (card_result.money > 0)
+                display_money();
 
             BlindEventData blind_event_data = {.card = scored_card_object->card};
             blind_effects_trigger(BLIND_EVENT_ON_CARD_SCORED, &blind_event_data);
@@ -1943,6 +2035,16 @@ static inline bool play_scoring_card_jokers_update(void)
             }
             return true;
         }
+
+        // Red seal: score the same card once more
+        if (!s_red_seal_retriggered &&
+            card_modifiers_has_retrigger(s_played_hand[s_scored_card_index]->card))
+        {
+            s_red_seal_retriggered = true;
+            play_state = PLAY_SCORING_CARDS;
+            return true;
+        }
+        s_red_seal_retriggered = false;
 
         // increment index to start seeking the next scoring card from the next card
         s_scored_card_index++;
@@ -2116,7 +2218,17 @@ static bool play_ended_played_cards_update(int played_idx)
         // card has exited the screen, now discard it and set it to NULL
         if (s_played_hand[played_idx]->x >= int2fx(CARD_DISCARD_PNT.x))
         {
-            discard_push(s_played_hand[played_idx]->card); // Push the card to the discard pile
+            Card* played_card = s_played_hand[played_idx]->card;
+            if (!s_hand_scores_nothing && card_object_is_selected(s_played_hand[played_idx]) &&
+                card_modifiers_breaks_after_scoring(played_card))
+            {
+                // Glass card broke: it leaves the deck for good
+                card_destroy(&played_card);
+            }
+            else
+            {
+                discard_push(played_card); // Push the card to the discard pile
+            }
             card_object_destroy(&s_played_hand[played_idx]);
 
             s_cards_drawn++; // This technically isn't drawing cards, I'm just reusing the variable
@@ -2127,6 +2239,7 @@ static bool play_ended_played_cards_update(int played_idx)
             {
                 if (round_is_over())
                 {
+                    round_apply_held_cards_round_won();
                     set_hand_state(HAND_SHUFFLING);
                 }
                 else

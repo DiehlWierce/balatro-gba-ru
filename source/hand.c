@@ -468,8 +468,7 @@ static void get_hand_distribution(u8 ranks_out[NUM_RANKS], u8 suits_out[NUM_SUIT
     {
         if (s_hand.cards[i] && card_object_is_selected(s_hand.cards[i]))
         {
-            ranks_out[s_hand.cards[i]->card->rank]++;
-            suits_out[s_hand.cards[i]->card->suit]++;
+            card_add_to_distribution(s_hand.cards[i]->card, ranks_out, suits_out);
         }
     }
 }
@@ -660,7 +659,11 @@ int find_flush_in_played_cards(CardObject** played, int top, int min_len, bool* 
     {
         if (played[i] && played[i]->card)
         {
-            suit_counts[played[i]->card->suit]++;
+            for (int suit = 0; suit < NUM_SUITS; suit++)
+            {
+                if (card_has_suit(played[i]->card, suit))
+                    suit_counts[suit]++;
+            }
         }
     }
 
@@ -679,7 +682,7 @@ int find_flush_in_played_cards(CardObject** played, int top, int min_len, bool* 
     {
         for (int i = 0; i <= top; i++)
         {
-            if (played[i] && played[i]->card && played[i]->card->suit == best_suit)
+            if (played[i] && played[i]->card && card_has_suit(played[i]->card, best_suit))
             {
                 out_selection[i] = true;
             }
@@ -707,7 +710,7 @@ int find_straight_in_played_cards(CardObject** played, int top, int min_len, boo
     u8 ranks[NUM_RANKS] = {0};
     for (int i = 0; i <= top; i++)
     {
-        if (played[i] && played[i]->card)
+        if (played[i] && played[i]->card && card_has_rank(played[i]->card))
         {
             ranks[played[i]->card->rank]++;
         }
@@ -817,7 +820,8 @@ int find_straight_in_played_cards(CardObject** played, int top, int min_len, boo
 
         for (int i = 0; i <= top; i++)
         {
-            if (played[i] && played[i]->card && needed_ranks[played[i]->card->rank] > 0)
+            if (played[i] && played[i]->card && card_has_rank(played[i]->card) &&
+                needed_ranks[played[i]->card->rank] > 0)
             {
                 out_selection[i] = true;
                 needed_ranks[played[i]->card->rank]--;
@@ -843,7 +847,7 @@ void select_paired_cards_in_hand(CardObject** played, int played_top, bool* sele
 
     for (int i = 0; i <= played_top; i++)
     {
-        if (selection[i] && played[i] && played[i]->card)
+        if (selection[i] && played[i] && played[i]->card && card_has_rank(played[i]->card))
         {
             rank_selected[played[i]->card->rank] = true;
             any_selected_rank = true;
@@ -859,7 +863,7 @@ void select_paired_cards_in_hand(CardObject** played, int played_top, bool* sele
     {
         if (played[i] && played[i]->card && !selection[i])
         {
-            if (rank_selected[played[i]->card->rank])
+            if (card_has_rank(played[i]->card) && rank_selected[played[i]->card->rank])
             {
                 selection[i] = true;
             }

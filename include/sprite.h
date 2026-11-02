@@ -31,6 +31,8 @@
 #define BLIND_SPRITE_TILES      16
 #define SKIP_TAG_SPRITE_TILES   4
 #define CONSUMABLE_SPRITE_TILES 16
+#define PACK_SPRITE_TILES       16
+#define VOUCHER_SPRITE_TILES    16
 /** @} */
 
 /**
@@ -46,6 +48,8 @@ enum SpriteType
     JOKER_SPRITE,
     DECK_SPRITE,
     CONSUMABLE_SPRITE,
+    PACK_SPRITE,
+    VOUCHER_SPRITE,
     MAX_SPRITE_TYPE
 };
 

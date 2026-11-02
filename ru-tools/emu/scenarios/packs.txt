@@ -1,0 +1,75 @@
+# Seed GBARU1: buy a Standard Pack in the Shop (the 9th Shop has one in its first slot), look at
+# the choices, take the second card, check the deck size and the Shop afterwards.
+
+wait 460
+press START
+wait 60
+press A
+wait 60
+pokestr {sym:s_seed_str} GBARU1
+poke8 {sym:use_seed} 1
+press DOWN
+wait 10
+press A
+wait 120
+
+# Small Blind won with a forced score, cash out
+press A
+wait 180
+poke32 {gv:score} 100000
+press A
+press L
+wait 1100
+press A
+wait 200
+
+# Reroll 9 times (money forced): the first slot of the 10th Shop is a Standard Pack
+poke32 {gv:money} 100
+press DOWN
+wait 20
+press A
+wait 60
+press A
+wait 60
+press A
+wait 60
+press A
+wait 60
+press A
+wait 60
+press A
+wait 60
+press A
+wait 60
+press A
+wait 60
+press A
+wait 60
+poke32 {gv:money} 100
+shot 00_shop_with_pack
+
+# Description of the pack (UP lands on "Next round")
+press UP
+wait 20
+press RIGHT
+wait 20
+hold B
+wait 90
+shot 01_pack_description
+release B
+wait 30
+
+# Buy and open it: 3 cards to choose from
+press A
+wait 60
+shot 02_pack_open
+press RIGHT
+wait 15
+shot 03_second_card_selected
+
+# Take the second card: the deck grows to 53 and the Shop comes back
+press A
+wait 60
+shot 04_shop_after_pack
+
+# Buy the pack again is impossible (it is gone): leave and play a round with the new card

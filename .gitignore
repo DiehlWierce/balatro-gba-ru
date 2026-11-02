@@ -18,3 +18,5 @@ audio/*.bak
 # Headless emulator runner binary (built by ru-tools/emu/run.py)
 ru-tools/emu/gbarun
 tests/hand_levels/build
+tests/card_rules/build
+__pycache__/

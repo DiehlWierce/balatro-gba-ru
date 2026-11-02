@@ -8,13 +8,13 @@
 
 #include <tonc.h>
 
-#define MAX_DECK_SIZE 52
+#define MAX_DECK_SIZE 80 // Standard Packs add cards to the 52 of the starting Deck
 #define FRAMES(x)     (((x) + (g_game_vars.game_speed) - 1) / (g_game_vars.game_speed))
 
 // Capacities for arrays and screen layouts. The limits during a run are
 // g_game_vars.joker_slots and g_game_vars.shop_slots.
-#define MAX_JOKERS_HELD_SIZE 6 // This doesn't account for negatives right now.
-#define MAX_SHOP_ITEMS       2
+#define MAX_JOKERS_HELD_SIZE 7 // This doesn't account for negatives right now.
+#define MAX_SHOP_ITEMS       4
 
 // The maximum interest is g_game_vars.interest_cap
 #define INTEREST_PER_5 1
@@ -30,6 +30,7 @@
 #define KEY_SELL             KEY_L
 #define KEY_TAB_LEFT         KEY_L
 #define KEY_TAB_RIGHT        KEY_R
+#define KEY_BOSS_REROLL      KEY_R // Blind Select, with Director's Cut or Retcon
 
 // Using these buttons for play and discard hand to match the position of the on-screen buttons
 #define KEY_PLAY_HAND KEY_L
