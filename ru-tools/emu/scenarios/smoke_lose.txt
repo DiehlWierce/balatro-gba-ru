@@ -1,0 +1,70 @@
+# Seed GBARU1: play the 5 leftmost cards 4 times without any help until the Game Over screen.
+
+wait 460
+press START
+wait 60
+press A
+wait 60
+pokestr {sym:s_seed_str} GBARU1
+poke8 {sym:use_seed} 1
+press DOWN
+wait 10
+press A
+wait 120
+shot 00_blind_select
+press A
+wait 180
+
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+wait 10
+shot 10_hand1_selected
+press L
+wait 600
+shot 11_hand1_scored
+
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press L
+wait 600
+shot 21_hand2_scored
+
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press L
+wait 600
+shot 31_hand3_scored
+
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press L
+wait 1200
+shot 90_game_over
