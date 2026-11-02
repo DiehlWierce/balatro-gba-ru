@@ -106,6 +106,7 @@ typedef struct JokerObject
 {
     Item; // First member struct inheritance
     Joker* joker;
+    bool face_down; // Amber Acorn: the sprite is drawn face down, the description is hidden
 } JokerObject;
 
 typedef struct // These jokers are triggered after the played hand has finished scoring.

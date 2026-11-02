@@ -242,6 +242,8 @@ static FIXED s_lerped_temp_score = 0;
 // discarded cards specific
 static bool s_sound_played = false;
 static bool s_discarded_card = false;
+/// The Hook is discarding held cards after a play, scoring starts once it is done
+static bool s_hook_discarding = false;
 
 static int s_cards_drawn = 0;
 static int s_cards_discarded = 0;
@@ -807,6 +809,9 @@ static inline void round_handle_round_over(void)
     game_change_state(next_state);
 }
 
+static void round_begin_scoring(void);
+static bool round_apply_boss_forced_discards(void);
+
 static inline void card_in_hand_loop_handle_discard_and_shuffling(
     int card_idx,
     FIXED* hand_x,
@@ -890,12 +895,18 @@ static inline void card_in_hand_loop_handle_discard_and_shuffling(
     {
         // This is never reached in the case of HAND_SHUFFLING. Not sure why but that's how it's
         // supposed to be.
-        set_hand_state(HAND_DRAW);
         s_sound_played = false;
         s_cards_discarded = 0;
         hand_set_nb_selected_cards(0);
         g_game_vars.timer = TM_ZERO;
         *break_loop = true;
+        if (s_hook_discarding)
+        {
+            s_hook_discarding = false;
+            round_begin_scoring();
+            return;
+        }
+        set_hand_state(HAND_DRAW);
         return;
     };
 }
@@ -1289,7 +1300,7 @@ static inline void round_process_card_draw(void)
  * @brief Selects random cards held in hand for a Boss that discards them (The Hook)
  *        and starts discarding them. Doesn't use the player's discards.
  */
-static void round_apply_boss_forced_discards(void)
+static bool round_apply_boss_forced_discards(void)
 {
     int nb_held = hand_nb_held_cards();
     int nb_discards = blind_effects_get_forced_discards();
@@ -1297,7 +1308,7 @@ static void round_apply_boss_forced_discards(void)
         nb_discards = nb_held;
 
     if (nb_discards <= 0)
-        return;
+        return false;
 
     CardObject** hand = get_hand_array();
     for (int i = 0; i < nb_discards; i++)
@@ -1319,6 +1330,7 @@ static void round_apply_boss_forced_discards(void)
 
     hand_set_nb_selected_cards(nb_discards);
     set_hand_state(HAND_DISCARD);
+    return true;
 }
 
 static inline void round_discarded_cards_loop(void)
@@ -1419,6 +1431,14 @@ static inline void select_cards_in_played_hand(void)
     }
 }
 
+/// Starts scoring the played hand (after the held cards were discarded by The Hook, if any)
+static void round_begin_scoring(void)
+{
+    set_hand_state(HAND_PLAYING);
+    s_scored_card_index = get_played_size();
+    select_cards_in_played_hand();
+}
+
 static inline void cards_in_hand_update_loop(void)
 {
     int selected_card_idx = hand_sel_idx_to_card_idx(game_round_selection_grid.selection.x);
@@ -1517,13 +1537,13 @@ static inline void cards_in_hand_update_loop(void)
 
                     if (i == 0 && s_discarded_card == false && g_game_vars.timer % FRAMES(10) == 0)
                     {
-                        set_hand_state(HAND_PLAYING);
                         s_cards_drawn = 0;
                         hand_set_nb_selected_cards(0);
                         g_game_vars.timer = TM_ZERO;
-                        s_scored_card_index = get_played_size();
-
-                        select_cards_in_played_hand();
+                        // The Hook discards right after the play, before the hand is scored
+                        s_hook_discarding = round_apply_boss_forced_discards();
+                        if (!s_hook_discarding)
+                            round_begin_scoring();
                     }
 
                     break;
@@ -2271,8 +2291,6 @@ static bool play_ended_played_cards_update(int played_idx)
                     s_hand_scores_nothing = false;
                 }
 
-                if (get_hand_state() == HAND_DRAW)
-                    round_apply_boss_forced_discards();
             }
 
             return true; // return early to avoid accessing played[played_idx] == NULL
