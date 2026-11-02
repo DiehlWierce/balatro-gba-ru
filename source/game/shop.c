@@ -602,7 +602,7 @@ static void shop_top_row_on_key_transit(SelectionGrid* selection_grid, Selection
     {
         int shop_item_idx = selection->x - 1; // - 1 to account for next round button
         Item* item = (Item*)list_get_at_idx(&s_shop_items_list, shop_item_idx);
-        if (!item_can_acquire(item) || g_game_vars.money < item_get_buy_price(item))
+        if (!item_can_acquire(item) || !game_can_afford(item_get_buy_price(item)))
         {
             return;
         }
@@ -752,7 +752,7 @@ static void shop_buy_voucher(SelectionGrid* selection_grid)
 {
     Item* voucher = s_shop_voucher;
     if (voucher == NULL || !item_can_acquire(voucher) ||
-        g_game_vars.money < item_get_buy_price(voucher))
+        !game_can_afford(item_get_buy_price(voucher)))
     {
         return;
     }
@@ -849,7 +849,7 @@ static void reroll_on_pressed(void)
 
 static bool reroll_can_be_pressed(void)
 {
-    return g_game_vars.money >= s_reroll_cost;
+    return game_can_afford(s_reroll_cost);
 }
 
 /**

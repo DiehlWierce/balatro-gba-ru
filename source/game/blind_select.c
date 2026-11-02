@@ -308,7 +308,7 @@ static void blind_select_handle_input(void)
 {
     // Director's Cut / Retcon: R pays to reroll the Boss Blind before facing it
     if (key_hit(KEY_BOSS_REROLL) && voucher_can_reroll_boss() &&
-        g_game_vars.money >= VOUCHER_BOSS_REROLL_PRICE)
+        game_can_afford(VOUCHER_BOSS_REROLL_PRICE))
     {
         g_game_vars.money -= VOUCHER_BOSS_REROLL_PRICE;
         display_money();

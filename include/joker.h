@@ -170,6 +170,12 @@ u32 joker_get_score_effect(
 int joker_get_sell_value(const Joker* joker);
 
 /**
+ * @brief Called when the player cashes out: Egg and Gift Card raise sell values, Rocket grows
+ * @param boss_defeated Whether the round that has just ended was a Boss Blind
+ */
+void joker_economy_on_round_end(bool boss_defeated);
+
+/**
  * @brief Whether the Joker can be sold: Eternal Jokers (Black Stake) can't
  */
 bool joker_can_be_sold(const Joker* joker);

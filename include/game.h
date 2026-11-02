@@ -1,6 +1,7 @@
 #ifndef GAME_H
 #define GAME_H
 
+#include "joker_economy.h"
 #include "game/common_ui.h"
 #include "game_variables.h"
 #include "graphic_utils.h"
@@ -74,6 +75,19 @@ void game_change_state(enum GameState new_game_state);
 enum GameState game_get_state(void);
 
 bool is_joker_owned(int joker_id);
+
+/**
+ * @brief Sums the effects of the owned Jokers on the run limits (see joker_economy.h)
+ */
+JokerRunBonus game_get_joker_bonus(void);
+int game_get_hands_per_round(void);
+int game_get_discards_per_round(void);
+int game_get_hand_size(void);
+
+/**
+ * @brief Whether the player can pay @p price, Credit Card allows going into debt
+ */
+bool game_can_afford(int price);
 bool joker_object_can_acquire(Item* item);
 bool card_is_face(Card* card);
 void add_joker(JokerObject* joker_object);
