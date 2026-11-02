@@ -1,0 +1,40 @@
+# Descriptions of two Tarots in the owned row, needs make DEBUG_TAROT=1 (touch source/consumable.c first).
+# usage: run.py scenarios/tarot_desc.txt OUT -D a=<TarotType> -D b=<TarotType>
+# Seed GBARU1, Small Blind won, in the Shop: give both Tarots, hold B on each of them in the row.
+
+wait 460
+press START
+wait 60
+press A
+wait 60
+pokestr {sym:s_seed_str} GBARU1
+poke8 {sym:use_seed} 1
+press DOWN
+wait 10
+press A
+wait 120
+press A
+wait 180
+poke32 {gv:score} 100000
+press A
+press L
+wait 1100
+press A
+wait 200
+poke32 {sym:g_debug_give_tarot} {def:a}
+wait 30
+poke32 {sym:g_debug_give_tarot} {def:b}
+wait 90
+press UP
+wait 20
+hold B
+wait 90
+shot 00_first
+release B
+wait 20
+press RIGHT
+wait 20
+hold B
+wait 90
+shot 01_second
+release B

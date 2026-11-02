@@ -34,8 +34,6 @@ release B
 wait 20
 press A
 wait 60
-press DOWN
-wait 20
 press RIGHT
 wait 20
 hold B
