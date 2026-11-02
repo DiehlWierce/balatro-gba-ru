@@ -21,3 +21,5 @@ tests/hand_levels/build
 tests/card_rules/build
 __pycache__/
 /tests/joker_cards/build
+
+tests/*/build/
