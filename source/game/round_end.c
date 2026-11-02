@@ -27,6 +27,7 @@ enum GameRoundEndStates
 enum RewardType
 {
     REWARD_TYPE_HAND,
+    REWARD_TYPE_DISCARD,
     REWARD_TYPE_INVESTMENT,
     REWARD_TYPE_INTEREST,
     REWARD_TYPE_MAX
@@ -79,10 +80,11 @@ typedef struct RewardTypeData
      * towards the total cashout. Equal to 1 most of the time, but the Investment Tag increments
      * by a full reward amount per tag so the the multiplier is a full amount.
      *
-     * @note make this not const if "To the Moon" is ever implemented, since it increases the
-     * Interest multiplier from 1 to 2
+     * Hands and Discards use g_game_vars.money_per_hand and money_per_discard (Green Deck).
+     *
+     * @note "To the Moon" would increase the Interest multiplier from 1 to 2
      */
-    const int multiplier;
+    int multiplier;
 
     /**
      * @brief how many times the reward was earned by the player during the last round
@@ -101,6 +103,13 @@ static RewardTypeData s_reward_data[] = {
         .text = "Руки",
         .text_color = TTE_BLUE_PB,
         .multiplier = 1,
+        .count = 0,
+        .remaining = 0
+    },
+    [REWARD_TYPE_DISCARD] = {
+        .text = "Сбросы",
+        .text_color = TTE_RED_PB,
+        .multiplier = 0,
         .count = 0,
         .remaining = 0
     },
@@ -182,7 +191,12 @@ static void round_end_start(void)
         s_reward_y_offset = 1;
 
         s_blind_reward = blind_get_reward(g_game_vars.current_blind);
-        s_reward_data[REWARD_TYPE_HAND].count = g_game_vars.hands;
+        s_reward_data[REWARD_TYPE_HAND].multiplier = g_game_vars.money_per_hand;
+        s_reward_data[REWARD_TYPE_HAND].count =
+            g_game_vars.money_per_hand > 0 ? g_game_vars.hands : 0;
+        s_reward_data[REWARD_TYPE_DISCARD].multiplier = g_game_vars.money_per_discard;
+        s_reward_data[REWARD_TYPE_DISCARD].count =
+            g_game_vars.money_per_discard > 0 ? g_game_vars.discards : 0;
         s_reward_data[REWARD_TYPE_INVESTMENT].count = g_game_vars.current_blind >= BLIND_TYPE_BOSS
                                                         ? skip_tag_count(SKIP_TAG_TYPE_INVESTMENT)
                                                         : 0;
@@ -349,9 +363,10 @@ static inline bool s_should_increment_curr_reward(void)
 {
     switch (s_current_reward)
     {
-        // For Hands and Interest rewards, updating the values on screen
+        // For Hands, Discards and Interest rewards, updating the values on screen
         // depends only on the timer
         case REWARD_TYPE_HAND:
+        case REWARD_TYPE_DISCARD:
         case REWARD_TYPE_INTEREST:
             return g_game_vars.timer % FRAMES(TM_REWARD_INCREMENT_INTERVAL) == 0;
 

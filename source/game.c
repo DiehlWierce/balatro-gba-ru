@@ -115,6 +115,8 @@ GameVariables g_game_vars = {
     .consumable_slots = DEFAULT_CONSUMABLE_SLOTS,
     .shop_slots = DEFAULT_SHOP_SLOTS,
     .interest_cap = DEFAULT_INTEREST_CAP,
+    .money_per_hand = DEFAULT_MONEY_PER_HAND,
+    .money_per_discard = DEFAULT_MONEY_PER_DISCARD,
     .stake = STAKE_WHITE,
     // Set to DEFAULT_HAND_LEVEL in game_init()
     .hand_levels = {0},
@@ -204,7 +206,7 @@ void game_init()
     g_game_vars.hand_size = DEFAULT_HAND_SIZE;
     g_game_vars.ante = STARTING_ANTE;
     g_game_vars.round = STARTING_ROUND;
-    g_game_vars.deck = DECK_TYPE_RED;
+    // g_game_vars.deck is kept: the Run Setup screen shows the last chosen Deck
     for (int i = 0; i < HAND_TYPE_MAX; i++)
         g_game_vars.nb_played_hands[i] = 0;
     g_game_vars.hands_per_round = MAX_HANDS;
@@ -214,6 +216,8 @@ void game_init()
     g_game_vars.consumable_slots = DEFAULT_CONSUMABLE_SLOTS;
     g_game_vars.shop_slots = DEFAULT_SHOP_SLOTS;
     g_game_vars.interest_cap = DEFAULT_INTEREST_CAP;
+    g_game_vars.money_per_hand = DEFAULT_MONEY_PER_HAND;
+    g_game_vars.money_per_discard = DEFAULT_MONEY_PER_DISCARD;
     g_game_vars.stake = STAKE_WHITE;
     for (int i = 0; i < HAND_TYPE_MAX; i++)
         g_game_vars.hand_levels[i] = DEFAULT_HAND_LEVEL;
@@ -294,11 +298,12 @@ static inline void discarded_items_update_loop(void)
 static inline void held_jokers_update_loop(void)
 {
     static const int SPACING_LUT[MAX_JOKERS_HELD_SIZE][MAX_JOKERS_HELD_SIZE] = {
-        {0,  0,   0,   0,   0  },
-        {13, -13, 0,   0,   0  },
-        {26, 0,   -26, 0,   0  },
-        {39, 13,  -13, -39, 0  },
-        {40, 20,  0,   -20, -40}
+        {0,  0,   0,   0,   0,   0  },
+        {13, -13, 0,   0,   0,   0  },
+        {26, 0,   -26, 0,   0,   0  },
+        {39, 13,  -13, -39, 0,   0  },
+        {40, 20,  0,   -20, -40, 0  },
+        {45, 27,  9,   -9,  -27, -45}
     };
 
     FIXED hand_x = int2fx(HELD_JOKERS_POS.x);

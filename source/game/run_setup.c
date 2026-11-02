@@ -258,6 +258,9 @@ enum RunSetupDeckBottomButtons
 // CHOOSE DECK SELECTION GRID
 
 static int change_deck_get_row_size(void);
+static void change_deck_row_on_key_transit(SelectionGrid* selection_grid, Selection* selection);
+static void run_setup_print_deck_info(void);
+static void run_setup_cycle_deck(int direction);
 static bool choose_deck_row_on_selection_changed(
     SelectionGrid* selection_grid,
     int row_idx,
@@ -273,7 +276,7 @@ static SelectionGridRow choose_deck_rows[RUN_SETUP_DECK_ROW_MAX] = {
         RUN_SETUP_DECK_ROW_CHANGE_DECK,
         change_deck_get_row_size,
         choose_deck_row_on_selection_changed,
-        NULL,
+        change_deck_row_on_key_transit,
         {.wrap = true}
     }, {
         RUN_SETUP_DECK_ROW_SEED_PLAY,
@@ -661,10 +664,9 @@ void run_setup_on_exit(void)
  */
 static void choose_deck_substate_init(void)
 {
-    // Show Deck sprite, name and TODO: description
+    // Show Deck sprite, name and description
     sprite_object_unhide((SpriteObject*)run_setup_deck);
-    print_deck_name(g_game_vars.deck, RUN_SETUP_DECK_NAME_TEXT_POS);
-    print_deck_description(g_game_vars.deck, RUN_SETUP_DECK_DESC_TEXT_POS);
+    run_setup_print_deck_info();
 
     // Clean frame and expand 9-patch for the Deck choice background
     main_bg_se_copy_expand_tile(
@@ -679,8 +681,6 @@ static void choose_deck_substate_init(void)
         RUN_SETUP_CHOOSE_DECK_CHOICE_BG_9_PTCH_DEST,
         &RUN_SETUP_CHOOSE_DECK_CHOICE_BG_9_PTCH_SRC
     );
-
-    // TODO: add left/right navigation arrows once more decks have been implemented
 
     // Set Tab to "New Run"
     // Uncomment when tab row is re-added (clang-format made it ugly, sorry)
@@ -731,6 +731,57 @@ static int change_deck_get_row_size(void)
 }
 
 /**
+ * @brief Prints the name of the current Deck between left/right arrows, and its description.
+ */
+static void run_setup_print_deck_info(void)
+{
+    print_deck_name(g_game_vars.deck, RUN_SETUP_DECK_NAME_TEXT_POS);
+    print_deck_description(g_game_vars.deck, RUN_SETUP_DECK_DESC_TEXT_POS);
+
+    // Deck names are centered in DECK_NAME_LENGTH - 1 characters with at least one space on each
+    // side, so the arrows replace those spaces. «» are drawn as arrows in the font (CP1251
+    // 0xAB/0xBB)
+    tte_printf(
+        "#{P:%d,%d; cx:0x%X000}«",
+        RUN_SETUP_DECK_NAME_TEXT_POS.x,
+        RUN_SETUP_DECK_NAME_TEXT_POS.y,
+        TTE_WHITE_PB
+    );
+    tte_printf(
+        "#{P:%d,%d; cx:0x%X000}»",
+        RUN_SETUP_DECK_NAME_TEXT_POS.x + (DECK_NAME_LENGTH - 2) * TTE_CHAR_SIZE,
+        RUN_SETUP_DECK_NAME_TEXT_POS.y,
+        TTE_WHITE_PB
+    );
+}
+
+/**
+ * @brief Selects the next or previous Deck and updates its sprite, name and description.
+ *
+ * @param direction 1 for the next Deck, -1 for the previous one
+ */
+static void run_setup_cycle_deck(int direction)
+{
+    g_game_vars.deck = wrap(g_game_vars.deck + direction, 0, DECK_TYPE_MAX);
+    card_object_set_sprite_face_down(run_setup_deck, g_game_vars.deck, 0);
+    run_setup_print_deck_info();
+}
+
+/**
+ * @brief Handle button inputs on the Change Deck row: A shows the next Deck
+ *
+ * @param selection_grid pointer to `choose_deck_selection_grid`
+ * @param selection current Selection in selection_grid
+ */
+static void change_deck_row_on_key_transit(SelectionGrid* selection_grid, Selection* selection)
+{
+    if (key_hit(KEY_CONFIRM))
+    {
+        button_press(&change_deck_button);
+    }
+}
+
+/**
  * @brief Gets the Button corresponding to the current Selection in `choose_deck_selection_grid`
  *
  * @param sel Selection within `choose_deck_selection_grid`
@@ -773,8 +824,12 @@ static bool choose_deck_row_on_selection_changed(
     button_set_highlight(change_deck_get_button_from_sel(prev_selection), false);
     button_set_highlight(change_deck_get_button_from_sel(new_selection), true);
 
-    // TODO: detect left/right press on Change Deck row to allow swapping
-    // Decks need to be implemented for this
+    // Left/right on the single-button Change Deck row wraps onto itself: cycle through the Decks
+    if (prev_selection->y == RUN_SETUP_DECK_ROW_CHANGE_DECK &&
+        new_selection->y == RUN_SETUP_DECK_ROW_CHANGE_DECK)
+    {
+        run_setup_cycle_deck(key_hit(KEY_LEFT) ? -1 : 1);
+    }
 
     return true;
 }
@@ -1207,6 +1262,7 @@ static void back_on_pressed(void)
  */
 static void change_deck_on_pressed(void)
 {
+    run_setup_cycle_deck(1);
 }
 
 /**

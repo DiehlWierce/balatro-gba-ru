@@ -18,7 +18,7 @@
 static const char DECK_NAMES[DECK_TYPE_MAX][DECK_NAME_LENGTH] = {
     "   Красная   ",
     "    Синяя    ",
-    "   Желтая    ",
+    "   Жёлтая    ",
     "   Зелёная   ",
     "   Чёрная    ",
     "  Расписная  "
@@ -65,13 +65,9 @@ static const DeckDescSegment* const DECK_DESCRIPTIONS[DECK_TYPE_MAX][5] = {
      },
     {
      SEGS({TTE_BLACK_PB, "Конец раунда:"}),
-     NULL, SEGS({TTE_BLACK_PB, "-"}, {TTE_YELLOW_PB, "$2 "}, {TTE_BLACK_PB, "за "}, {TTE_RED_PB, "руку"}),
-     SEGS(
-        {TTE_BLACK_PB, "-"},
-     {TTE_YELLOW_PB, "$1 "},
-     {TTE_BLACK_PB, "за "},
-     {TTE_BLUE_PB, "сброс"}
-    ), SEGS({TTE_BLACK_PB, "-Нет "}, {TTE_YELLOW_PB, "процента"}),
+     NULL, SEGS({TTE_BLACK_PB, "-"}, {TTE_YELLOW_PB, "$2 "}, {TTE_BLACK_PB, "за "}, {TTE_BLUE_PB, "руку"}),
+     SEGS({TTE_BLACK_PB, "-"}, {TTE_YELLOW_PB, "$1 "}, {TTE_BLACK_PB, "за "}, {TTE_RED_PB, "сброс"}),
+     SEGS({TTE_BLACK_PB, "-Нет "}, {TTE_YELLOW_PB, "процента"}),
      },
     {
      SEGS({TTE_YELLOW_PB, "+1 "}, {TTE_BLACK_PB, "слот Джок."}),
@@ -117,13 +113,34 @@ void deck_apply_start_effects(enum DeckType deck)
 {
     switch (deck)
     {
-        // TODO: Deck effects. The Red Deck's +1 discard is still included in MAX_DISCARDS.
         case DECK_TYPE_RED:
+            g_game_vars.discards_per_round += 1;
+            break;
+
         case DECK_TYPE_BLUE:
+            g_game_vars.hands_per_round += 1;
+            break;
+
         case DECK_TYPE_YELLOW:
+            g_game_vars.money += 10;
+            break;
+
         case DECK_TYPE_GREEN:
+            g_game_vars.money_per_hand = 2;
+            g_game_vars.money_per_discard = 1;
+            g_game_vars.interest_cap = 0;
+            break;
+
         case DECK_TYPE_BLACK:
+            g_game_vars.joker_slots += 1;
+            g_game_vars.hands_per_round -= 1;
+            break;
+
         case DECK_TYPE_PAINTED:
+            g_game_vars.base_hand_size += 2;
+            g_game_vars.joker_slots -= 1;
+            break;
+
         default:
             break;
     }

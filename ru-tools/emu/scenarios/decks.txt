@@ -1,0 +1,64 @@
+# Run setup: show all 6 Decks (RIGHT/LEFT cycle them), then a seeded run with the Green Deck:
+# 4 hands, 3 discards, at the end of the round $2 per remaining hand, $1 per remaining discard
+# and no interest.
+
+wait 460
+press START
+wait 60
+press A
+wait 60
+shot 00_deck_red
+press RIGHT
+wait 20
+shot 01_deck_blue
+press RIGHT
+wait 20
+shot 02_deck_yellow
+press RIGHT
+wait 20
+shot 03_deck_green
+press RIGHT
+wait 20
+shot 04_deck_black
+press RIGHT
+wait 20
+shot 05_deck_painted
+press RIGHT
+wait 20
+shot 06_deck_red_again
+press LEFT
+wait 20
+shot 07_deck_painted_left
+
+# Back to Green: Painted -> Red -> Blue -> Yellow -> Green
+press RIGHT
+press RIGHT
+press RIGHT
+press RIGHT
+wait 20
+shot 08_green_chosen
+
+pokestr {sym:s_seed_str} GBARU1
+poke8 {sym:use_seed} 1
+press DOWN
+wait 10
+press A
+wait 120
+shot 10_blind_select
+press A
+wait 180
+shot 11_round
+peek32 {gv:hands_per_round}
+peek32 {gv:discards_per_round}
+peek32 {gv:interest_cap}
+
+# Win with one hand (score forced): 3 hands and 3 discards left -> $6 + $3, and no interest
+# even with $50
+poke32 {gv:money} 50
+poke32 {gv:score} 100000
+press A
+press L
+wait 1100
+shot 12_round_end
+wait 300
+shot 13_round_end_rewards
