@@ -1,10 +1,14 @@
 #include "joker.h"
 
+#include "blind_effects.h"
 #include "card.h"
+#include "consumable.h"
+#include "hand.h"
 #include "game/round.h"
 #include "game_variables.h"
 #include "graphic_utils.h"
 #include "item.h"
+#include "joker_cards.h"
 #include "layout.h"
 #include "mgba_logger.h"
 #include "pool.h"
@@ -79,6 +83,7 @@ static const int JOKER_ID_TO_SPRITE_MAP[] = {
     17,
     18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
     29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43,
+    44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58,
 };
 
 // Map of Spritesheet idx -> first Joker ID in sheet
@@ -88,7 +93,8 @@ static const int JOKER_ID_TO_SPRITE_MAP[] = {
 static const int SPRITESHEET_IDX_TO_STARTING_JOKER_ID[] = {
      0, 18, 20, 22, 27, 32, 36, 40, 42, 44,
     45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
-    64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78
+    64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78,
+    79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93
 };
 
 // Lookup table of Joker Rarity strings. Used to display at the bottom of the description screen.
@@ -708,4 +714,126 @@ void joker_economy_on_round_end(bool boss_defeated)
         if (joker->id == ROCKET_JOKER_ID)
             joker->persistent_state = joker_economy_rocket_next(joker->persistent_state, boss_defeated);
     }
+}
+
+/*******************************************************************************
+ * A8 batch 3: hooks of the Jokers tied to cards, Tarots and the deck
+ ******************************************************************************/
+
+// Where Tarots created by Jokers appear
+#define JOKER_TAROT_SPAWN_X int2fx(120)
+#define JOKER_TAROT_SPAWN_Y int2fx(60)
+
+// Runs @p fn for every owned Joker that works (not Perishable-expired, not disabled by a Boss)
+static void joker_for_each_active(void (*fn)(Joker* joker))
+{
+    ListItr itr = list_itr_create(get_jokers_list());
+    JokerObject* joker_object;
+    while ((joker_object = list_itr_next(&itr)))
+    {
+        if (joker_is_perished(joker_object->joker) || blind_effects_is_joker_disabled(joker_object))
+            continue;
+        fn(joker_object->joker);
+    }
+}
+
+static void joker_hook_glass_broken(Joker* joker)
+{
+    if (joker->id == GLASS_JOKER_ID)
+        joker->persistent_state++;
+}
+
+static void joker_hook_lucky_triggered(Joker* joker)
+{
+    if (joker->id == LUCKY_CAT_JOKER_ID)
+        joker->persistent_state++;
+}
+
+static void joker_hook_planet_used(Joker* joker)
+{
+    if (joker->id == CONSTELLATION_JOKER_ID)
+        joker->persistent_state++;
+}
+
+static void joker_hook_pack_opened(Joker* joker)
+{
+    if (joker->id == HALLUCINATION_JOKER_ID &&
+        joker_cards_one_in(rng_get_u32(RNG_SEQ_JOKER_HALLUCINATION), HALLUCINATION_CHANCE))
+        consumable_create_random_tarot(RNG_SEQ_JOKER_TAROT, JOKER_TAROT_SPAWN_X, JOKER_TAROT_SPAWN_Y);
+}
+
+static void joker_hook_blind_selected(Joker* joker)
+{
+    switch (joker->id)
+    {
+        case BURGLAR_JOKER_ID:
+            g_game_vars.hands = joker_cards_burglar_hands(g_game_vars.hands);
+            g_game_vars.discards = 0;
+            display_hands();
+            display_discards();
+            break;
+        case CARTOMANCER_JOKER_ID:
+            consumable_create_random_tarot(
+                RNG_SEQ_JOKER_TAROT,
+                JOKER_TAROT_SPAWN_X,
+                JOKER_TAROT_SPAWN_Y
+            );
+            break;
+        case MARBLE_JOKER_ID:
+            if (deck_get_size() < MAX_DECK_SIZE)
+            {
+                Card* stone = card_new(SPADES, ACE);
+                stone->enhancement = CARD_ENHANCEMENT_STONE;
+                deck_push(stone);
+            }
+            break;
+        default:
+            break;
+    }
+}
+
+static void joker_hook_deck_shuffled(Joker* joker)
+{
+    if (joker->id != CERTIFICATE_JOKER_ID || deck_get_size() >= MAX_DECK_SIZE)
+        return;
+
+    Card* card = card_new(
+        rng_get_u32(RNG_SEQ_JOKER_CERTIFICATE) % NUM_SUITS,
+        rng_get_u32(RNG_SEQ_JOKER_CERTIFICATE) % NUM_RANKS
+    );
+    card->seal = CARD_SEAL_NONE + 1 + rng_get_u32(RNG_SEQ_JOKER_CERTIFICATE) % (CARD_SEAL_MAX - 1);
+    deck_push(card); // The top of the deck is drawn first: the card lands in the hand
+}
+
+void joker_on_glass_broken(void)
+{
+    joker_for_each_active(joker_hook_glass_broken);
+}
+
+void joker_on_lucky_triggered(void)
+{
+    joker_for_each_active(joker_hook_lucky_triggered);
+}
+
+void joker_on_consumable_used(bool is_tarot)
+{
+    if (is_tarot)
+        g_game_vars.tarots_used++;
+    else
+        joker_for_each_active(joker_hook_planet_used);
+}
+
+void joker_on_pack_opened(void)
+{
+    joker_for_each_active(joker_hook_pack_opened);
+}
+
+void joker_on_blind_selected(void)
+{
+    joker_for_each_active(joker_hook_blind_selected);
+}
+
+void joker_on_deck_shuffled(void)
+{
+    joker_for_each_active(joker_hook_deck_shuffled);
 }

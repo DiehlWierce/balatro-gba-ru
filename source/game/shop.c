@@ -1195,6 +1195,7 @@ static void shop_pack_open_start(void)
 {
     s_pack_info = booster_pack_get_info(s_opened_pack->pack_type);
     booster_pack_destroy(&s_opened_pack);
+    joker_on_pack_opened(); // Hallucination
 
     // Move the other shop items out of the way
     ListItr itr = list_itr_create(&s_shop_items_list);

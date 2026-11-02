@@ -268,6 +268,28 @@ int get_played_size(void)
     return s_played_top + 1;
 }
 
+CardObject** get_played_array(void)
+{
+    return s_played_hand;
+}
+
+int round_count_enhancement(u8 enhancement)
+{
+    int count = 0;
+    for (int i = 0; i <= s_played_top; i++)
+    {
+        if (s_played_hand[i] != NULL && s_played_hand[i]->card != NULL &&
+            s_played_hand[i]->card->enhancement == enhancement)
+            count++;
+    }
+    for (int i = 0; i <= s_discard_top; i++)
+    {
+        if (s_discard_pile[i] != NULL && s_discard_pile[i]->enhancement == enhancement)
+            count++;
+    }
+    return count;
+}
+
 /**
  * @brief Push a new card to play at the end of the associated array
  *
@@ -2000,6 +2022,8 @@ static inline bool play_scoring_cards_update(void)
             // Chips, enhancement and seal of the card
             CardScoreResult card_result = card_modifiers_on_scored(scored_card_object->card);
             print_card_score_result(&card_result);
+            if (card_result.lucky_triggered)
+                joker_on_lucky_triggered();
 
             card_object_shake(scored_card_object, SFX_CHIPS_CARD);
 
@@ -2253,6 +2277,7 @@ static bool play_ended_played_cards_update(int played_idx)
                 card_modifiers_breaks_after_scoring(played_card))
             {
                 // Glass card broke: it leaves the deck for good
+                joker_on_glass_broken();
                 card_destroy(&played_card);
             }
             else
@@ -2473,7 +2498,11 @@ void round_on_init(void)
 
     blind_effects_trigger(BLIND_EVENT_ON_BLIND_SELECTED, NULL);
 
+    joker_on_blind_selected(); // Burglar, Cartomancer, Marble Joker
+
     deck_shuffle(); // Shuffle the deck at the start of the round
+
+    joker_on_deck_shuffled(); // Certificate puts its card on top, so it is drawn first
 
     skip_tag_process_start(SKIP_TAG_EVENT_ON_ROUND_START);
 

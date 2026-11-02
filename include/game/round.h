@@ -6,6 +6,8 @@
 #ifndef GAME_ROUND_H
 #define GAME_ROUND_H
 
+#include "card.h"
+
 #include <stdbool.h>
 
 /**
@@ -34,6 +36,17 @@ int get_played_size(void);
  * @return int
  */
 int get_discard_top(void);
+
+/**
+ * @brief The cards played in this hand (entries can be NULL), valid up to get_played_top().
+ *        The scoring cards are the selected ones.
+ */
+CardObject** get_played_array(void);
+
+/**
+ * @brief Number of played and discarded cards with @p enhancement (see game_count_deck_enhancement)
+ */
+int round_count_enhancement(u8 enhancement);
 
 /**
  * @brief Get the index of the card that is currently being scored

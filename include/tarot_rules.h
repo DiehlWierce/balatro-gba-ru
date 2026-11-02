@@ -181,6 +181,7 @@ static inline void card_copy_from(Card* dst, const Card* src)
     dst->rank = src->rank;
     dst->enhancement = src->enhancement;
     dst->seal = src->seal;
+    dst->bonus_chips = src->bonus_chips;
 }
 
 /**

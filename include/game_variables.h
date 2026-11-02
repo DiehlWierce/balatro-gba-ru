@@ -95,6 +95,7 @@ typedef struct
     u32 best_hand_score;
     u32 nb_skipped_rounds;
     u32 nb_unused_discards;
+    u32 tarots_used; // Tarots used in the run (Fortune Teller)
 
     // Blind variables
 

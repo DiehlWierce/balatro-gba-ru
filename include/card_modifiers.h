@@ -22,6 +22,7 @@ typedef struct CardScoreResult
     int mult;   // Mult added (Mult card, Lucky card)
     bool xmult; // Mult multiplied by 2 (Glass card)
     int money;  // Money earned (Gold seal, Lucky card)
+    bool lucky_triggered; // A Lucky card won its mult or its money (Lucky Cat)
 } CardScoreResult;
 
 /**

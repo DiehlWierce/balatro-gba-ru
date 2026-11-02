@@ -102,6 +102,12 @@ List* get_expired_jokers_list(void);
 void item_start_discard_animation(Item* item);
 
 int deck_get_size(void);
+
+/**
+ * @brief Number of cards with @p enhancement in the whole deck: draw pile, hand, played cards
+ *        and discard pile (Steel Joker, Stone Joker)
+ */
+int game_count_deck_enhancement(u8 enhancement);
 int get_deck_top(void);
 void deck_push(Card* card);
 Card* deck_pop(void);

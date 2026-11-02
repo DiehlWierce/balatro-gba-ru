@@ -2,7 +2,9 @@
 #include "game/round.h"
 #include "game_variables.h"
 #include "hand.h"
+#include "hand_levels.h"
 #include "joker.h"
+#include "joker_cards.h"
 #include "list.h"
 #include "pool.h"
 #include "random.h"
@@ -119,6 +121,21 @@ DECLARE_JOKER_DESC_FUNC(gift_card_joker_desc)
 DECLARE_JOKER_DESC_FUNC(swashbuckler_joker_desc)
 DECLARE_JOKER_DESC_FUNC(golden_ticket_joker_desc)
 DECLARE_JOKER_DESC_FUNC(rough_gem_joker_desc)
+DECLARE_JOKER_DESC_FUNC(steel_joker_desc)
+DECLARE_JOKER_DESC_FUNC(glass_joker_desc)
+DECLARE_JOKER_DESC_FUNC(lucky_cat_joker_desc)
+DECLARE_JOKER_DESC_FUNC(vampire_joker_desc)
+DECLARE_JOKER_DESC_FUNC(midas_mask_joker_desc)
+DECLARE_JOKER_DESC_FUNC(cartomancer_joker_desc)
+DECLARE_JOKER_DESC_FUNC(constellation_joker_desc)
+DECLARE_JOKER_DESC_FUNC(fortune_teller_joker_desc)
+DECLARE_JOKER_DESC_FUNC(hallucination_joker_desc)
+DECLARE_JOKER_DESC_FUNC(stone_joker_desc)
+DECLARE_JOKER_DESC_FUNC(marble_joker_desc)
+DECLARE_JOKER_DESC_FUNC(certificate_joker_desc)
+DECLARE_JOKER_DESC_FUNC(space_joker_desc)
+DECLARE_JOKER_DESC_FUNC(hiker_joker_desc)
+DECLARE_JOKER_DESC_FUNC(burglar_joker_desc)
 
 // Joker Effect functions
 
@@ -195,6 +212,16 @@ DECLARE_JOKER_EFFECT_FUNC(stuntman_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(swashbuckler_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(golden_ticket_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(rough_gem_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(steel_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(glass_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(lucky_cat_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(vampire_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(midas_mask_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(constellation_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(fortune_teller_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(stone_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(space_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(hiker_joker_effect)
 
 /* The index of a joker in the registry matches its ID.
  *
@@ -304,6 +331,23 @@ const JokerInfo joker_registry[] =
     { "Головорез", COMMON_JOKER, 4, false, swashbuckler_joker_desc, swashbuckler_joker_effect }, // 76
     { "Золотой билет", COMMON_JOKER, 5, false, golden_ticket_joker_desc, golden_ticket_joker_effect }, // 77
     { "Грубый алмаз", UNCOMMON_JOKER, 7, false, rough_gem_joker_desc, rough_gem_joker_effect }, // 78
+
+
+    { "Стальной Джокер", UNCOMMON_JOKER, 7, false, steel_joker_desc, steel_joker_effect }, // 79
+    { "Стеклянный Джокер", UNCOMMON_JOKER, 6, false, glass_joker_desc, glass_joker_effect }, // 80
+    { "Счастливый кот", UNCOMMON_JOKER, 6, false, lucky_cat_joker_desc, lucky_cat_joker_effect }, // 81
+    { "Вампир", UNCOMMON_JOKER, 7, false, vampire_joker_desc, vampire_joker_effect }, // 82
+    { "Маска Мидаса", UNCOMMON_JOKER, 7, false, midas_mask_joker_desc, midas_mask_joker_effect }, // 83
+    { "Картомант", UNCOMMON_JOKER, 6, false, cartomancer_joker_desc, joker_effect_noop }, // 84
+    { "Созвездие", UNCOMMON_JOKER, 6, false, constellation_joker_desc, constellation_joker_effect }, // 85
+    { "Гадалка", COMMON_JOKER, 6, false, fortune_teller_joker_desc, fortune_teller_joker_effect }, // 86
+    { "Галлюцинация", COMMON_JOKER, 4, false, hallucination_joker_desc, joker_effect_noop }, // 87
+    { "Каменный Джокер", UNCOMMON_JOKER, 6, false, stone_joker_desc, stone_joker_effect }, // 88
+    { "Мраморный Джокер", UNCOMMON_JOKER, 6, false, marble_joker_desc, joker_effect_noop }, // 89
+    { "Сертификат", UNCOMMON_JOKER, 6, false, certificate_joker_desc, joker_effect_noop }, // 90
+    { "Космический Джокер", UNCOMMON_JOKER, 5, false, space_joker_desc, space_joker_effect }, // 91
+    { "Турист", UNCOMMON_JOKER, 5, false, hiker_joker_desc, hiker_joker_effect }, // 92
+    { "Взломщик", UNCOMMON_JOKER, 6, false, burglar_joker_desc, joker_effect_noop }, // 93
 
     // The following jokers don't have sprites yet,
     // uncomment them when their sprites are added.
@@ -999,6 +1043,149 @@ static int rough_gem_joker_desc(Joker* joker, Rect dest_rect)
     static const char desc[] =
         TTE_BLACK_TAG "Сыгранные карты масти " TTE_YELLOW_TAG "Бубны " TTE_BLACK_TAG "дают " TTE_YELLOW_TAG "$1" TTE_BLACK_TAG " при подсчёте";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
+}
+
+static int steel_joker_steel_count(void)
+{
+    return game_count_deck_enhancement(CARD_ENHANCEMENT_STEEL);
+}
+
+static int stone_joker_stone_count(void)
+{
+    return game_count_deck_enhancement(CARD_ENHANCEMENT_STONE);
+}
+
+// Prints "X1.25" style numbers: percent / 100 with two decimals
+#define XMULT_FMT "X%d.%02d"
+#define XMULT_ARGS(percent) (percent) / 100, (percent) % 100
+
+static int print_desc(const char* desc, Rect dest_rect)
+{
+    return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
+}
+
+static int steel_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc_format[] =
+        TTE_RED_TAG "X0.2" TTE_BLACK_TAG " множ. за каждую " TTE_YELLOW_TAG "Стальную" TTE_BLACK_TAG " карту в колоде\n\n(Сейчас " TTE_RED_TAG XMULT_FMT TTE_BLACK_TAG " множ.)";
+    char desc[180];
+    int percent = joker_cards_xmult_percent(joker->id, 0, steel_joker_steel_count());
+    snprintf(desc, sizeof(desc), desc_format, XMULT_ARGS(percent));
+    return print_desc(desc, dest_rect);
+}
+
+static int glass_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc_format[] =
+        TTE_RED_TAG "X0.75" TTE_BLACK_TAG " множ. за каждую разбитую " TTE_YELLOW_TAG "Стеклянную" TTE_BLACK_TAG " карту\n\n(Сейчас " TTE_RED_TAG XMULT_FMT TTE_BLACK_TAG " множ.)";
+    char desc[180];
+    int percent = joker_cards_xmult_percent(joker->id, joker->persistent_state, 0);
+    snprintf(desc, sizeof(desc), desc_format, XMULT_ARGS(percent));
+    return print_desc(desc, dest_rect);
+}
+
+static int lucky_cat_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc_format[] =
+        TTE_RED_TAG "X0.25" TTE_BLACK_TAG " множ. за каждое срабатывание " TTE_YELLOW_TAG "Счастливой" TTE_BLACK_TAG " карты\n\n(Сейчас " TTE_RED_TAG XMULT_FMT TTE_BLACK_TAG " множ.)";
+    char desc[180];
+    int percent = joker_cards_xmult_percent(joker->id, joker->persistent_state, 0);
+    snprintf(desc, sizeof(desc), desc_format, XMULT_ARGS(percent));
+    return print_desc(desc, dest_rect);
+}
+
+static int vampire_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc_format[] =
+        TTE_RED_TAG "X0.1" TTE_BLACK_TAG " множ. за каждое улучшение сыгранных карт, улучшение снимается\n\n(Сейчас " TTE_RED_TAG XMULT_FMT TTE_BLACK_TAG " множ.)";
+    char desc[200];
+    int percent = joker_cards_xmult_percent(joker->id, joker->persistent_state, 0);
+    snprintf(desc, sizeof(desc), desc_format, XMULT_ARGS(percent));
+    return print_desc(desc, dest_rect);
+}
+
+static int midas_mask_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_BLACK_TAG "Сыгранные " TTE_YELLOW_TAG "картинки" TTE_BLACK_TAG " становятся " TTE_YELLOW_TAG "Золотыми";
+    return print_desc(desc, dest_rect);
+}
+
+static int cartomancer_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_BLACK_TAG "Создаёт карту " TTE_PURPLE_TAG "Таро" TTE_BLACK_TAG " при выборе блайнда\n(нужен свободный слот)";
+    return print_desc(desc, dest_rect);
+}
+
+static int constellation_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc_format[] =
+        TTE_RED_TAG "X0.1" TTE_BLACK_TAG " множ. за каждую использованную " TTE_YELLOW_TAG "Планету" TTE_BLACK_TAG "\n\n(Сейчас " TTE_RED_TAG XMULT_FMT TTE_BLACK_TAG " множ.)";
+    char desc[180];
+    int percent = joker_cards_xmult_percent(joker->id, joker->persistent_state, 0);
+    snprintf(desc, sizeof(desc), desc_format, XMULT_ARGS(percent));
+    return print_desc(desc, dest_rect);
+}
+
+static int fortune_teller_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc_format[] =
+        TTE_RED_TAG "+1" TTE_BLACK_TAG " множ. за каждую использованную " TTE_PURPLE_TAG "Таро" TTE_BLACK_TAG " за забег\n\n(Сейчас " TTE_RED_TAG "+%d" TTE_BLACK_TAG " множ.)";
+    char desc[180];
+    snprintf(desc, sizeof(desc), desc_format, joker_cards_fortune_teller_mult(g_game_vars.tarots_used));
+    return print_desc(desc, dest_rect);
+}
+
+static int hallucination_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_GREEN_TAG "1 из 2" TTE_BLACK_TAG ", что при открытии бустера создастся " TTE_PURPLE_TAG "Таро" TTE_BLACK_TAG "\n(нужен свободный слот)";
+    return print_desc(desc, dest_rect);
+}
+
+static int stone_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc_format[] =
+        TTE_BLUE_TAG "+25" TTE_BLACK_TAG " фишек за каждую " TTE_YELLOW_TAG "Каменную" TTE_BLACK_TAG " карту в колоде\n\n(Сейчас " TTE_BLUE_TAG "+%d" TTE_BLACK_TAG " фишек)";
+    char desc[180];
+    snprintf(desc, sizeof(desc), desc_format, joker_cards_stone_chips(stone_joker_stone_count()));
+    return print_desc(desc, dest_rect);
+}
+
+static int marble_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_BLACK_TAG "Добавляет в колоду одну " TTE_YELLOW_TAG "Каменную" TTE_BLACK_TAG " карту при выборе блайнда";
+    return print_desc(desc, dest_rect);
+}
+
+static int certificate_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_BLACK_TAG "В начале раунда в руку попадает случайная карта со случайной " TTE_YELLOW_TAG "печатью";
+    return print_desc(desc, dest_rect);
+}
+
+static int space_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_GREEN_TAG "1 из 4" TTE_BLACK_TAG ", что сыгранная рука повысит " TTE_YELLOW_TAG "уровень" TTE_BLACK_TAG " на 1";
+    return print_desc(desc, dest_rect);
+}
+
+static int hiker_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_BLACK_TAG "Каждая сыгранная карта навсегда получает " TTE_BLUE_TAG "+5" TTE_BLACK_TAG " фишек при подсчёте";
+    return print_desc(desc, dest_rect);
+}
+
+static int burglar_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_BLACK_TAG "При выборе блайнда " TTE_RED_TAG "+3" TTE_BLACK_TAG " руки и " TTE_RED_TAG "все сбросы пропадают";
+    return print_desc(desc, dest_rect);
 }
 
 static int pareidolia_joker_desc(Joker* joker, Rect dest_rect)
@@ -2782,6 +2969,216 @@ static u32 rough_gem_joker_effect(
 
     (*joker_effect)->money = 1;
     return JOKER_EFFECT_FLAG_MONEY;
+}
+
+// Applies an "X" multiplier given as a percent by adding the difference to the mult
+static u32 joker_percent_xmult_effect(int percent, JokerEffect** joker_effect)
+{
+    u32 gain = joker_cards_mult_gain(g_game_vars.mult, percent);
+    if (gain == 0)
+        return JOKER_EFFECT_FLAG_NONE;
+
+    *joker_effect = &s_shared_joker_effect;
+    (*joker_effect)->mult = gain;
+    return JOKER_EFFECT_FLAG_MULT;
+}
+
+static u32 steel_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    SCORE_ON_EVENT_ONLY(JOKER_EVENT_INDEPENDENT, joker_event)
+
+    int percent = joker_cards_xmult_percent(joker->id, 0, steel_joker_steel_count());
+    return joker_percent_xmult_effect(percent, joker_effect);
+}
+
+// Glass Joker, Lucky Cat and Constellation: X mult from the counter kept in persistent_state
+static u32 glass_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    SCORE_ON_EVENT_ONLY(JOKER_EVENT_INDEPENDENT, joker_event)
+
+    int percent = joker_cards_xmult_percent(joker->id, joker->persistent_state, 0);
+    return joker_percent_xmult_effect(percent, joker_effect);
+}
+
+static u32 lucky_cat_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    return glass_joker_effect(joker, scored_card, joker_event, joker_effect);
+}
+
+static u32 constellation_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    return glass_joker_effect(joker, scored_card, joker_event, joker_effect);
+}
+
+// Redraws the sprite of a played card after its enhancement changed
+static void played_card_refresh(int played_idx)
+{
+    card_object_set_sprite(get_played_array()[played_idx], MAX_HAND_SIZE + played_idx);
+}
+
+static u32 vampire_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    if (joker_event == JOKER_EVENT_INDEPENDENT)
+    {
+        int percent = joker_cards_xmult_percent(joker->id, joker->persistent_state, 0);
+        return joker_percent_xmult_effect(percent, joker_effect);
+    }
+
+    if (joker_event != JOKER_EVENT_ON_HAND_PLAYED)
+        return JOKER_EFFECT_FLAG_NONE;
+
+    // Before the hand is scored the scoring cards lose their enhancement and feed the Vampire
+    CardObject** played = get_played_array();
+    int eaten = 0;
+    for (int i = 0; i <= get_played_top(); i++)
+    {
+        if (played[i] == NULL || !card_object_is_selected(played[i]) || played[i]->card->debuffed)
+            continue;
+        if (joker_cards_vampire_eat(played[i]->card))
+        {
+            eaten++;
+            played_card_refresh(i);
+        }
+    }
+
+    if (eaten == 0)
+        return JOKER_EFFECT_FLAG_NONE;
+
+    joker->persistent_state += eaten;
+    *joker_effect = &s_shared_joker_effect;
+    (*joker_effect)->message = "Ням!";
+    return JOKER_EFFECT_FLAG_MESSAGE;
+}
+
+static u32 midas_mask_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    SCORE_ON_EVENT_ONLY(JOKER_EVENT_ON_HAND_PLAYED, joker_event)
+
+    CardObject** played = get_played_array();
+    int gilded = 0;
+    for (int i = 0; i <= get_played_top(); i++)
+    {
+        if (played[i] == NULL || !card_object_is_selected(played[i]) || played[i]->card->debuffed)
+            continue;
+        if (joker_cards_midas_gild(played[i]->card, card_is_face(played[i]->card)))
+        {
+            gilded++;
+            played_card_refresh(i);
+        }
+    }
+
+    if (gilded == 0)
+        return JOKER_EFFECT_FLAG_NONE;
+
+    *joker_effect = &s_shared_joker_effect;
+    (*joker_effect)->message = "Золото!";
+    return JOKER_EFFECT_FLAG_MESSAGE;
+}
+
+static u32 fortune_teller_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    SCORE_ON_EVENT_ONLY(JOKER_EVENT_INDEPENDENT, joker_event)
+
+    int mult = joker_cards_fortune_teller_mult(g_game_vars.tarots_used);
+    if (mult <= 0)
+        return JOKER_EFFECT_FLAG_NONE;
+
+    *joker_effect = &s_shared_joker_effect;
+    (*joker_effect)->mult = mult;
+    return JOKER_EFFECT_FLAG_MULT;
+}
+
+static u32 stone_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    SCORE_ON_EVENT_ONLY(JOKER_EVENT_INDEPENDENT, joker_event)
+
+    int chips = joker_cards_stone_chips(stone_joker_stone_count());
+    if (chips <= 0)
+        return JOKER_EFFECT_FLAG_NONE;
+
+    *joker_effect = &s_shared_joker_effect;
+    (*joker_effect)->chips = chips;
+    return JOKER_EFFECT_FLAG_CHIPS;
+}
+
+static u32 space_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    SCORE_ON_EVENT_ONLY(JOKER_EVENT_ON_HAND_PLAYED, joker_event)
+
+    if (!joker_cards_one_in(rng_get_u32(RNG_SEQ_JOKER_SPACE), SPACE_JOKER_CHANCE))
+        return JOKER_EFFECT_FLAG_NONE;
+
+    enum HandType hand_type = get_hand_type();
+    HandLevelValues before = hand_get_values(hand_type);
+    hand_level_up(hand_type, 1);
+    HandLevelValues after = hand_get_values(hand_type);
+
+    // The played hand already has its chips and mult: add what the new level gives on top
+    *joker_effect = &s_shared_joker_effect;
+    (*joker_effect)->chips = after.chips - before.chips;
+    (*joker_effect)->mult = after.mult - before.mult;
+    return JOKER_EFFECT_FLAG_CHIPS | JOKER_EFFECT_FLAG_MULT;
+}
+
+static u32 hiker_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    SCORE_ON_EVENT_ONLY_WITH_CARD(scored_card, JOKER_EVENT_ON_CARD_SCORED, joker_event)
+
+    scored_card->bonus_chips = joker_cards_hiker_bonus(scored_card->bonus_chips);
+
+    *joker_effect = &s_shared_joker_effect;
+    (*joker_effect)->message = "+5 фиш.";
+    return JOKER_EFFECT_FLAG_MESSAGE;
 }
 
 #pragma endregion

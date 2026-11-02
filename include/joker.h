@@ -177,6 +177,17 @@ int joker_get_sell_value(const Joker* joker);
 void joker_economy_on_round_end(bool boss_defeated);
 
 /**
+ * @brief Hooks of the Jokers of A8 batch 3, called by the game at the matching moment.
+ *        They go through the owned Jokers and update their counters or change the run.
+ */
+void joker_on_glass_broken(void);                // A Glass card broke (Glass Joker)
+void joker_on_lucky_triggered(void);             // A Lucky card won something (Lucky Cat)
+void joker_on_consumable_used(bool is_tarot);    // Constellation, Fortune Teller
+void joker_on_pack_opened(void);                 // Hallucination
+void joker_on_blind_selected(void);              // Burglar, Cartomancer, Marble Joker (before shuffle)
+void joker_on_deck_shuffled(void);               // Certificate (after the deck is shuffled)
+
+/**
  * @brief Whether the Joker can be sold: Eternal Jokers (Black Stake) can't
  */
 bool joker_can_be_sold(const Joker* joker);

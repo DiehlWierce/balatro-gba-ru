@@ -60,6 +60,12 @@ enum RngSequence
     RNG_SEQ_PACK_TAROT,           // Tarots of an Arcana Pack
     RNG_SEQ_TAROT_JUDGEMENT,      // The Joker created by Judgement
 
+    // Jokers of A8 batch 3
+    RNG_SEQ_JOKER_TAROT,          // Tarot created by Cartomancer and Hallucination
+    RNG_SEQ_JOKER_HALLUCINATION,  // 1 in 2 chance when a Booster Pack is opened
+    RNG_SEQ_JOKER_SPACE,          // 1 in 4 chance to level up the played hand
+    RNG_SEQ_JOKER_CERTIFICATE,    // Rank, suit and seal of the card created by Certificate
+
     RNG_SEQ_MAX
 };
 
