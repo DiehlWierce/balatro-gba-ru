@@ -1,0 +1,102 @@
+# Voucher check: the first Shop offers the Voucher given with -D voucher=<enum VoucherType>
+# usage: run.py scenarios/vouchers.txt OUT -D voucher=N -D owned=BITS
+#   Overstock 0, Clearance Sale 2, Reroll Surplus 6, Crystal Ball 8, Grabber 12, Wasteful 14,
+#   Planet Merchant 18, Seed Money 20, Blank 22, Hieroglyph 26, Director's Cut 28, Paint Brush 30
+#   Upgraded versions are N + 1 and need the base one owned: -D owned=$((1 << N)), else owned=0.
+#   Owning a Voucher through `owned` only sets its bit, its effect is not applied.
+# Seed GBARU1: win the Small Blind, show and buy the Voucher in the Shop, then go to the Big Blind
+# round. The values changed by Vouchers are printed before and after buying.
+
+wait 460
+press START
+wait 60
+press A
+wait 60
+pokestr {sym:s_seed_str} GBARU1
+poke8 {sym:use_seed} 1
+press DOWN
+wait 10
+press A
+wait 120
+
+# Small Blind won with a forced score
+press A
+wait 180
+poke32 {gv:score} 100000
+press A
+press L
+wait 1100
+
+# The Shop of Ante 1 offers the chosen Voucher
+poke8 {sym:s_offer} {def:voucher}
+poke8 {sym:s_offer_ante} 1
+poke32 {gv:owned_vouchers} {def:owned}
+poke32 {gv:money} 100
+press A
+wait 200
+shot 01_shop
+peek32 {gv:hands_per_round}
+peek32 {gv:discards_per_round}
+peek32 {gv:base_hand_size}
+peek32 {gv:joker_slots}
+peek32 {gv:consumable_slots}
+peek32 {gv:shop_slots}
+peek32 {gv:interest_cap}
+peek32 {gv:ante}
+
+# Reroll button, then the Voucher
+press DOWN
+wait 20
+press RIGHT
+wait 20
+shot 02_voucher_selected
+hold B
+wait 90
+shot 03_voucher_description
+release B
+wait 40
+
+# Buy it
+press A
+wait 90
+shot 04_voucher_bought
+peek32 {gv:owned_vouchers}
+peek32 {gv:money}
+peek32 {gv:hands_per_round}
+peek32 {gv:discards_per_round}
+peek32 {gv:base_hand_size}
+peek32 {gv:joker_slots}
+peek32 {gv:consumable_slots}
+peek32 {gv:shop_slots}
+peek32 {gv:interest_cap}
+peek32 {gv:ante}
+
+# Reroll the Shop once to see the reroll price and the top row
+press A
+wait 60
+shot 05_shop_rerolled
+
+# Next round: Reroll button -> top row "Next round"
+press UP
+wait 20
+press A
+wait 200
+shot 06_blind_select
+
+# R rerolls the Boss with Director's Cut / Retcon
+press R
+wait 120
+shot 07_after_r
+peek32 {gv:money}
+press R
+wait 120
+shot 08_after_second_r
+peek32 {gv:money}
+
+# Big Blind round
+press A
+wait 200
+shot 09_big_blind_round
+peek32 {gv:hands}
+peek32 {gv:discards}
+peek32 {gv:hand_size}

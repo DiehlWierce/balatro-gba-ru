@@ -99,9 +99,10 @@ static const Rect     ITEM_NAME_TEXT_RECT           = { 10,  7, 27,  7};
 
 // Positions in pixels
 static const BG_POINT SHOP_JOKER_SPRITES_INIT_POS = {120, 160};
-// The Voucher sits in the bottom left box of the Shop panel, its price above the box
-static const BG_POINT SHOP_VOUCHER_POS            = { 92, 113};
-static const Rect     SHOP_VOUCHER_PRICE_RECT     = { 96, 104, 119, 111 };
+// The Voucher sits in the bottom right box of the Shop panel (the ticket is 28 pixels wide
+// inside its 32 pixels sprite), its price on its right
+static const BG_POINT SHOP_VOUCHER_POS            = {135, 113};
+static const Rect     SHOP_VOUCHER_PRICE_RECT     = {166, 125, 189, 132 };
 static const BG_POINT ITEM_DESCRIPTION_SPRITE_POS = {135,   9};
 static const Rect     SHOP_PRICES_TEXT_RECT       = { 72,  56, 192, 160 };
 static const Rect     SHOP_REROLL_RECT            = { 88,  96, UNDEFINED, UNDEFINED };
@@ -469,9 +470,9 @@ static void shop_add_top_row_item(void)
     ListItr itr = list_itr_create(&s_shop_items_list);
     while ((item = list_itr_next(&itr)))
     {
+        // Moved right away so that the prices are printed under the new positions
         item->tx = int2fx(shop_top_row_item_x(idx, nb_items));
-        if (item == new_item)
-            item->x = item->tx;
+        item->x = item->tx;
         idx++;
     }
 
