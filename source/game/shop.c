@@ -52,10 +52,14 @@
 #define SHOP_PACK_WEIGHT     8 // Booster Packs share the top row since there is no room for a second
 
 // Opened Booster Pack
-#define PACK_CHOICES_SPACING_PX 36
-#define PACK_TITLE_POS_Y        56
-#define PACK_CARD_INFO_POS_Y    112
-#define PACK_HINT_POS_Y         124
+#define PACK_CHOICES_SPACING_PX 33
+#define PACK_CHOICES_CENTER_X   154 // Middle of the green area right of the Shop icon
+#define PACK_CHOICES_Y          10
+#define PACK_TEXT_POS_X         76  // Title and card info, in the green area under the choices
+#define PACK_TITLE_POS_Y        44
+#define PACK_CARD_INFO_POS_Y    53
+#define PACK_HINT_POS_X         116 // Hint, in the Shop panel right of the Reroll button
+#define PACK_HINT_POS_Y         72
 #define NEXT_ROUND_BTN_SEL_X 0
 
 // Palette IDs
@@ -102,6 +106,7 @@ static const Rect     ITEM_NAME_TEXT_RECT           = { 10,  7, 27,  7};
 static const BG_POINT SHOP_JOKER_SPRITES_INIT_POS = {120, 160};
 static const BG_POINT ITEM_DESCRIPTION_SPRITE_POS = {135,   9};
 static const Rect     SHOP_PRICES_TEXT_RECT       = { 72,  56, 192, 160 };
+static const Rect     PACK_TEXT_RECT              = { 72,  40, 240, 160 };
 static const Rect     SHOP_REROLL_RECT            = { 88,  96, UNDEFINED, UNDEFINED };
 // clang-format on
 
@@ -922,16 +927,13 @@ static int s_pack_picks_left = 0;
 
 static void shop_pack_print_texts(void)
 {
-    tte_erase_rect_wrapper(SHOP_PRICES_TEXT_RECT);
+    tte_erase_rect_wrapper(PACK_TEXT_RECT);
 
-    const char* name = s_pack_info->name;
     tte_printf(
-        TTE_WHITE_TAG "#{P:%d,%d}%*s%s",
-        SHOP_PRICES_TEXT_RECT.left,
+        TTE_WHITE_TAG "#{P:%d,%d}%s",
+        PACK_TEXT_POS_X,
         PACK_TITLE_POS_Y,
-        (24 - (int)strlen(name)) / 2,
-        "",
-        name
+        s_pack_info->name
     );
 
     // Enhancement and seal of the selected card
@@ -942,19 +944,18 @@ static void shop_pack_print_texts(void)
         const char* enhancement = card_get_enhancement_name(card);
         const char* seal = card_get_seal_name(card);
         tte_printf(
-            TTE_WHITE_TAG "#{P:%d,%d}%s %s",
-            SHOP_PRICES_TEXT_RECT.left,
+            TTE_YELLOW_TAG "#{P:%d,%d}%s%s%s",
+            PACK_TEXT_POS_X,
             PACK_CARD_INFO_POS_Y,
             enhancement != NULL ? enhancement : "",
+            enhancement != NULL && seal != NULL ? ", " : "",
             seal != NULL ? seal : ""
         );
     }
 
-    tte_printf(
-        TTE_WHITE_TAG "#{P:%d,%d}Взять: A  Пропуск: START",
-        SHOP_PRICES_TEXT_RECT.left,
-        PACK_HINT_POS_Y
-    );
+    tte_printf(TTE_WHITE_TAG "#{P:%d,%d}A: взять", PACK_HINT_POS_X, PACK_HINT_POS_Y);
+    tte_printf(TTE_WHITE_TAG "#{P:%d,%d}START: пропуск", PACK_HINT_POS_X, PACK_HINT_POS_Y + 10);
+    display_deck_size_max();
 }
 
 static void shop_pack_set_selected(int idx)
@@ -986,7 +987,7 @@ static void shop_pack_open_start(void)
     if (nb_choices > MAX_PACK_CHOICES)
         nb_choices = MAX_PACK_CHOICES;
 
-    int start_x = (SCREEN_WIDTH - (nb_choices * PACK_CHOICES_SPACING_PX - 4)) / 2;
+    int start_x = PACK_CHOICES_CENTER_X - (nb_choices * PACK_CHOICES_SPACING_PX - 1) / 2;
     for (int i = 0; i < nb_choices; i++)
     {
         Item* choice = s_pack_info->roll_choice(i);
@@ -996,7 +997,7 @@ static void shop_pack_open_start(void)
         choice->x = int2fx(start_x + i * PACK_CHOICES_SPACING_PX);
         choice->y = int2fx(SHOP_JOKER_SPRITES_INIT_POS.y);
         choice->tx = choice->x;
-        choice->ty = int2fx(ITEM_SHOP_Y);
+        choice->ty = int2fx(PACK_CHOICES_Y);
         s_pack_nb_choices++;
     }
     for (int i = nb_choices; i < MAX_PACK_CHOICES; i++)
@@ -1025,7 +1026,7 @@ static void shop_pack_close(void)
     s_pack_nb_choices = 0;
     s_pack_info = NULL;
 
-    tte_erase_rect_wrapper(SHOP_PRICES_TEXT_RECT);
+    tte_erase_rect_wrapper(PACK_TEXT_RECT);
 
     // Bring the shop items back
     ListItr itr = list_itr_create(&s_shop_items_list);
@@ -1044,6 +1045,7 @@ static void shop_pack_close(void)
     }
 
     shop_print_reroll_cost();
+    display_deck_size_max();
     state_machine_change_state(&shop_sm, GAME_SHOP_ACTIVE);
 }
 

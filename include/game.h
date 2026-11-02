@@ -8,7 +8,7 @@
 
 #include <tonc.h>
 
-#define MAX_DECK_SIZE 52
+#define MAX_DECK_SIZE 80 // Standard Packs add cards to the 52 of the starting Deck
 #define FRAMES(x)     (((x) + (g_game_vars.game_speed) - 1) / (g_game_vars.game_speed))
 
 // Capacities for arrays and screen layouts. The limits during a run are

@@ -57,7 +57,10 @@ static Item* standard_pack_roll_choice(int idx)
 static void standard_pack_pick(Item** choice)
 {
     CardObject* card_object = (CardObject*)(*choice);
-    deck_push(card_object->card);
+    if (deck_get_size() < MAX_DECK_SIZE)
+        deck_push(card_object->card);
+    else
+        card_destroy(&card_object->card); // The deck is full, the card is lost
     card_object_destroy(&card_object);
     *choice = NULL;
     display_deck_size_max();
