@@ -1,0 +1,80 @@
+# Boss Blind check, needs a debug build: make clean && make DEBUG_BOSS=-1
+# usage: run.py scenarios/boss_round.txt OUT -D boss=<BlindType number>
+#   Hook 2, Ox 3, Wall 5, Arm 7, Psychic 10, Water 12, Manacle 14, Eye 15, Mouth 16,
+#   Serpent 18, Needle 20, Tooth 22, Flint 23, Vessel 27
+# Seed GBARU1, the forced Boss is shown on the Blind Select screen, then its round starts
+# directly. Plays 1 card, then 5 cards, discards 1 card, plays 1 card, with screenshots and values.
+
+wait 460
+press START
+wait 60
+press A
+wait 60
+pokestr {sym:s_seed_str} GBARU1
+poke8 {sym:use_seed} 1
+poke32 {sym:g_debug_forced_boss} {def:boss}
+# High Card at level 2, to see The Arm lower it
+poke8 {gv:hand_levels} 2
+press DOWN
+wait 10
+press A
+wait 120
+shot 01_blind_select
+
+# Start the Boss round right away
+poke32 {gv:current_blind} {def:boss}
+press A
+wait 180
+shot 02_round_start
+peek32 {gv:hands}
+peek32 {gv:discards}
+peek32 {gv:hand_size}
+
+# Hand 1: the first card alone
+press A
+wait 10
+shot 03_hand1_selected
+press L
+wait 90
+shot 04_hand1_playing
+wait 500
+shot 05_hand1_done
+peek32 {gv:money}
+peek32 {gv:hand_levels}
+peek32 {gv:score}
+
+# Hand 2: the 5 leftmost cards
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+wait 10
+shot 06_hand2_selected
+press L
+wait 90
+shot 07_hand2_playing
+wait 600
+shot 08_hand2_done
+peek32 {gv:money}
+peek32 {gv:score}
+
+# Discard the first card
+press A
+press R
+wait 300
+shot 09_after_discard
+peek32 {gv:discards}
+
+# Hand 3: the first card alone again (same hand type as hand 1 for The Eye)
+press A
+press L
+wait 90
+shot 10_hand3_playing
+wait 500
+shot 11_hand3_done
+peek32 {gv:score}

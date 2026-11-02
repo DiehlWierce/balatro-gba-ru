@@ -51,41 +51,42 @@ static const u32 ANTE_LUT[] = {100, 300, 800, 2000, 5000, 11000, 20000, 35000, 5
 
 // clang-format off
 /**
- * @brief Stores an instance of the Blind struct for each BlindType value, ordered in the same way.
+ * @brief Stores an instance of the Blind struct for each BlindType value, indexed by BlindType.
+ *         The Wall (x4) and Violet Vessel (x6) effects are their score requirement.
  *         Acts the same way the Joker registry does, and may need to go in its own file depending
  *         on how Blind effects are implemented.
  */
 static Blind s_blind_type_map[BLIND_TYPE_MAX] = {
-    {BLIND_TYPE_SMALL,   FIX_ONE         },
-    {BLIND_TYPE_BIG,    (FIX_ONE * 3) / 2},
-    {BLIND_TYPE_HOOK,    FIX_ONE * 2     },
-    {BLIND_TYPE_OX,      FIX_ONE * 2     },
-    {BLIND_TYPE_HOUSE,   FIX_ONE * 2     },
-    {BLIND_TYPE_WHEEL,   FIX_ONE * 2     },
-    {BLIND_TYPE_WALL,    FIX_ONE * 2     }, // x4 score requirement will be part of the effect
-    {BLIND_TYPE_ARM,     FIX_ONE * 2     },
-    {BLIND_TYPE_CLUB,    FIX_ONE * 2     },
-    {BLIND_TYPE_FISH,    FIX_ONE * 2     },
-    {BLIND_TYPE_PSYCHIC, FIX_ONE * 2     },
-    {BLIND_TYPE_GOAD,    FIX_ONE * 2     },
-    {BLIND_TYPE_WATER,   FIX_ONE * 2     },
-    {BLIND_TYPE_WINDOW,  FIX_ONE * 2     },
-    {BLIND_TYPE_MANACLE, FIX_ONE * 2     },
-    {BLIND_TYPE_EYE,     FIX_ONE * 2     },
-    {BLIND_TYPE_MOUTH,   FIX_ONE * 2     },
-    {BLIND_TYPE_PLANT,   FIX_ONE * 2     },
-    {BLIND_TYPE_SERPENT, FIX_ONE * 2     },
-    {BLIND_TYPE_PILLAR,  FIX_ONE * 2     },
-    {BLIND_TYPE_NEEDLE,  FIX_ONE * 2     }, // Same as the Wall with normal requirement
-    {BLIND_TYPE_HEAD,    FIX_ONE * 2     },
-    {BLIND_TYPE_TOOTH,   FIX_ONE * 2     },
-    {BLIND_TYPE_FLINT,   FIX_ONE * 2     },
-    {BLIND_TYPE_MARK,    FIX_ONE * 2     },
-    {BLIND_TYPE_ACORN,   FIX_ONE * 2     },
-    {BLIND_TYPE_LEAF,    FIX_ONE * 2     },
-    {BLIND_TYPE_VESSEL,  FIX_ONE * 2     }, // Same as the Wall with x6 requirement
-    {BLIND_TYPE_HEART,   FIX_ONE * 2     },
-    {BLIND_TYPE_BELL,    FIX_ONE * 2     }
+    [BLIND_TYPE_SMALL]   = {BLIND_TYPE_SMALL,   FIX_ONE          },
+    [BLIND_TYPE_BIG]     = {BLIND_TYPE_BIG,     (FIX_ONE * 3) / 2},
+    [BLIND_TYPE_HOOK]    = {BLIND_TYPE_HOOK,    FIX_ONE * 2      },
+    [BLIND_TYPE_OX]      = {BLIND_TYPE_OX,      FIX_ONE * 2      },
+    [BLIND_TYPE_HOUSE]   = {BLIND_TYPE_HOUSE,   FIX_ONE * 2      },
+    [BLIND_TYPE_WALL]    = {BLIND_TYPE_WALL,    FIX_ONE * 4      },
+    [BLIND_TYPE_WHEEL]   = {BLIND_TYPE_WHEEL,   FIX_ONE * 2      },
+    [BLIND_TYPE_ARM]     = {BLIND_TYPE_ARM,     FIX_ONE * 2      },
+    [BLIND_TYPE_CLUB]    = {BLIND_TYPE_CLUB,    FIX_ONE * 2      },
+    [BLIND_TYPE_FISH]    = {BLIND_TYPE_FISH,    FIX_ONE * 2      },
+    [BLIND_TYPE_PSYCHIC] = {BLIND_TYPE_PSYCHIC, FIX_ONE * 2      },
+    [BLIND_TYPE_GOAD]    = {BLIND_TYPE_GOAD,    FIX_ONE * 2      },
+    [BLIND_TYPE_WATER]   = {BLIND_TYPE_WATER,   FIX_ONE * 2      },
+    [BLIND_TYPE_WINDOW]  = {BLIND_TYPE_WINDOW,  FIX_ONE * 2      },
+    [BLIND_TYPE_MANACLE] = {BLIND_TYPE_MANACLE, FIX_ONE * 2      },
+    [BLIND_TYPE_EYE]     = {BLIND_TYPE_EYE,     FIX_ONE * 2      },
+    [BLIND_TYPE_MOUTH]   = {BLIND_TYPE_MOUTH,   FIX_ONE * 2      },
+    [BLIND_TYPE_PLANT]   = {BLIND_TYPE_PLANT,   FIX_ONE * 2      },
+    [BLIND_TYPE_SERPENT] = {BLIND_TYPE_SERPENT, FIX_ONE * 2      },
+    [BLIND_TYPE_PILLAR]  = {BLIND_TYPE_PILLAR,  FIX_ONE * 2      },
+    [BLIND_TYPE_NEEDLE]  = {BLIND_TYPE_NEEDLE,  FIX_ONE * 2      },
+    [BLIND_TYPE_HEAD]    = {BLIND_TYPE_HEAD,    FIX_ONE * 2      },
+    [BLIND_TYPE_TOOTH]   = {BLIND_TYPE_TOOTH,   FIX_ONE * 2      },
+    [BLIND_TYPE_FLINT]   = {BLIND_TYPE_FLINT,   FIX_ONE * 2      },
+    [BLIND_TYPE_MARK]    = {BLIND_TYPE_MARK,    FIX_ONE * 2      },
+    [BLIND_TYPE_ACORN]   = {BLIND_TYPE_ACORN,   FIX_ONE * 2      },
+    [BLIND_TYPE_LEAF]    = {BLIND_TYPE_LEAF,    FIX_ONE * 2      },
+    [BLIND_TYPE_VESSEL]  = {BLIND_TYPE_VESSEL,  FIX_ONE * 6      },
+    [BLIND_TYPE_HEART]   = {BLIND_TYPE_HEART,   FIX_ONE * 2      },
+    [BLIND_TYPE_BELL]    = {BLIND_TYPE_BELL,    FIX_ONE * 2      }
 };
 // clang-format on
 

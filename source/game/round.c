@@ -242,6 +242,12 @@ static bool s_discarded_card = false;
 static int s_cards_drawn = 0;
 static int s_cards_discarded = 0;
 
+// Boss Blind effects
+static bool s_hand_scores_nothing = false; // The Boss doesn't allow the played hand
+static bool s_first_draw_done = false;     // Forced draws (The Serpent) skip the first draw
+
+static const BG_POINT BOSS_NO_SCORE_TEXT_POS = {104, 48};
+
 /*******************************************************************************
  * UTILS FUNCTIONS
  ******************************************************************************/
@@ -516,7 +522,8 @@ static inline void round_execute_play_hand(void)
         .hand_type = get_hand_type(),
         .nb_cards = hand_get_nb_selected_cards()
     };
-    blind_effects_trigger(BLIND_EVENT_ON_HAND_PLAYED, &blind_event_data);
+    u32 blind_flags = blind_effects_trigger(BLIND_EVENT_ON_HAND_PLAYED, &blind_event_data);
+    s_hand_scores_nothing = (blind_flags & BLIND_EFFECT_FLAG_NO_SCORE) != 0;
 }
 
 /**
@@ -1149,9 +1156,9 @@ static inline void round_process_input_and_state(void)
  * @brief Draw the next card at the top of the Deck and play a little Sprite animation to position
  *         it in our hand.
  */
-static inline void card_draw(void)
+static inline void card_draw(int max_hand_size)
 {
-    if (get_deck_top() < 0 || get_hand_top() >= g_game_vars.hand_size - 1 ||
+    if (get_deck_top() < 0 || get_hand_top() >= max_hand_size - 1 ||
         get_hand_top() >= MAX_HAND_SIZE - 1)
         return;
 
@@ -1181,20 +1188,64 @@ static inline void card_draw(void)
 
 static inline void round_process_card_draw(void)
 {
-    if (get_hand_state() == HAND_DRAW && s_cards_drawn < g_game_vars.hand_size)
+    // Normally the hand is filled up to its size. Some Bosses (The Serpent) force the number of
+    // cards drawn after a play or a discard, even past the hand size.
+    int forced_draws = s_first_draw_done ? blind_effects_get_forced_draws() : 0;
+    int nb_draws = (forced_draws > 0) ? forced_draws : g_game_vars.hand_size;
+    int max_hand_size = (forced_draws > 0) ? MAX_HAND_SIZE : g_game_vars.hand_size;
+
+    if (get_hand_state() == HAND_DRAW && s_cards_drawn < nb_draws)
     {
         if (g_game_vars.timer % FRAMES(10) == 0) // Draw a card every 10 frames
         {
             s_cards_drawn++;
-            card_draw();
+            card_draw(max_hand_size);
         }
     }
     else if (get_hand_state() == HAND_DRAW)
     {
         set_hand_state(HAND_SELECT); // Change the hand state to select after drawing all the cards
         s_cards_drawn = 0;
+        s_first_draw_done = true;
         g_game_vars.timer = TM_ZERO;
+        hand_display_boss_caption();
     }
+}
+
+/**
+ * @brief Selects random cards held in hand for a Boss that discards them (The Hook)
+ *        and starts discarding them. Doesn't use the player's discards.
+ */
+static void round_apply_boss_forced_discards(void)
+{
+    int nb_held = hand_nb_held_cards();
+    int nb_discards = blind_effects_get_forced_discards();
+    if (nb_discards > nb_held)
+        nb_discards = nb_held;
+
+    if (nb_discards <= 0)
+        return;
+
+    CardObject** hand = get_hand_array();
+    for (int i = 0; i < nb_discards; i++)
+    {
+        // Pick a random card among the ones not selected yet
+        int pick = rng_get_u32(RNG_SEQ_BOSS_HOOK) % (nb_held - i);
+        for (int card_idx = 0; card_idx < nb_held; card_idx++)
+        {
+            if (hand[card_idx] == NULL || card_object_is_selected(hand[card_idx]))
+                continue;
+
+            if (pick-- == 0)
+            {
+                card_object_set_selected(hand[card_idx], true);
+                break;
+            }
+        }
+    }
+
+    hand_set_nb_selected_cards(nb_discards);
+    set_hand_state(HAND_DISCARD);
 }
 
 static inline void round_discarded_cards_loop(void)
@@ -1712,6 +1763,28 @@ static inline void play_starting_played_cards_update(int played_idx)
  */
 static inline bool play_before_scoring_cards_update(void)
 {
+    // A hand not allowed by the Boss is played but scores nothing and doesn't trigger Jokers
+    if (s_hand_scores_nothing)
+    {
+        tte_printf(
+            "#{P:%d,%d; cx:0x%X000}Не засчитано!",
+            BOSS_NO_SCORE_TEXT_POS.x,
+            BOSS_NO_SCORE_TEXT_POS.y,
+            TTE_RED_PB
+        );
+        play_sfx(SFX_BUTTON, MM_BASE_PITCH_RATE, SFX_DEFAULT_VOLUME);
+
+        g_game_vars.chips = 0;
+        g_game_vars.mult = 0;
+        display_chips();
+        display_mult();
+
+        s_scored_card_index = get_played_size();
+        g_game_vars.timer = TM_ZERO;
+        play_state = PLAY_ENDING;
+        return false;
+    }
+
     // Activate Jokers with an effect just before the hand is scored
     if (check_and_score_joker_for_event(&s_joker_scored_itr, NULL, JOKER_EVENT_ON_HAND_PLAYED))
     {
@@ -2032,6 +2105,15 @@ static bool play_ended_played_cards_update(int played_idx)
                 s_scored_card_index = 0;
                 s_joker_scored_itr = list_itr_create(get_jokers_list());
                 g_game_vars.timer = TM_ZERO;
+
+                if (s_hand_scores_nothing)
+                {
+                    tte_erase_rect_wrapper(PLAYED_CARDS_SCORES_RECT);
+                    s_hand_scores_nothing = false;
+                }
+
+                if (get_hand_state() == HAND_DRAW)
+                    round_apply_boss_forced_discards();
             }
 
             return true; // return early to avoid accessing played[played_idx] == NULL
@@ -2153,6 +2235,8 @@ void round_on_init(void)
 
     hand_set_nb_selected_cards(0);
     s_cards_drawn = 0;
+    s_hand_scores_nothing = false;
+    s_first_draw_done = false;
 
     sprite_destroy(&g_game_vars.playing_blind_token);
     g_game_vars.playing_blind_token = blind_token_new(

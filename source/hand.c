@@ -7,6 +7,7 @@
 #include "hand.h"
 
 #include "audio_utils.h"
+#include "blind_effects.h"
 #include "card.h"
 #include "game.h"
 #include "game/common_ui.h"
@@ -138,7 +139,7 @@ ContainedHandTypes* get_contained_hands(void)
     return &s_hand.contained_hands;
 }
 
-static void print_hand_type(const char* hand_type_str)
+static void print_hand_type(const char* hand_type_str, int color_pb)
 {
     if (hand_type_str == NULL)
         return; // NULL-checking paranoia
@@ -149,9 +150,22 @@ static void print_hand_type(const char* hand_type_str)
         "#{P:%d,%d; cx:0x%X000}%s",
         hand_type_rect.left,
         hand_type_rect.top,
-        TTE_WHITE_PB,
+        color_pb,
         hand_type_str
     );
+}
+
+void hand_display_boss_caption(void)
+{
+    if (s_hand.hand_selections > 0)
+        return;
+
+    const char* caption = blind_effects_get_short_caption(g_game_vars.current_blind);
+    if (caption == NULL)
+        return;
+
+    tte_erase_rect_wrapper(HAND_TYPE_RECT);
+    print_hand_type(caption, TTE_RED_PB);
 }
 
 void compute_hand_value_info(void)
@@ -165,7 +179,11 @@ void compute_hand_value_info(void)
     g_game_vars.chips = hand_values.chips;
     g_game_vars.mult = hand_values.mult;
 
-    print_hand_type(hand_values.display_name);
+    if (hand_values.display_name != NULL)
+        print_hand_type(hand_values.display_name, TTE_WHITE_PB);
+    else
+        hand_display_boss_caption();
+
     display_chips();
     display_mult();
 }

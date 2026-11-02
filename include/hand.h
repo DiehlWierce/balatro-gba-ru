@@ -100,6 +100,12 @@ enum HandState get_hand_state(void);
 void compute_hand_value_info(void);
 
 /**
+ * @brief Shows the short rule of the current Boss Blind where the hand type is displayed,
+ *        if no card is selected.
+ */
+void hand_display_boss_caption(void);
+
+/**
  * @brief Get the current hand type
  *
  * @return enum HandType

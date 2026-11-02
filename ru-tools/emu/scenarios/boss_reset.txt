@@ -1,0 +1,49 @@
+# Boss round won, then the next round must be back to normal (no leak of the Boss effects).
+# Needs a debug build: make clean && make DEBUG_BOSS=-1
+# usage: run.py scenarios/boss_reset.txt OUT -D boss=<BlindType number>
+#   e.g. Water 12 (discards), Needle 20 (hands), Manacle 14 (hand size)
+
+wait 460
+press START
+wait 60
+press A
+wait 60
+pokestr {sym:s_seed_str} GBARU1
+poke8 {sym:use_seed} 1
+poke32 {sym:g_debug_forced_boss} {def:boss}
+press DOWN
+wait 10
+press A
+wait 120
+
+# Boss round, won with a forced score
+poke32 {gv:current_blind} {def:boss}
+press A
+wait 180
+shot 01_boss_round
+poke32 {gv:score} 100000
+press A
+press L
+wait 1100
+shot 02_round_end
+
+# Cash out, leave the Shop with "Next round"
+press A
+wait 200
+press LEFT
+wait 20
+press UP
+wait 20
+press A
+wait 200
+shot 03_next_blind_select
+peek32 {gv:hands}
+peek32 {gv:discards}
+
+# Next round (normal Blind)
+press A
+wait 300
+shot 04_next_round
+peek32 {gv:hands}
+peek32 {gv:discards}
+peek32 {gv:hand_size}

@@ -61,6 +61,13 @@ ifeq ($(MGBA_LOGGING),1)
 CFLAGS += -DMGBA_LOGGING
 endif
 
+# Debug: force the Boss Blind, e.g. make DEBUG_BOSS=BLIND_TYPE_HOOK (or a BlindType number).
+# DEBUG_BOSS=-1 rolls Bosses normally but lets the emulator poke g_debug_forced_boss.
+# Run `make clean` when changing it.
+ifneq ($(strip $(DEBUG_BOSS)),)
+CFLAGS += -DDEBUG_FORCE_BOSS=$(DEBUG_BOSS)
+endif
+
 CXXFLAGS	:=	$(CFLAGS) -fno-rtti -fno-exceptions
 
 ASFLAGS	:=	-g $(ARCH)
