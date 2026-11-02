@@ -29,6 +29,7 @@
 #include "state_machine.h"
 #include "timer.h"
 #include "util.h"
+#include "voucher.h"
 
 #include <string.h>
 
@@ -44,12 +45,17 @@
 #define OWNED_ITEMS_HIDE_Y_OFFSET 50
 
 // Shop
-#define REROLL_BASE_COST 5 // Base cost for rerolling the shop items
+#define REROLL_BASE_COST             5 // Base cost for rerolling the shop items
+#define REROLL_VOUCHER_COST_DISCOUNT 2 // Reroll Surplus / Reroll Glut
 
-// Weights of the top row item types, as in the original game (Tarots will add 4)
-#define SHOP_JOKER_WEIGHT    20
-#define SHOP_PLANET_WEIGHT   4
-#define SHOP_PACK_WEIGHT     8 // Booster Packs share the top row since there is no room for a second
+// Weights of the top row item types in tenths, as in the original game (Jokers 20, Planets 4,
+// Tarots will add 4). Planet Merchant / Tycoon change the Planets' weight.
+#define SHOP_JOKER_WEIGHT_X10 200
+#define NEXT_ROUND_BTN_SEL_X  0
+#define REROLL_BTN_SEL_X      0
+#define VOUCHER_SEL_X         1
+
+#define SHOP_PACK_WEIGHT 8 // Booster Packs share the top row
 
 // Opened Booster Pack
 #define PACK_CHOICES_SPACING_PX 33
@@ -60,7 +66,9 @@
 #define PACK_CARD_INFO_POS_Y    53
 #define PACK_HINT_POS_X         116 // Hint, in the Shop panel right of the Reroll button
 #define PACK_HINT_POS_Y         72
-#define NEXT_ROUND_BTN_SEL_X 0
+// Top row of the Shop: cards are spread over its width when there are more than 2 of them
+#define SHOP_TOP_ROW_CENTER_X 152
+#define SHOP_TOP_ROW_WIDTH    76
 
 // Palette IDs
 #define REROLL_BTN_PAL_IDX                     3
@@ -104,6 +112,10 @@ static const Rect     ITEM_NAME_TEXT_RECT           = { 10,  7, 27,  7};
 
 // Positions in pixels
 static const BG_POINT SHOP_JOKER_SPRITES_INIT_POS = {120, 160};
+// The Voucher sits in the bottom right box of the Shop panel (the ticket is 28 pixels wide
+// inside its 32 pixels sprite), its price on its right
+static const BG_POINT SHOP_VOUCHER_POS            = {135, 113};
+static const Rect     SHOP_VOUCHER_PRICE_RECT     = {169, 125, 192, 132 };
 static const BG_POINT ITEM_DESCRIPTION_SPRITE_POS = {135,   9};
 static const Rect     SHOP_PRICES_TEXT_RECT       = { 72,  56, 192, 160 };
 static const Rect     PACK_TEXT_RECT              = { 72,  40, 240, 160 };
@@ -111,6 +123,9 @@ static const Rect     SHOP_REROLL_RECT            = { 88,  96, UNDEFINED, UNDEFI
 // clang-format on
 
 static List s_shop_items_list = LIST_DEFAULT;
+
+// Voucher offered in the bottom left box, NULL if none
+static Item* s_shop_voucher = NULL;
 
 enum GameShopStates
 {
@@ -157,6 +172,7 @@ static StateMachine shop_sm = STATE_MACHINE_DEFINE(shop_state_actions, GAME_SHOP
 
 #define SHOP_GRID_OWNED_ROW    0
 #define SHOP_GRID_FOR_SALE_ROW 1
+#define SHOP_GRID_REROLL_ROW   2
 
 static int shop_top_row_get_size(void);
 static bool shop_top_row_on_selection_changed(
@@ -209,6 +225,15 @@ static int s_timer;
 
 static int s_reroll_cost = REROLL_BASE_COST;
 
+/**
+ * @brief Reroll cost at the start of each Shop, lowered by Reroll Surplus / Reroll Glut.
+ */
+static int shop_get_reroll_base_cost(void)
+{
+    int cost = REROLL_BASE_COST - voucher_get_reroll_discount();
+    return (cost < 0) ? 0 : cost;
+}
+
 // Variables relative to the Card we are showing the description of
 
 static Item* s_description_item = NULL;
@@ -246,6 +271,8 @@ void shop_reset(void)
 {
     list_clear(&s_shop_items_list);
     s_shop_items_list = list_init();
+    s_shop_voucher = NULL;
+    s_reroll_cost = REROLL_BASE_COST;
     joker_reset_rollable_jokers();
 }
 
@@ -304,19 +331,26 @@ static void shop_redeem_skip_tags(void)
  */
 static Item* shop_create_top_row_item(void)
 {
-    u32 roll = rng_get_u32(RNG_SEQ_SHOP_ITEM_TYPE) %
-               (SHOP_JOKER_WEIGHT + SHOP_PLANET_WEIGHT + SHOP_PACK_WEIGHT);
+    // Smallest integer weights, so that the default 20:4 odds use the same modulus as before
+    // and a given seed keeps rolling the same Shops
+    int joker_weight = SHOP_JOKER_WEIGHT_X10;
+    int planet_weight = voucher_get_planet_shop_weight_x10();
+    int divisor = (planet_weight % 10 == 0) ? 10 : 2;
+    joker_weight /= divisor;
+    planet_weight /= divisor;
 
-    if (roll >= SHOP_JOKER_WEIGHT + SHOP_PLANET_WEIGHT)
+    u32 roll = rng_get_u32(RNG_SEQ_SHOP_ITEM_TYPE) % (joker_weight + planet_weight + SHOP_PACK_WEIGHT);
+
+    if (roll >= joker_weight + planet_weight)
     {
-        // NULL when no pack sprite is free: fall back to a Joker or a Planet
+        // NULL when no pack sprite is free: fall back to a Joker
         Item* pack = item_roll_new(ITEM_TYPE_PACK, RNG_SEQ_SHOP_PACKS);
         if (pack != NULL)
             return pack;
         roll = 0;
     }
 
-    if (roll < SHOP_JOKER_WEIGHT)
+    if (roll < joker_weight)
     {
         Item* joker = item_roll_new(ITEM_TYPE_JOKER, RNG_SEQ_SHOP_ITEMS);
         // No Joker left to roll: fall back to a Planet
@@ -325,6 +359,22 @@ static Item* shop_create_top_row_item(void)
     }
 
     return item_roll_new(ITEM_TYPE_CONSUMABLE, RNG_SEQ_SHOP_PLANETS);
+}
+
+/**
+ * @brief Horizontal position of a card in the Shop's top row.
+ *
+ * @param idx index of the card in the row
+ * @param nb_items number of cards in the row: up to 2 side by side, more are spread over the row
+ */
+static int shop_top_row_item_x(int idx, int nb_items)
+{
+    int spacing = CARD_SPRITE_SIZE_PX;
+    if (nb_items > 2)
+        spacing = (SHOP_TOP_ROW_WIDTH - CARD_SPRITE_SIZE_PX) / (nb_items - 1);
+
+    int first_x = SHOP_TOP_ROW_CENTER_X - ((nb_items - 1) * spacing) / 2 - CARD_SPRITE_SIZE_PX / 2;
+    return first_x + idx * spacing;
 }
 
 /**
@@ -359,7 +409,7 @@ static void shop_create_top_row_items(void)
             return;
         }
 
-        item->x = int2fx(SHOP_JOKER_SPRITES_INIT_POS.x + i * CARD_SPRITE_SIZE_PX);
+        item->x = int2fx(shop_top_row_item_x(i, shop_slots));
         item->y = int2fx(SHOP_JOKER_SPRITES_INIT_POS.y);
         item->tx = item->x;
         item->ty = int2fx(ITEM_SHOP_Y);
@@ -368,6 +418,91 @@ static void shop_create_top_row_items(void)
 
         list_push_back(shop_items_list, item);
     }
+}
+
+static void shop_print_voucher_price(void)
+{
+    tte_erase_rect_wrapper(SHOP_VOUCHER_PRICE_RECT);
+    if (s_shop_voucher == NULL)
+        return;
+
+    tte_printf(
+        "#{P:%d,%d; cx:0x%X000}$%d",
+        SHOP_VOUCHER_PRICE_RECT.left,
+        SHOP_VOUCHER_PRICE_RECT.top,
+        TTE_YELLOW_PB,
+        item_get_buy_price(s_shop_voucher)
+    );
+}
+
+/**
+ * @brief Reprints every price of the Shop: top row cards, reroll and Voucher.
+ */
+static void shop_print_all_prices(void)
+{
+    tte_erase_rect_wrapper(SHOP_PRICES_TEXT_RECT);
+
+    Item* item;
+    ListItr itr = list_itr_create(&s_shop_items_list);
+    while ((item = list_itr_next(&itr)))
+    {
+        item_print_buy_price_under(item);
+    }
+
+    shop_print_reroll_cost();
+    shop_print_voucher_price();
+}
+
+/**
+ * @brief Puts the Voucher of the current Ante in the bottom left box, if it wasn't bought yet.
+ */
+static void shop_create_voucher(void)
+{
+    s_shop_voucher = NULL;
+
+    enum VoucherType voucher = voucher_get_shop_offer();
+    if (voucher == VOUCHER_NONE)
+        return;
+
+    s_shop_voucher = (Item*)voucher_object_new(voucher);
+    if (s_shop_voucher == NULL)
+        return;
+
+    s_shop_voucher->x = int2fx(SHOP_VOUCHER_POS.x);
+    s_shop_voucher->y = int2fx(SHOP_JOKER_SPRITES_INIT_POS.y);
+    s_shop_voucher->tx = s_shop_voucher->x;
+    s_shop_voucher->ty = int2fx(SHOP_VOUCHER_POS.y);
+
+    shop_print_voucher_price();
+}
+
+/**
+ * @brief Adds one card to the top row when Overstock is redeemed in the Shop, and spreads the
+ *        row again.
+ */
+static void shop_add_top_row_item(void)
+{
+    Item* new_item = shop_create_top_row_item();
+    if (new_item == NULL)
+        return;
+
+    new_item->y = int2fx(SHOP_JOKER_SPRITES_INIT_POS.y);
+    new_item->ty = int2fx(ITEM_SHOP_Y);
+    list_push_back(&s_shop_items_list, new_item);
+
+    int nb_items = list_get_len(&s_shop_items_list);
+    int idx = 0;
+    Item* item;
+    ListItr itr = list_itr_create(&s_shop_items_list);
+    while ((item = list_itr_next(&itr)))
+    {
+        // Moved right away so that the prices are printed under the new positions
+        item->tx = int2fx(shop_top_row_item_x(idx, nb_items));
+        item->x = item->tx;
+        idx++;
+    }
+
+    shop_print_all_prices();
 }
 
 /**
@@ -380,6 +515,7 @@ static void shop_intro()
     if (s_timer == TM_CREATE_SHOP_ITEMS_WAIT)
     {
         shop_create_top_row_items();
+        shop_create_voucher();
     }
 
     if (s_timer >= TM_SHIFT_SHOP_ICON_WAIT) // Shift the shop icon
@@ -535,11 +671,13 @@ static bool shop_top_row_on_selection_changed(
 /**
  * @brief Get size of the row with the "Reroll" button
  *
- * @returns Always 1, because there is only the "Reroll" button on that row.
+ * @returns 2 when a Voucher is offered (Reroll button, then the Voucher), 1 otherwise.
  */
 static int shop_reroll_row_get_size()
 {
-    return 1;
+    // Without a Voucher, left/right on the Reroll button goes to the top row like before
+    shop_selection_rows[SHOP_GRID_REROLL_ROW].attributes.has_h_exit_idx = (s_shop_voucher == NULL);
+    return (s_shop_voucher != NULL) ? 2 : 1;
 }
 
 /**
@@ -554,21 +692,82 @@ static bool shop_reroll_row_on_selection_changed(
 {
     if (row_idx == prev_selection->y)
     {
-        button_set_highlight(&reroll_button, false);
+        if (prev_selection->x == VOUCHER_SEL_X)
+            sprite_object_set_focus((SpriteObject*)s_shop_voucher, false);
+        else
+            button_set_highlight(&reroll_button, false);
 
-        if (new_selection->x != NEXT_ROUND_BTN_SEL_X)
+        // Leaving through the right of the Reroll button goes to the top row's first card
+        if (new_selection->y == SHOP_GRID_FOR_SALE_ROW && new_selection->x != NEXT_ROUND_BTN_SEL_X)
         {
             int idx = new_selection->x - 1;
             SpriteObject* sprite_object = (SpriteObject*)list_get_at_idx(&s_shop_items_list, idx);
             sprite_object_set_focus(sprite_object, true);
         }
     }
-    else if (row_idx == new_selection->y)
+
+    if (row_idx == new_selection->y)
     {
-        button_set_highlight(&reroll_button, true);
+        if (new_selection->x == VOUCHER_SEL_X)
+            sprite_object_set_focus((SpriteObject*)s_shop_voucher, true);
+        else
+            button_set_highlight(&reroll_button, true);
     }
 
     return true;
+}
+
+/**
+ * @brief Applies what a redeemed Voucher changes in the Shop that is open.
+ */
+static void shop_on_voucher_redeemed(enum VoucherType voucher)
+{
+    switch (voucher)
+    {
+        case VOUCHER_OVERSTOCK:
+        case VOUCHER_OVERSTOCK_PLUS:
+            if (list_get_len(&s_shop_items_list) < MAX_SHOP_ITEMS)
+                shop_add_top_row_item();
+            break;
+
+        case VOUCHER_REROLL_SURPLUS:
+        case VOUCHER_REROLL_GLUT:
+            s_reroll_cost -= REROLL_VOUCHER_COST_DISCOUNT;
+            if (s_reroll_cost < 0)
+                s_reroll_cost = 0;
+            break;
+
+        default:
+            break;
+    }
+
+    // Discounts change the prices, the reroll cost may have changed
+    shop_print_all_prices();
+}
+
+/**
+ * @brief Buys the Voucher offered in the Shop.
+ */
+static void shop_buy_voucher(SelectionGrid* selection_grid)
+{
+    Item* voucher = s_shop_voucher;
+    if (voucher == NULL || !item_can_acquire(voucher) ||
+        g_game_vars.money < item_get_buy_price(voucher))
+    {
+        return;
+    }
+
+    // Move the selection back to the Reroll button while the Voucher still exists
+    selection_grid_move_selection_horz(selection_grid, -1);
+
+    enum VoucherType voucher_type = ((VoucherObject*)voucher)->voucher_type;
+    g_game_vars.money -= item_get_buy_price(voucher);
+    display_money();
+    sprite_object_set_focus((SpriteObject*)voucher, false);
+    s_shop_voucher = NULL;
+    item_acquire(voucher); // Redeems it and starts its discard animation
+
+    shop_on_voucher_redeemed(voucher_type);
 }
 
 /**
@@ -612,6 +811,8 @@ static inline void shop_reroll(void)
 
     s_reroll_cost++;
     shop_print_reroll_cost();
+    // The top row prices were erased with the Voucher's
+    shop_print_voucher_price();
 }
 
 /**
@@ -624,7 +825,10 @@ static void shop_reroll_row_on_key_transit(SelectionGrid* selection_grid, Select
         return;
     }
 
-    button_press(&reroll_button);
+    if (selection->x == VOUCHER_SEL_X)
+        shop_buy_voucher(selection_grid);
+    else
+        button_press(&reroll_button);
 }
 
 static void next_round_on_pressed(void)
@@ -632,7 +836,7 @@ static void next_round_on_pressed(void)
     // Go to next blind selection game state
     state_machine_change_state(&shop_sm, GAME_SHOP_EXIT);
     s_timer = TM_ZERO;
-    s_reroll_cost = REROLL_BASE_COST;
+    s_reroll_cost = shop_get_reroll_base_cost();
 
     pal_bg_mem[NEXT_ROUND_BTN_SELECTED_BORDER_PAL_IDX] = pal_bg_mem[SHOP_PANEL_SHADOW_PAL_IDX];
 }
@@ -677,7 +881,12 @@ static void shop_process_user_input(void)
             break;
         }
 
-            // TODO: handle Consumables and Vouchers when implemented
+        case SHOP_GRID_REROLL_ROW:
+        {
+            new_description_item =
+                (shop_selection_grid.selection.x == VOUCHER_SEL_X) ? s_shop_voucher : NULL;
+            break;
+        }
 
         default:
         {
@@ -732,6 +941,10 @@ static void shop_show_item_desc_on_init(void)
         if (tmp_item != s_description_item)
             tmp_item->ty = int2fx(SHOP_JOKER_SPRITES_INIT_POS.y + TILE_SIZE);
     }
+
+    // Shop Voucher
+    if (s_shop_voucher != NULL && s_shop_voucher != s_description_item)
+        s_shop_voucher->ty = int2fx(SHOP_JOKER_SPRITES_INIT_POS.y + TILE_SIZE);
 
     set_owned_skip_tags_moved_offscreen(true);
 
@@ -849,6 +1062,10 @@ static void shop_hide_item_desc_on_init(void)
             tmp_item->ty = int2fx(ITEM_SHOP_Y);
     }
 
+    // Shop Voucher
+    if (s_shop_voucher != NULL && s_shop_voucher != s_description_item)
+        s_shop_voucher->ty = int2fx(SHOP_VOUCHER_POS.y);
+
     set_owned_skip_tags_moved_offscreen(false);
 
     s_description_item->tx = s_description_item_original_x_pos;
@@ -900,6 +1117,7 @@ static void shop_hide_item_desc_on_exit(void)
         s_description_item->ty -= int2fx(TILE_SIZE);
 
     shop_print_reroll_cost();
+    shop_print_voucher_price();
 
     // Print Deck size that was erased
     display_deck_size_max();
@@ -1039,7 +1257,8 @@ static void shop_pack_close(void)
 
     // Re-highlight what the shop selection points to
     int sel_x = shop_selection_grid.selection.x;
-    if (sel_x > NEXT_ROUND_BTN_SEL_X && sel_x - 1 < list_get_len(&s_shop_items_list))
+    if (shop_selection_grid.selection.y == SHOP_GRID_FOR_SALE_ROW && sel_x > NEXT_ROUND_BTN_SEL_X &&
+        sel_x - 1 < list_get_len(&s_shop_items_list))
     {
         sprite_object_set_focus((SpriteObject*)list_get_at_idx(&s_shop_items_list, sel_x - 1), true);
     }
@@ -1131,6 +1350,9 @@ static void shop_outro(void)
             }
         }
 
+        if (s_shop_voucher != NULL)
+            s_shop_voucher->ty = int2fx(160);
+
         reset_top_left_panel_bottom_row();
     }
     else if (s_timer == 2)
@@ -1200,6 +1422,10 @@ void shop_on_exit(void)
     }
 
     list_clear(shop_items_list);
+
+    // A Voucher not bought stays offered until the end of the Ante, see voucher_get_shop_offer()
+    if (s_shop_voucher != NULL)
+        item_dispose(&s_shop_voucher);
 
     // A Planet used in the Shop leaves its hand's values in the left panel
     hand_clear_level_up_display();

@@ -43,6 +43,7 @@ enum RngSequence
     RNG_SEQ_BOSS_ACORN,     // Amber Acorn: Jokers shuffle
     RNG_SEQ_BOSS_HEART,     // Crimson Heart: disabled Joker
     RNG_SEQ_BOSS_BELL,      // Cerulean Bell: forced card
+    RNG_SEQ_SHOP_VOUCHERS,
 
     // Card enhancements and Booster Packs
     RNG_SEQ_CARD_LUCKY_MULT,

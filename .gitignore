@@ -19,3 +19,4 @@ audio/*.bak
 ru-tools/emu/gbarun
 tests/hand_levels/build
 tests/card_rules/build
+__pycache__/
