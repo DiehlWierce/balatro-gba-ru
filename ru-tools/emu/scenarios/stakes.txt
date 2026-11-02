@@ -1,0 +1,99 @@
+# Stakes: the selector (L/R in run setup), then a seeded Gold Stake run at Ante 3:
+# faster score scaling (Green/Purple), no Small Blind reward (Red), stickered Shop Jokers.
+
+wait 460
+press START
+wait 60
+press A
+wait 60
+shot 00_stake_white
+
+# R/L cycle the Stakes, with wrap-around
+press R
+wait 10
+shot 01_stake_red
+press R
+wait 10
+shot 02_stake_green
+press R
+press R
+press R
+wait 10
+shot 03_stake_purple
+press R
+press R
+wait 10
+shot 04_stake_gold
+press R
+wait 10
+shot 05_stake_wrap_white
+press L
+wait 10
+shot 06_stake_wrap_gold
+
+# Gold Stake (7) is selected. Start at Ante 3: requirement 3200 (Purple table) instead of 2000
+pokestr {sym:s_seed_str} GBARU1
+poke8 {sym:use_seed} 1
+poke32 {gv:ante} 3
+press DOWN
+wait 10
+press A
+wait 120
+shot 10_blind_select_ante3
+peek32 {gv:discards}
+
+# Win the Small Blind: no blind reward at Red Stake and above
+press A
+wait 180
+shot 11_round_blue_stake_discards
+poke32 {gv:score} 1000000
+press A
+press L
+wait 1100
+shot 12_round_end_no_small_blind_reward
+
+# Shop: look at the Jokers' stickers, reroll a few times with plenty of money
+press A
+wait 200
+poke32 {gv:money} 200
+shot 20_shop
+press RIGHT
+wait 20
+hold B
+wait 90
+shot 21_joker1_description
+release B
+wait 30
+press RIGHT
+wait 20
+hold B
+wait 90
+shot 22_joker2_description
+release B
+wait 30
+
+# Reroll: go to the Reroll button (left, then down)
+press LEFT
+press LEFT
+wait 20
+press DOWN
+wait 20
+press A
+wait 60
+shot 23_reroll1
+press UP
+wait 20
+press RIGHT
+wait 20
+hold B
+wait 90
+shot 24_reroll1_joker1
+release B
+wait 30
+press RIGHT
+wait 20
+hold B
+wait 90
+shot 25_reroll1_joker2
+release B
+wait 30

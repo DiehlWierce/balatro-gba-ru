@@ -38,6 +38,11 @@ enum RngSequence
 
     // Added after RNG_SEQ_MISC so the states of the sequences above stay the same for a given seed
     RNG_SEQ_BOSS_HOOK,
+    RNG_SEQ_STAKE_STICKERS, // Eternal/Perishable/Rental stickers of Shop Jokers
+    RNG_SEQ_BOSS_WHEEL,     // The Wheel: 1 in 7 cards drawn face down
+    RNG_SEQ_BOSS_ACORN,     // Amber Acorn: Jokers shuffle
+    RNG_SEQ_BOSS_HEART,     // Crimson Heart: disabled Joker
+    RNG_SEQ_BOSS_BELL,      // Cerulean Bell: forced card
     RNG_SEQ_SHOP_VOUCHERS,
 
     RNG_SEQ_MAX

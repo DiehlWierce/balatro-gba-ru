@@ -1,5 +1,6 @@
 #include "card.h"
 
+#include "game_variables.h"
 #include "graphic_utils.h"
 #include "item.h"
 #include "util.h"
@@ -75,6 +76,7 @@ Card* card_new(u8 suit, u8 rank)
     card->seal = CARD_SEAL_NONE;
     card->debuffed = false;
     card->face_down = false;
+    card->played_ante = 0;
 
     return card;
 }
@@ -125,20 +127,85 @@ void card_object_destroy(CardObject** card_object)
     *card_object = NULL;
 }
 
+/**
+ * @brief Colors of a debuffed card: the face becomes grey and every colored pixel dark grey,
+ *        so the card stays readable but looks disabled. Indices of `deck_gfx.png`, also valid
+ *        for the high contrast palette (1 and 12 white, 2 light grey, 9 dark grey).
+ */
+static const u8 DEBUFFED_CARD_COLOR_LUT[16] = {
+    0,
+    2,
+    2,
+    9,
+    9,
+    9,
+    9,
+    7,
+    9,
+    9,
+    9,
+    9,
+    2,
+    9,
+    9,
+    15,
+};
+
+/**
+ * @brief Recolors the 4bpp tiles of a card sprite with DEBUFFED_CARD_COLOR_LUT, in place.
+ */
+static void card_tiles_apply_debuffed_colors(u32* tiles, int nb_words)
+{
+    for (int w = 0; w < nb_words; w++)
+    {
+        u32 word = tiles[w];
+        u32 recolored = 0;
+        for (int px = 0; px < 8; px++)
+        {
+            u32 color = (word >> (px * 4)) & 0xF;
+            recolored |= (u32)DEBUFFED_CARD_COLOR_LUT[color] << (px * 4);
+        }
+        tiles[w] = recolored;
+    }
+}
+
 void card_object_set_sprite(CardObject* card_object, s16 layer)
 {
+    // Free the current sprite first: the new one uses the same OAM slot
+    sprite_object_set_sprite((SpriteObject*)card_object, NULL);
+
     int tile_index = sprite_get_tid(CARD_SPRITE, layer);
-    const unsigned int* card_tiles = s_more_readable ? deck_big_gfxTiles : deck_gfxTiles;
-    memcpy32(
-        &tile_mem[TILE_MEM_OBJ_CHARBLOCK0_IDX][tile_index],
-        &card_tiles[CARD_SPRITE_LUT[card_object->card->suit][card_object->card->rank] * TILE_SIZE],
-        TILE_SIZE * CARD_SPRITE_TILES
-    );
+    Card* card = card_object->card;
+    int pb = CARD_PB;
+
+    if (card->face_down)
+    {
+        // Face down cards show the back of the run's Deck
+        card_copy_deck_back_tiles(&tile_mem[TILE_MEM_OBJ_CHARBLOCK0_IDX][tile_index]);
+        pb = DECK_PB;
+    }
+    else
+    {
+        const unsigned int* card_tiles = s_more_readable ? deck_big_gfxTiles : deck_gfxTiles;
+        memcpy32(
+            &tile_mem[TILE_MEM_OBJ_CHARBLOCK0_IDX][tile_index],
+            &card_tiles[CARD_SPRITE_LUT[card->suit][card->rank] * TILE_SIZE],
+            TILE_SIZE * CARD_SPRITE_TILES
+        );
+        if (card->debuffed)
+        {
+            card_tiles_apply_debuffed_colors(
+                (u32*)&tile_mem[TILE_MEM_OBJ_CHARBLOCK0_IDX][tile_index],
+                TILE_SIZE * CARD_SPRITE_TILES
+            );
+        }
+    }
+
     Sprite* sprite = sprite_new(
         ATTR0_SQUARE | ATTR0_4BPP | ATTR0_AFF,
         ATTR1_SIZE_32,
         tile_index,
-        CARD_PB,
+        pb,
         sprite_get_starting_layer(CARD_SPRITE) + layer
     );
     sprite_object_set_sprite((SpriteObject*)card_object, sprite);
@@ -163,6 +230,15 @@ void card_object_set_sprite_face_down(CardObject* card_object, enum DeckType dec
         sprite_get_starting_layer(DECK_SPRITE) + layer
     );
     sprite_object_set_sprite((SpriteObject*)card_object, sprite);
+}
+
+void card_copy_deck_back_tiles(void* dst_tiles)
+{
+    memcpy32(
+        dst_tiles,
+        &decks_face_down_gfxTiles[DECK_SPRITE_LUT[g_game_vars.deck] * TILE_SIZE],
+        TILE_SIZE * CARD_SPRITE_TILES
+    );
 }
 
 void card_object_shake(CardObject* card_object, mm_word sound_id)
