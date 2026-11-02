@@ -52,6 +52,12 @@ enum RngSequence
     RNG_SEQ_PACK_CONTENTS,
     RNG_SEQ_SHOP_PACKS, // Type of the Booster Packs for sale in the Shop
 
+    // Tarots
+    RNG_SEQ_SHOP_CONSUMABLE_TYPE, // Planet or Tarot in a Shop slot of consumables
+    RNG_SEQ_SHOP_TAROT,           // Which Tarot is for sale in the Shop
+    RNG_SEQ_TAROT_CREATE,         // Planets of the High Priestess, Tarots of the Emperor
+    RNG_SEQ_TAROT_PURPLE_SEAL,    // Tarot created by a discarded card with a Purple seal
+
     RNG_SEQ_MAX
 };
 
