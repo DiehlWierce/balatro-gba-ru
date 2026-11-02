@@ -256,6 +256,7 @@ JokerObject* joker_object_new(Joker* joker)
     joker_object->joker = joker;
     joker_object->type = ITEM_TYPE_JOKER;
     joker_object->is_owned = false;
+    joker_object->face_down = false;
 
     int tile_index = sprite_get_tid(JOKER_SPRITE, layer);
     int joker_spritesheet_idx = s_joker_get_spritesheet_idx(joker->id);
@@ -333,7 +334,11 @@ int joker_object_print_description(Item* joker_object_item, Rect dest_rect)
     const JokerInfo* info = get_joker_registry_entry(joker->id);
     GBAL_RETURN_IF_NULL(info, 0);
 
-    int nb_lines = info->joker_print_desc(joker, dest_rect);
+    int nb_lines;
+    if (joker_object->face_down)
+        nb_lines = tte_printf_justified_in_rect("???", dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
+    else
+        nb_lines = info->joker_print_desc(joker, dest_rect);
 
     if (joker->stickers == 0)
         return nb_lines;
@@ -555,6 +560,7 @@ void joker_object_set_face_down(JokerObject* joker_object, bool face_down)
     Sprite* sprite = joker_object_get_sprite(joker_object);
     GBAL_RETURN_IF_NULL(sprite, RET_NONE);
 
+    joker_object->face_down = face_down;
     int tile_index = sprite->obj->attr2 & ATTR2_ID_MASK;
     int pb = DECK_PB;
     if (face_down)
