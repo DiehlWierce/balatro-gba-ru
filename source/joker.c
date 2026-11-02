@@ -10,6 +10,7 @@
 #include "pool.h"
 #include "random.h"
 #include "soundbank.h"
+#include "stake.h"
 #include "util.h"
 
 // Tiles and palettes
@@ -125,6 +126,8 @@ Joker* joker_new(u8 id)
     joker->id = id;
     joker->value = jinfo->base_value;
     joker->rarity = jinfo->rarity;
+    joker->stickers = 0;
+    joker->perish_rounds = 0;
     joker->scoring_state = 0;
     joker->persistent_state = 0;
 
@@ -149,7 +152,7 @@ u32 joker_get_score_effect(
 )
 {
     const JokerInfo* jinfo = get_joker_registry_entry(joker->id);
-    if (!jinfo)
+    if (!jinfo || joker_is_perished(joker))
         return JOKER_EFFECT_FLAG_NONE;
 
     return jinfo->joker_effect_func(joker, scored_card, joker_event, joker_effect);
@@ -202,6 +205,9 @@ int joker_get_buy_price(const Joker* joker)
 {
     GBAL_RETURN_IF_NULL(joker, UNDEFINED);
 
+    if (joker->stickers & JOKER_STICKER_RENTAL)
+        return RENTAL_JOKER_BUY_PRICE;
+
     return joker->value;
 }
 
@@ -209,7 +215,22 @@ int joker_get_sell_value(const Joker* joker)
 {
     GBAL_RETURN_IF_NULL(joker, UNDEFINED);
 
+    // Rental Jokers are bought for RENTAL_JOKER_BUY_PRICE: they sell for the minimum, $1
+    if (joker->stickers & JOKER_STICKER_RENTAL)
+        return 1;
+
     return joker->value / 2;
+}
+
+bool joker_can_be_sold(const Joker* joker)
+{
+    return joker != NULL && !(joker->stickers & JOKER_STICKER_ETERNAL);
+}
+
+bool joker_is_perished(const Joker* joker)
+{
+    return joker != NULL && (joker->stickers & JOKER_STICKER_PERISHABLE) &&
+           joker->perish_rounds == 0;
 }
 
 // JokerObject methods
@@ -310,7 +331,51 @@ int joker_object_print_description(Item* joker_object_item, Rect dest_rect)
     const JokerInfo* info = get_joker_registry_entry(joker->id);
     GBAL_RETURN_IF_NULL(info, 0);
 
-    return info->joker_print_desc(joker, dest_rect);
+    int nb_lines = info->joker_print_desc(joker, dest_rect);
+
+    if (joker->stickers == 0)
+        return nb_lines;
+
+    // Stake stickers on a line below the description
+    char stickers_text[64] = {'\0'};
+    int len = 0;
+    if (joker->stickers & JOKER_STICKER_ETERNAL)
+    {
+        len +=
+            snprintf(stickers_text + len, sizeof(stickers_text) - len, TTE_DARK_BLUE_TAG "Вечный ");
+    }
+    if (joker->stickers & JOKER_STICKER_PERISHABLE)
+    {
+        if (joker->perish_rounds > 0)
+            len += snprintf(
+                stickers_text + len,
+                sizeof(stickers_text) - len,
+                TTE_DARK_GREEN_TAG "Скоропорт. (%d) ",
+                joker->perish_rounds
+            );
+        else
+            len +=
+                snprintf(stickers_text + len, sizeof(stickers_text) - len, TTE_RED_TAG "Испорчен ");
+    }
+    if (joker->stickers & JOKER_STICKER_RENTAL)
+    {
+        snprintf(
+            stickers_text + len,
+            sizeof(stickers_text) - len,
+            TTE_YELLOW_TAG "Аренда $%d",
+            RENTAL_JOKER_COST
+        );
+    }
+
+    Rect stickers_rect = dest_rect;
+    stickers_rect.top += nb_lines;
+    return nb_lines + tte_printf_justified_in_rect(
+                          stickers_text,
+                          stickers_rect,
+                          JUSTIFY_CENTER,
+                          SCREEN_LEFT,
+                          true
+                      );
 }
 
 void joker_object_shake(JokerObject* joker_object, mm_word sound_id)
@@ -445,7 +510,10 @@ Item* joker_object_roll_new(enum RngSequence key)
 
     joker_set_rollable(joker_id, false);
 
-    return (Item*)joker_object_new(joker_new(joker_id));
+    Joker* joker = joker_new(joker_id);
+    stake_roll_joker_stickers(joker);
+
+    return (Item*)joker_object_new(joker);
 }
 
 /**
