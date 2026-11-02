@@ -2353,13 +2353,13 @@ static u32 baron_joker_effect(
 
     u32 effect_flags_ret = JOKER_EFFECT_FLAG_NONE;
 
-    // Mult is integer only, so X1.5 is applied as + half of the current mult
-    if (card_effective_rank(scored_card) == KING && g_game_vars.mult > 1)
+    // X1.5 in fixed point (applied in round.c, rounded to the nearest integer mult)
+    if (card_effective_rank(scored_card) == KING)
     {
         *joker_effect = &s_shared_joker_effect;
 
-        (*joker_effect)->mult = g_game_vars.mult / 2;
-        effect_flags_ret = JOKER_EFFECT_FLAG_MULT;
+        (*joker_effect)->xmult_fx = FIX_ONE * 3 / 2;
+        effect_flags_ret = JOKER_EFFECT_FLAG_XMULT_FX;
     }
 
     return effect_flags_ret;
@@ -2421,7 +2421,14 @@ static u32 supernova_joker_effect(
         *joker_effect = &s_shared_joker_effect;
 
         // The hand that is being played has already been counted
-        (*joker_effect)->mult = g_game_vars.nb_played_hands[hand_type - 1];
+        u32 played = g_game_vars.nb_played_hands[hand_type - 1];
+        // A Royal Flush is a Straight Flush for the play counter, like in the original game
+        if (hand_type == STRAIGHT_FLUSH)
+            played += g_game_vars.nb_played_hands[ROYAL_FLUSH - 1];
+        else if (hand_type == ROYAL_FLUSH)
+            played += g_game_vars.nb_played_hands[STRAIGHT_FLUSH - 1];
+
+        (*joker_effect)->mult = played;
         effect_flags_ret = JOKER_EFFECT_FLAG_MULT;
     }
 

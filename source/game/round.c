@@ -1757,6 +1757,23 @@ static bool joker_object_score(
         joker_scoring_increment_text_cursor(&cursorPosX);
         sfx_id = SFX_XMULT;
     }
+    // Fractional X mult (Baron X1.5): exact in fixed point, rounded to the nearest like Steel
+    if (effect_flags_ret & JOKER_EFFECT_FLAG_XMULT_FX && joker_effect->xmult_fx > 0)
+    {
+        u64 new_mult =
+            ((u64)g_game_vars.mult * joker_effect->xmult_fx + FIX_ONE / 2) >> FIX_SHIFT;
+        g_game_vars.mult = new_mult > UINT32_MAX ? UINT32_MAX : (u32)new_mult;
+        tte_printf(
+            "#{P:%d,%d; cx:0x%X000;}X%lu.%lu",
+            cursorPosX,
+            cursorPosY,
+            TTE_RED_PB,
+            joker_effect->xmult_fx >> FIX_SHIFT,
+            (((joker_effect->xmult_fx & (FIX_ONE - 1)) * 10) >> FIX_SHIFT)
+        );
+        joker_scoring_increment_text_cursor(&cursorPosX);
+        sfx_id = SFX_XMULT;
+    }
     if (effect_flags_ret & JOKER_EFFECT_FLAG_MONEY)
     {
         g_game_vars.money += joker_effect->money;
