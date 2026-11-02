@@ -1,6 +1,7 @@
 #include "game.h"
 
 #include "affine_background.h"
+#include "ante_table.h"
 #include "affine_background_gfx.h"
 #include "audio_utils.h"
 #include "background_main_menu_gfx.h"
@@ -183,7 +184,7 @@ void display_ante(void)
         TTE_YELLOW_PB,
         g_game_vars.ante,
         TTE_WHITE_PB,
-        MAX_ANTE
+        g_game_vars.ante > MAX_ANTE ? ANTE_LAST : MAX_ANTE
     );
 }
 
@@ -210,6 +211,7 @@ void game_init()
     g_game_vars.money = STARTING_MONEY;
     g_game_vars.hand_size = DEFAULT_HAND_SIZE;
     g_game_vars.ante = STARTING_ANTE;
+    g_game_vars.win_pending = false;
     g_game_vars.round = STARTING_ROUND;
     // g_game_vars.deck is kept: the Run Setup screen shows the last chosen Deck
     for (int i = 0; i < HAND_TYPE_MAX; i++)
@@ -237,6 +239,11 @@ void game_init()
     g_game_vars.blinds_states[2] = BLIND_STATE_UPCOMING;
 }
 
+// The back of the run's Deck in the bottom right corner. It uses the DECK_SPRITE slot (free during
+// a run: the Run Setup one is destroyed when leaving it), the DECK_PB palette and no affine matrix.
+// The red Deck that used to be drawn in the round, shop and blind select backgrounds is gone.
+static Sprite* s_deck_sprite = NULL;
+
 void game_reset()
 {
     while (list_get_len(&s_owned_jokers_list) > 0)
@@ -247,6 +254,8 @@ void game_reset()
     }
 
     consumables_reset();
+
+    sprite_destroy(&s_deck_sprite);
 
     tte_erase_screen();
 
@@ -775,6 +784,43 @@ void deck_shuffle(void)
     }
 }
 
+#define DECK_SPRITE_X 204 // Card art starts 4 px into the 32x32 sprite, the baked Deck was at x=208
+#define DECK_SPRITE_Y 115
+
+static void game_deck_sprite_create(void)
+{
+    sprite_destroy(&s_deck_sprite);
+
+    int tile_index = sprite_get_tid(DECK_SPRITE, 0);
+    card_copy_deck_back_tiles(&tile_mem[TILE_MEM_OBJ_CHARBLOCK0_IDX][tile_index]);
+    s_deck_sprite = sprite_new(
+        ATTR0_SQUARE | ATTR0_4BPP,
+        ATTR1_SIZE_32,
+        tile_index,
+        DECK_PB,
+        sprite_get_starting_layer(DECK_SPRITE)
+    );
+    if (s_deck_sprite != NULL)
+    {
+        // Priority 2: over the affine background (2) but under the main background (1) and the
+        // text (0), so Joker description popups and the "44/52" text cover it like the old
+        // Deck. The Deck pixels were removed from the backgrounds (the shadow stays).
+        s_deck_sprite->obj->attr2 |= ATTR2_PRIO(2);
+        sprite_position(s_deck_sprite, DECK_SPRITE_X, DECK_SPRITE_Y);
+    }
+}
+
+void game_deck_sprite_set_hidden(bool hidden)
+{
+    if (s_deck_sprite == NULL)
+        return;
+
+    if (hidden)
+        sprite_hide(s_deck_sprite);
+    else
+        sprite_unhide(s_deck_sprite);
+}
+
 void game_start(void)
 {
     affine_background_change_background(AFFINE_BG_GAME);
@@ -787,6 +833,8 @@ void game_start(void)
     g_game_vars.hands = game_get_hands_per_round();
     g_game_vars.discards = game_get_discards_per_round();
     g_game_vars.hand_size = game_get_hand_size();
+
+    game_deck_sprite_create();
 
     // Fill the deck with all the cards. Later on this can be replaced with a more dynamic system
     // that allows for different decks and card types.

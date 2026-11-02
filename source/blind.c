@@ -3,6 +3,7 @@
  * @brief Implementation of functions relative to the behaviour and graphics of Blinds.
  */
 
+#include "ante_table.h"
 #include "blind.h"
 
 #include "blind_gfx.h"
@@ -44,23 +45,16 @@ static const unsigned short* blind_gfxPal[] = {
 static List s_unbeaten_boss_blinds = LIST_DEFAULT;
 static List s_unbeaten_showdown_blinds = LIST_DEFAULT;
 
-// Maps the ante number to the base blind requirement for that ante.
-// The game starts at ante 1 which is at index 1 for base requirement 300.
-// Ante 0 is also there in case it is ever reached.
+// The base requirement per ante lives in ante_table.h (antes 0-12, so Endless mode fits in a u32).
 // Green and Purple Stakes use the faster scaling tables, like in Balatro.
-// clang-format off
-static const u32 ANTE_LUT[] =        {100, 300, 800,  2000, 5000, 11000, 20000, 35000,  50000 };
-static const u32 ANTE_LUT_GREEN[] =  {100, 300, 900,  2600, 8000, 20000, 36000, 60000,  100000};
-static const u32 ANTE_LUT_PURPLE[] = {100, 300, 1000, 3200, 9000, 25000, 60000, 110000, 200000};
-// clang-format on
-
 static inline u32 ante_base_requirement(int ante)
 {
+    int scaling = 0;
     if (g_game_vars.stake >= STAKE_PURPLE)
-        return ANTE_LUT_PURPLE[ante];
-    if (g_game_vars.stake >= STAKE_GREEN)
-        return ANTE_LUT_GREEN[ante];
-    return ANTE_LUT[ante];
+        scaling = 2;
+    else if (g_game_vars.stake >= STAKE_GREEN)
+        scaling = 1;
+    return ante_table_base(scaling, ante);
 }
 
 // clang-format off
@@ -116,10 +110,14 @@ void blind_init()
 u32 blind_get_requirement(enum BlindType type, int ante)
 {
     // Ensure ante is within valid range
-    if (ante < 0 || ante > MAX_ANTE)
+    if (ante < 0 || ante > ANTE_LAST)
         ante = 0;
 
-    return fx2int(s_blind_type_map[type].score_req_multiplier * ante_base_requirement(ante));
+    // 64 bits and saturated: ante 12 Boss Blinds are in the billions
+    return ante_table_requirement(
+        ante_base_requirement(ante),
+        (u32)s_blind_type_map[type].score_req_multiplier
+    );
 }
 
 int blind_get_reward(enum BlindType type)

@@ -81,8 +81,11 @@ bool card_modifiers_on_held(Card* card)
         return false;
 
     // The mult is an integer: round X1.5 to the nearest (1 -> 2, 3 -> 5) so Steel always counts
-    u32 mult = u32_protected_mult(g_game_vars.mult, STEEL_XMULT_NUM);
-    g_game_vars.mult = (mult + STEEL_XMULT_DEN / 2) / STEEL_XMULT_DEN;
+    // 64 bits so that neither the product nor the rounding can wrap around near UINT32_MAX
+    unsigned long long mult =
+        ((unsigned long long)g_game_vars.mult * STEEL_XMULT_NUM + STEEL_XMULT_DEN / 2) /
+        STEEL_XMULT_DEN;
+    g_game_vars.mult = mult > UINT32_MAX ? UINT32_MAX : (u32)mult;
     return true;
 }
 

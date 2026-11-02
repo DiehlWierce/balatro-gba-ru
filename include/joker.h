@@ -68,6 +68,7 @@ enum JokerEvent
 #define JOKER_EFFECT_FLAG_RETRIGGER (1 << 4)
 #define JOKER_EFFECT_FLAG_EXPIRE    (1 << 5)
 #define JOKER_EFFECT_FLAG_MESSAGE   (1 << 6)
+#define JOKER_EFFECT_FLAG_XMULT_FX  (1 << 7) // Mult times xmult_fx (24.8 fixed point, e.g. X1.5)
 
 #define MAX_JOKER_OBJECTS 32 // The maximum number of joker objects that can be created at once
 
@@ -114,6 +115,7 @@ typedef struct // These jokers are triggered after the played hand has finished 
     u32 chips;
     u32 mult;
     u32 xmult;
+    u32 xmult_fx; // Used with JOKER_EFFECT_FLAG_XMULT_FX, FIX_ONE = X1
     int money;
     bool retrigger; // Retrigger played hand (e.g. "Dusk" joker, even though on the wiki it says "On
                     // Scored" it makes more sense to have it here)
