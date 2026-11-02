@@ -480,7 +480,8 @@ static inline void round_execute_discard(void)
     CardObject** hand = get_hand_array();
     for (int i = 0; i <= get_hand_top(); i++)
     {
-        if (card_object_is_selected(hand[i]) && card_modifiers_on_discarded(hand[i]->card))
+        if (card_object_is_selected(hand[i]) &&
+            card_modifiers_on_discarded(hand[i]->card, hand[i]->x, hand[i]->y))
             card_object_shake(hand[i], SFX_CARD_SELECT);
     }
 }
@@ -564,6 +565,15 @@ static void round_play_hand_on_pressed(void)
 static int round_hand_row_get_size(void)
 {
     return hand_nb_held_cards();
+}
+
+void round_fix_hand_selection(void)
+{
+    if (game_round_selection_grid.selection.y == GAME_PLAYING_HAND_SEL_Y &&
+        game_round_selection_grid.selection.x >= hand_nb_held_cards())
+    {
+        game_round_selection_grid.selection.x = hand_nb_held_cards() - 1;
+    }
 }
 
 /*******************************************************************************

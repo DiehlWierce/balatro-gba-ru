@@ -61,7 +61,7 @@
 #define PACK_CHOICES_SPACING_PX 33
 #define PACK_CHOICES_CENTER_X   154 // Middle of the green area right of the Shop icon
 #define PACK_CHOICES_Y          10
-#define PACK_TEXT_POS_X         76  // Title and card info, in the green area under the choices
+#define PACK_TEXT_POS_X         76 // Title and card info, in the green area under the choices
 #define PACK_TITLE_POS_Y        44
 #define PACK_CARD_INFO_POS_Y    53
 #define PACK_HINT_POS_X         116 // Hint, in the Shop panel right of the Reroll button
@@ -339,7 +339,8 @@ static Item* shop_create_top_row_item(void)
     joker_weight /= divisor;
     planet_weight /= divisor;
 
-    u32 roll = rng_get_u32(RNG_SEQ_SHOP_ITEM_TYPE) % (joker_weight + planet_weight + SHOP_PACK_WEIGHT);
+    u32 roll =
+        rng_get_u32(RNG_SEQ_SHOP_ITEM_TYPE) % (joker_weight + planet_weight + SHOP_PACK_WEIGHT);
 
     if (roll >= joker_weight + planet_weight)
     {
@@ -1134,7 +1135,6 @@ static void shop_hide_item_desc_on_exit(void)
     s_description_item = NULL;
 }
 
-
 #pragma region Booster Pack opening
 
 static const PackInfo* s_pack_info = NULL;
@@ -1147,12 +1147,7 @@ static void shop_pack_print_texts(void)
 {
     tte_erase_rect_wrapper(PACK_TEXT_RECT);
 
-    tte_printf(
-        TTE_WHITE_TAG "#{P:%d,%d}%s",
-        PACK_TEXT_POS_X,
-        PACK_TITLE_POS_Y,
-        s_pack_info->name
-    );
+    tte_printf(TTE_WHITE_TAG "#{P:%d,%d}%s", PACK_TEXT_POS_X, PACK_TITLE_POS_Y, s_pack_info->name);
 
     // Enhancement and seal of the selected card
     Item* choice = s_pack_choices[s_pack_selected];
@@ -1168,6 +1163,16 @@ static void shop_pack_print_texts(void)
             enhancement != NULL ? enhancement : "",
             enhancement != NULL && seal != NULL ? ", " : "",
             seal != NULL ? seal : ""
+        );
+    }
+
+    else if (choice != NULL && choice->type == ITEM_TYPE_CONSUMABLE)
+    {
+        tte_printf(
+            TTE_YELLOW_TAG "#{P:%d,%d}%s",
+            PACK_TEXT_POS_X,
+            PACK_CARD_INFO_POS_Y,
+            item_get_name(choice)
         );
     }
 
@@ -1260,7 +1265,10 @@ static void shop_pack_close(void)
     if (shop_selection_grid.selection.y == SHOP_GRID_FOR_SALE_ROW && sel_x > NEXT_ROUND_BTN_SEL_X &&
         sel_x - 1 < list_get_len(&s_shop_items_list))
     {
-        sprite_object_set_focus((SpriteObject*)list_get_at_idx(&s_shop_items_list, sel_x - 1), true);
+        sprite_object_set_focus(
+            (SpriteObject*)list_get_at_idx(&s_shop_items_list, sel_x - 1),
+            true
+        );
     }
 
     shop_print_reroll_cost();

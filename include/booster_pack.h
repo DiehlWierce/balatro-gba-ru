@@ -21,14 +21,14 @@
 enum PackType
 {
     PACK_TYPE_STANDARD,  // Playing cards, added to the deck
-    PACK_TYPE_ARCANA,    // Tarot cards, not implemented yet
+    PACK_TYPE_ARCANA,    // Tarot cards, taken to the consumables row
     PACK_TYPE_CELESTIAL, // Planet cards, not implemented yet
     PACK_TYPE_MAX
 };
 
 typedef struct BoosterPackObject
 {
-    Item; // First member struct inheritance
+    Item;         // First member struct inheritance
     u8 pack_type; // enum PackType
     s8 layer;     // Layer of the PACK_SPRITE used by this pack
 } BoosterPackObject;

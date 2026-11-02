@@ -156,12 +156,10 @@ bool card_modifiers_on_round_won(Card* card, int last_hand_type, FIXED x, FIXED 
     return triggered;
 }
 
-bool card_modifiers_on_discarded(Card* card)
+bool card_modifiers_on_discarded(Card* card, FIXED x, FIXED y)
 {
     if (card == NULL || card->seal != CARD_SEAL_PURPLE)
         return false;
 
-    // TODO(A7): create a random Tarot card if a consumable slot is free. Tarots are not
-    // implemented yet, so the Purple seal has no effect for now.
-    return false;
+    return consumable_create_random_tarot(RNG_SEQ_TAROT_PURPLE_SEAL, x, y);
 }

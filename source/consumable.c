@@ -7,9 +7,11 @@
 
 #include "game.h"
 #include "game/common_ui.h"
+#include "game/round.h"
 #include "game_variables.h"
 #include "graphic_utils.h"
 #include "hand.h"
+#include "joker.h"
 #include "layout.h"
 #include "pool.h"
 #include "soundbank.h"
@@ -19,6 +21,7 @@
 // Tiles and palettes
 #include "card_rarity_pal_gfx.h"
 #include "planet_gfx.h"
+#include "tarot_gfx.h"
 
 #include <stdio.h>
 #include <tonc.h>
@@ -28,6 +31,7 @@
 #define CONSUMABLES_SPACING_X      16
 
 #define PLANET_SUBTYPE_PAL_IDX 9 // Planet colors in card_rarity_pal_gfx.png
+#define TAROT_SUBTYPE_PAL_IDX  7 // Tarot colors in card_rarity_pal_gfx.png
 
 typedef struct
 {
@@ -53,7 +57,49 @@ static const PlanetInfo PLANET_INFO[PLANET_TYPE_MAX] = {
 };
 // clang-format on
 
+typedef struct
+{
+    const char* name;
+    const char* desc; // With color tags, see TTE_*_TAG
+} TarotInfo;
+
+#define Y_ TTE_YELLOW_TAG
+#define B_ TTE_BLACK_TAG
+
+// clang-format off
+static const TarotInfo TAROT_INFO[TAROT_TYPE_MAX] = {
+    [TAROT_FOOL]           = {"Дурак",           B_ "Создаёт последнюю использованную Планету или Таро (кроме Дурака)"},
+    [TAROT_MAGICIAN]       = {"Маг",             B_ "До 2 выбранных карт получают улучшение: " Y_ "Счастливая"},
+    [TAROT_HIGH_PRIESTESS] = {"Жрица",           B_ "Создаёт до 2 Планет (нужны свободные слоты)"},
+    [TAROT_EMPRESS]        = {"Императрица",     B_ "До 2 выбранных карт получают улучшение: " Y_ "Множ."},
+    [TAROT_EMPEROR]        = {"Император",       B_ "Создаёт до 2 карт Таро (нужны свободные слоты)"},
+    [TAROT_HIEROPHANT]     = {"Иерофант",        B_ "До 2 выбранных карт получают улучшение: " Y_ "Бонусная"},
+    [TAROT_LOVERS]         = {"Влюблённые",      B_ "1 выбранная карта получает улучшение: " Y_ "Дикая"},
+    [TAROT_CHARIOT]        = {"Колесница",       B_ "1 выбранная карта получает улучшение: " Y_ "Стальная"},
+    [TAROT_JUSTICE]        = {"Справедливость",  B_ "1 выбранная карта получает улучшение: " Y_ "Стеклянная"},
+    [TAROT_HERMIT]         = {"Отшельник",       B_ "Удваивает ваши деньги (максимум " Y_ "+$20" B_ ")"},
+    [TAROT_WHEEL]          = {"Колесо фортуны",  B_ "Нужны издания, пока не реализовано"},
+    [TAROT_STRENGTH]       = {"Сила",            B_ "Повышает ранг до 2 выбранных карт на 1"},
+    [TAROT_HANGED_MAN]     = {"Повешенный",      B_ "Уничтожает до 2 выбранных карт"},
+    [TAROT_DEATH]          = {"Смерть",          B_ "Выберите 2 карты: левая станет копией правой"},
+    [TAROT_TEMPERANCE]     = {"Умеренность",     B_ "Даёт деньги, равные цене продажи всех джокеров (максимум " Y_ "+$50" B_ ")"},
+    [TAROT_DEVIL]          = {"Дьявол",          B_ "1 выбранная карта получает улучшение: " Y_ "Золотая"},
+    [TAROT_TOWER]          = {"Башня",           B_ "1 выбранная карта получает улучшение: " Y_ "Каменная"},
+    [TAROT_STAR]           = {"Звезда",          B_ "До 3 выбранных карт меняют масть на " Y_ "Бубны"},
+    [TAROT_MOON]           = {"Луна",            B_ "До 3 выбранных карт меняют масть на " Y_ "Трефы"},
+    [TAROT_SUN]            = {"Солнце",          B_ "До 3 выбранных карт меняют масть на " Y_ "Червы"},
+    [TAROT_JUDGEMENT]      = {"Суд",             B_ "Создаёт случайного джокера (нужен свободный слот)"},
+    [TAROT_WORLD]          = {"Мир",             B_ "До 3 выбранных карт меняют масть на " Y_ "Пики"},
+};
+// clang-format on
+
+#undef Y_
+#undef B_
+
 static List s_owned_consumables;
+// The last Planet or Tarot (except The Fool) that was used, for The Fool
+static u8 s_last_used_type = CONSUMABLE_TYPE_MAX;
+static u8 s_last_used_id = 0;
 static bool s_used_layers[MAX_ACTIVE_CONSUMABLES] = {false};
 
 static inline bool planet_is_valid(int planet)
@@ -67,9 +113,27 @@ static inline bool is_planet(const ConsumableObject* consumable_object)
            planet_is_valid(consumable_object->id);
 }
 
+static inline bool tarot_is_valid(int tarot)
+{
+    return tarot >= 0 && tarot < TAROT_TYPE_MAX;
+}
+
+static inline bool is_tarot(const ConsumableObject* consumable_object)
+{
+    return consumable_object->consumable_type == CONSUMABLE_TYPE_TAROT &&
+           tarot_is_valid(consumable_object->id);
+}
+
+void consumables_forget_last_used(void)
+{
+    s_last_used_type = CONSUMABLE_TYPE_MAX;
+    s_last_used_id = 0;
+}
+
 void consumables_init(void)
 {
     s_owned_consumables = list_init();
+    consumables_forget_last_used();
 }
 
 void consumables_reset(void)
@@ -82,6 +146,7 @@ void consumables_reset(void)
     }
     list_clear(&s_owned_consumables);
     s_owned_consumables = list_init();
+    consumables_forget_last_used();
 }
 
 List* get_consumables_list(void)
@@ -89,8 +154,29 @@ List* get_consumables_list(void)
     return &s_owned_consumables;
 }
 
+#ifdef DEBUG_GIVE_TAROT
+// The emulator pokes a TarotType here to get that Tarot in the owned row
+volatile int g_debug_give_tarot = -1;
+#endif
+
 void consumables_update_loop(const Item* skipped_item)
 {
+#ifdef DEBUG_GIVE_TAROT
+    if (g_debug_give_tarot >= 0)
+    {
+        if (g_debug_give_tarot < TAROT_TYPE_MAX)
+        {
+            consumable_create_owned(
+                CONSUMABLE_TYPE_TAROT,
+                g_debug_give_tarot,
+                int2fx(CONSUMABLES_PANEL_CENTER_X),
+                int2fx(HELD_JOKERS_POS.y)
+            );
+        }
+        g_debug_give_tarot = -1;
+    }
+#endif
+
     int nb_owned = list_get_len(&s_owned_consumables);
     if (nb_owned == 0)
         return;
@@ -150,16 +236,235 @@ enum PlanetType planet_roll(enum RngSequence key)
 
 static void planet_use(enum PlanetType planet)
 {
+    s_last_used_type = CONSUMABLE_TYPE_PLANET;
+    s_last_used_id = planet;
+
     enum HandType hand_type = planet_get_hand_type(planet);
     hand_level_up(hand_type, 1);
     hand_show_level_up(hand_type);
+}
+
+// Tarots
+
+enum TarotType tarot_roll(enum RngSequence key)
+{
+    int nb_rollable = 0;
+    for (int tarot = 0; tarot < TAROT_TYPE_MAX; tarot++)
+        nb_rollable += tarot_is_rollable(tarot);
+
+    int pick = rng_get_u32(key) % nb_rollable;
+    for (int tarot = 0; tarot < TAROT_TYPE_MAX; tarot++)
+    {
+        if (tarot_is_rollable(tarot) && pick-- == 0)
+            return tarot;
+    }
+
+    return TAROT_TYPE_MAX;
+}
+
+/**
+ * @brief Selected cards of the hand, in the array order (the leftmost card on the screen has the
+ *        highest index). Only during a round, when the hand can be changed.
+ *
+ * @return the number of selected cards, at most TAROT_MAX_TARGETS + 1
+ */
+static int tarot_get_selected_cards(CardObject* out[TAROT_MAX_TARGETS + 1])
+{
+    if (game_get_state() != GAME_STATE_ROUND || get_hand_state() != HAND_SELECT)
+        return 0;
+
+    int nb_selected = 0;
+    CardObject** hand = get_hand_array();
+    for (int i = 0; i <= get_hand_top(); i++)
+    {
+        if (hand[i] != NULL && card_object_is_selected(hand[i]))
+        {
+            if (nb_selected > TAROT_MAX_TARGETS)
+                return nb_selected + 1;
+            out[nb_selected++] = hand[i];
+        }
+    }
+    return nb_selected;
+}
+
+bool tarot_can_use_now(enum TarotType tarot)
+{
+    if (!tarot_is_valid(tarot) || !tarot_is_rollable(tarot))
+        return false;
+
+    int min, max;
+    tarot_get_target_range(tarot, &min, &max);
+    if (max > 0)
+    {
+        CardObject* selected[TAROT_MAX_TARGETS + 1];
+        int nb_selected = tarot_get_selected_cards(selected);
+        if (nb_selected < min || nb_selected > max)
+            return false;
+
+        // Never empty the hand: the round couldn't go on
+        if (tarot == TAROT_HANGED_MAN && nb_selected >= hand_nb_held_cards())
+            return false;
+        return true;
+    }
+
+    if (tarot == TAROT_FOOL)
+        return s_last_used_type != CONSUMABLE_TYPE_MAX;
+
+    if (tarot == TAROT_JUDGEMENT)
+        return list_get_len(get_jokers_list()) < g_game_vars.joker_slots;
+
+    return true;
+}
+
+bool consumable_create_owned(enum ConsumableType type, int id, FIXED x, FIXED y)
+{
+    ConsumableObject* consumable = consumable_object_new(type, id);
+    if (consumable == NULL)
+        return false;
+
+    Item* item = (Item*)consumable;
+    if (!item_can_acquire(item))
+    {
+        // No free consumable slot
+        consumable_object_destroy(&consumable);
+        return false;
+    }
+
+    item->x = x;
+    item->y = y;
+    item->tx = x;
+    item->ty = y;
+    item_acquire(item);
+    return true;
+}
+
+bool consumable_create_random_tarot(enum RngSequence key, FIXED x, FIXED y)
+{
+    if (list_get_len(&s_owned_consumables) >= g_game_vars.consumable_slots)
+        return false;
+
+    enum TarotType tarot = tarot_roll(key);
+    return tarot != TAROT_TYPE_MAX && consumable_create_owned(CONSUMABLE_TYPE_TAROT, tarot, x, y);
+}
+
+/**
+ * @brief Applies a Tarot. The Tarot was already taken out of the owned row, so its slot is free.
+ *
+ * @param x, y where the Tarot is, consumables created by it appear there
+ */
+static void tarot_use(enum TarotType tarot, FIXED x, FIXED y)
+{
+    CardObject* selected[TAROT_MAX_TARGETS + 1];
+    int nb_selected = tarot_get_selected_cards(selected);
+    int min, max;
+    tarot_get_target_range(tarot, &min, &max);
+    if (max == 0)
+        nb_selected = 0;
+
+    if (tarot == TAROT_FOOL)
+    {
+        consumable_create_owned(s_last_used_type, s_last_used_id, x, y);
+    }
+    else if (tarot == TAROT_HIGH_PRIESTESS || tarot == TAROT_EMPEROR)
+    {
+        for (int i = 0; i < TAROT_CREATE_MAX; i++)
+        {
+            if (list_get_len(&s_owned_consumables) >= g_game_vars.consumable_slots)
+                break;
+
+            if (tarot == TAROT_EMPEROR)
+            {
+                consumable_create_random_tarot(RNG_SEQ_TAROT_CREATE, x, y);
+            }
+            else
+            {
+                enum PlanetType planet = planet_roll(RNG_SEQ_TAROT_CREATE);
+                if (planet != PLANET_TYPE_MAX)
+                    consumable_create_owned(CONSUMABLE_TYPE_PLANET, planet, x, y);
+            }
+        }
+    }
+    else if (tarot == TAROT_JUDGEMENT)
+    {
+        Item* joker = item_roll_new(ITEM_TYPE_JOKER, RNG_SEQ_TAROT_JUDGEMENT);
+        if (joker != NULL)
+        {
+            joker->x = x;
+            joker->y = y;
+            joker->tx = x;
+            joker->ty = y;
+            item_acquire(joker);
+        }
+    }
+    else if (tarot == TAROT_HERMIT)
+    {
+        g_game_vars.money += tarot_hermit_gain(g_game_vars.money);
+        display_money();
+    }
+    else if (tarot == TAROT_TEMPERANCE)
+    {
+        int total = 0;
+        ListItr itr = list_itr_create(get_jokers_list());
+        Item* joker;
+        while ((joker = list_itr_next(&itr)))
+            total += joker_object_get_sell_price(joker);
+
+        g_game_vars.money += tarot_temperance_gain(total);
+        display_money();
+    }
+    else if (tarot == TAROT_HANGED_MAN)
+    {
+        hand_destroy_selected_cards();
+        round_fix_hand_selection();
+    }
+    else if (nb_selected > 0)
+    {
+        // Pointers to the cards: the hand is sorted again afterwards
+        Card* cards[TAROT_MAX_TARGETS + 1];
+        for (int i = 0; i < nb_selected; i++)
+        {
+            cards[i] = selected[i]->card;
+            card_object_shake(selected[i], SFX_CARD_SELECT);
+        }
+
+        if (tarot == TAROT_DEATH)
+        {
+            // selected[] goes from the card at the bottom of the array (right on the screen) up
+            // to the left one: the left card becomes a copy of the right card
+            card_copy_from(cards[nb_selected - 1], cards[0]);
+        }
+        else
+        {
+            for (int i = 0; i < nb_selected; i++)
+            {
+                if (tarot == TAROT_STRENGTH)
+                    card_rank_up(cards[i]);
+                else if (tarot_get_suit(tarot) >= 0)
+                    card_set_suit(cards[i], tarot_get_suit(tarot));
+                else if (tarot_get_enhancement(tarot) != CARD_ENHANCEMENT_NONE)
+                    cards[i]->enhancement = tarot_get_enhancement(tarot);
+            }
+        }
+
+        hand_deselect_all_cards();
+        sort_cards(); // Sorts again after rank and suit changes, and redraws the card sprites
+        compute_hand_value_info();
+    }
+
+    if (tarot != TAROT_FOOL)
+    {
+        s_last_used_type = CONSUMABLE_TYPE_TAROT;
+        s_last_used_id = tarot;
+    }
 }
 
 // ConsumableObject
 
 ConsumableObject* consumable_object_new(enum ConsumableType type, int id)
 {
-    if (type != CONSUMABLE_TYPE_PLANET || !planet_is_valid(id))
+    bool valid = (type == CONSUMABLE_TYPE_PLANET && planet_is_valid(id)) ||
+                 (type == CONSUMABLE_TYPE_TAROT && tarot_is_valid(id));
+    if (!valid)
     {
         MGBA_FUNC_ERROR("Unsupported consumable %d:%d", type, id);
         return NULL;
@@ -191,13 +496,15 @@ ConsumableObject* consumable_object_new(enum ConsumableType type, int id)
     consumable_object->layer = layer;
     s_used_layers[layer] = true;
 
-    // All Planets share one palette bank, see docs/ru/PALETTES.md
+    // Planets and Tarots share one palette bank, see docs/ru/PALETTES.md
     memcpy16(&pal_obj_mem[PAL_ROW_LEN * CONSUMABLE_PB], planet_gfxPal, PAL_ROW_LEN);
 
+    const unsigned int* gfx_tiles =
+        (type == CONSUMABLE_TYPE_TAROT) ? tarot_gfxTiles : planet_gfxTiles;
     int tile_index = sprite_get_tid(CONSUMABLE_SPRITE, layer);
     memcpy32(
         &tile_mem[TILE_MEM_OBJ_CHARBLOCK0_IDX][tile_index],
-        &planet_gfxTiles[id * TILE_SIZE * CONSUMABLE_SPRITE_TILES],
+        &gfx_tiles[id * TILE_SIZE * CONSUMABLE_SPRITE_TILES],
         TILE_SIZE * CONSUMABLE_SPRITE_TILES
     );
 
@@ -241,8 +548,12 @@ bool consumable_object_can_use(const ConsumableObject* consumable_object)
 {
     GBAL_RETURN_IF_NULL(consumable_object, false);
 
+    if (!consumable_object->is_owned)
+        return false;
     // Planets can always be used
-    return consumable_object->is_owned && is_planet(consumable_object);
+    if (is_planet(consumable_object))
+        return true;
+    return is_tarot(consumable_object) && tarot_can_use_now(consumable_object->id);
 }
 
 static void consumable_object_remove_from_owned(ConsumableObject* consumable_object)
@@ -261,7 +572,10 @@ bool consumable_object_use(ConsumableObject* consumable_object)
     consumable_object_remove_from_owned(consumable_object);
     sprite_object_shake((SpriteObject*)consumable_object, SFX_CARD_SELECT);
 
-    planet_use(consumable_object->id);
+    if (is_tarot(consumable_object))
+        tarot_use(consumable_object->id, consumable_object->x, consumable_object->y);
+    else
+        planet_use(consumable_object->id);
 
     item_start_discard_animation((Item*)consumable_object);
     return true;
@@ -280,6 +594,14 @@ void consumable_object_sell(ConsumableObject* consumable_object)
 
 Item* consumable_object_roll_new(enum RngSequence key)
 {
+    // The Shop sells as many Tarots as Planets
+    if (key == RNG_SEQ_SHOP_PLANETS && rng_get_u32(RNG_SEQ_SHOP_CONSUMABLE_TYPE) % 2 == 0)
+    {
+        enum TarotType tarot = tarot_roll(RNG_SEQ_SHOP_TAROT);
+        if (tarot != TAROT_TYPE_MAX)
+            return (Item*)consumable_object_new(CONSUMABLE_TYPE_TAROT, tarot);
+    }
+
     enum PlanetType planet = planet_roll(key);
     if (planet == PLANET_TYPE_MAX)
         return NULL;
@@ -290,19 +612,22 @@ Item* consumable_object_roll_new(enum RngSequence key)
 int consumable_object_get_buy_price(Item* item)
 {
     GBAL_RETURN_IF_NULL(item, UNDEFINED);
-    return PLANET_BUY_PRICE;
+    return ((ConsumableObject*)item)->consumable_type == CONSUMABLE_TYPE_TAROT ? TAROT_BUY_PRICE
+                                                                               : PLANET_BUY_PRICE;
 }
 
 int consumable_object_get_sell_price(Item* item)
 {
     GBAL_RETURN_IF_NULL(item, UNDEFINED);
-    return PLANET_BUY_PRICE / 2;
+    return consumable_object_get_buy_price(item) / 2;
 }
 
 const char* consumable_object_get_name(Item* item)
 {
     GBAL_RETURN_IF_NULL(item, ITEM_NAME_UNDEFINED);
     ConsumableObject* consumable_object = (ConsumableObject*)item;
+    if (is_tarot(consumable_object))
+        return TAROT_INFO[consumable_object->id].name;
     return is_planet(consumable_object) ? PLANET_INFO[consumable_object->id].name
                                         : ITEM_NAME_UNDEFINED;
 }
@@ -317,6 +642,12 @@ ItemDescSubtypeInfo consumable_object_get_subtype_info(Item* item)
         subtype_info.main_color = card_rarity_pal_gfxPal[PLANET_SUBTYPE_PAL_IDX];
         subtype_info.shadow_color = card_rarity_pal_gfxPal[PLANET_SUBTYPE_PAL_IDX + 1];
         subtype_info.name_str = "Планета";
+    }
+    else if (is_tarot((ConsumableObject*)item))
+    {
+        subtype_info.main_color = card_rarity_pal_gfxPal[TAROT_SUBTYPE_PAL_IDX];
+        subtype_info.shadow_color = card_rarity_pal_gfxPal[TAROT_SUBTYPE_PAL_IDX + 1];
+        subtype_info.name_str = "Таро";
     }
 
     return subtype_info;
@@ -349,6 +680,16 @@ int consumable_object_print_description(Item* item, Rect dest_rect)
 {
     GBAL_RETURN_IF_NULL(item, 0);
     ConsumableObject* consumable_object = (ConsumableObject*)item;
+    if (is_tarot(consumable_object))
+    {
+        return tte_printf_justified_in_rect(
+            TAROT_INFO[consumable_object->id].desc,
+            dest_rect,
+            JUSTIFY_CENTER,
+            SCREEN_LEFT,
+            true
+        );
+    }
     if (!is_planet(consumable_object))
         return 0;
 
