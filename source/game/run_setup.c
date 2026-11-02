@@ -165,7 +165,9 @@ static const BG_POINT RUN_SETUP_DECK_DESC_TEXT_POS  = {80 , 56 };
 static const Rect     RUN_SETUP_DECK_NAME_DESC_RECT = {80 , 40 ,176, 96 };
 
 // Stake selector, above the Deck panel: "L« name »R" then the Stake's rule
-#define RUN_SETUP_STAKE_LINE_LEN (STAKE_NAME_LEN + 4)
+// The name is centered in a field one space wider on each side, so it never touches the arrows
+#define RUN_SETUP_STAKE_FIELD_LEN (STAKE_NAME_LEN + 2)
+#define RUN_SETUP_STAKE_LINE_LEN (RUN_SETUP_STAKE_FIELD_LEN + 4)
 static const BG_POINT RUN_SETUP_STAKE_NAME_TEXT_POS = {(SCREEN_WIDTH - RUN_SETUP_STAKE_LINE_LEN * TTE_CHAR_SIZE) / 2, 16};
 static const BG_POINT RUN_SETUP_STAKE_RULE_TEXT_POS = {(SCREEN_WIDTH - STAKE_RULE_LEN * TTE_CHAR_SIZE) / 2, 24};
 static const Rect     RUN_SETUP_STAKE_TEXT_RECT     = {32 , 16 ,208, 32 };
@@ -742,8 +744,8 @@ static void run_setup_print_stake_info(void)
 {
     const char* name = stake_get_name(g_game_vars.stake);
     int name_len = strlen(name);
-    int pad_left = (STAKE_NAME_LEN - name_len) / 2;
-    int pad_right = STAKE_NAME_LEN - name_len - pad_left;
+    int pad_left = (RUN_SETUP_STAKE_FIELD_LEN - name_len) / 2;
+    int pad_right = RUN_SETUP_STAKE_FIELD_LEN - name_len - pad_left;
 
     tte_erase_rect_wrapper(RUN_SETUP_STAKE_TEXT_RECT);
     tte_printf(
