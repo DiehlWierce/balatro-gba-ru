@@ -181,6 +181,9 @@ static StateMachine round_end_sm = STATE_MACHINE_DEFINE(state_info, ROUND_END_ST
 
 static int calculate_interest_reward(void)
 {
+    if (g_game_vars.money <= 0)
+        return 0;
+
     int reward = (g_game_vars.money / 5) * INTEREST_PER_5;
     if (reward > g_game_vars.interest_cap)
         reward = g_game_vars.interest_cap;
@@ -220,6 +223,10 @@ static void round_end_start(void)
             s_reward_data[i].remaining = s_reward_data[i].count;
             s_cashout += s_reward_data[i].count * s_reward_data[i].multiplier;
         }
+
+        // Rentals can't take more than the player has, so the money never goes negative
+        if (g_game_vars.money + s_cashout < 0)
+            s_cashout = -g_game_vars.money;
     }
 }
 
@@ -495,14 +502,15 @@ static void round_end_display_cashout()
         // Put the "cash out" button onto the round end panel
         main_bg_se_copy_expand_3x3_rect(CASHOUT_DEST_RECT, CASHOUT_SRC_3X3_RECT_POS);
 
-        bool omit_space = s_cashout >= 10;
+        bool omit_space = s_cashout >= 10 || s_cashout < 0;
         tte_printf(
-            "#{P:%d, %d; cx:0x%X000}Забрать:%s$%d",
+            "#{P:%d, %d; cx:0x%X000}Забрать:%s%s$%d",
             CASHOUT_TEXT_RECT.left,
             CASHOUT_TEXT_RECT.top,
             TTE_WHITE_PB,
             omit_space ? "" : " ",
-            s_cashout
+            s_cashout < 0 ? "-" : "",
+            s_cashout < 0 ? -s_cashout : s_cashout
         );
     }
 
