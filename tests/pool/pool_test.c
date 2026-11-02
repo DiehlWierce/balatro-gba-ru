@@ -21,7 +21,7 @@ void print_time_diff(timestamp_t start, timestamp_t end)
 {
     int64_t diff_nsec = end.tv_nsec - start.tv_nsec;
 
-    printf("Elapsed: %ld ns\n", diff_nsec);
+    printf("Elapsed: %lld ns\n", (long long)diff_nsec);
 }
 
 int get_random(int low, int high)
