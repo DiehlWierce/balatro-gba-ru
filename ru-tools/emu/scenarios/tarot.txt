@@ -67,3 +67,59 @@ wait 20
 press A
 wait 90
 shot 06_death_used
+
+# Star on 3 cards (suit becomes Diamonds) and The Hanged Man on 2 cards (they leave the deck)
+poke32 {sym:g_debug_give_tarot} 17
+wait 30
+poke32 {sym:g_debug_give_tarot} 12
+wait 60
+shot 07_star_and_hanged_man
+press LEFT
+press LEFT
+press LEFT
+press LEFT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+wait 20
+shot 08_three_selected
+press UP
+press LEFT
+wait 20
+press A
+wait 90
+shot 09_star_used
+# Hanged Man is the only Tarot left: 2 cards destroyed, the deck shrinks to 50
+press A
+press RIGHT
+press A
+wait 20
+press UP
+wait 20
+press A
+wait 120
+shot 10_hanged_man_used
+
+# Tower (Stone card), then The Hermit doubles the money
+poke32 {sym:g_debug_give_tarot} 16
+wait 30
+poke32 {sym:g_debug_give_tarot} 9
+wait 60
+press LEFT
+press LEFT
+press LEFT
+press A
+wait 20
+press UP
+press LEFT
+wait 20
+press A
+wait 90
+shot 11_tower_used
+press UP
+wait 20
+press A
+wait 90
+shot 12_hermit_used
