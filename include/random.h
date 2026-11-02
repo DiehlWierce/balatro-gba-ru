@@ -49,6 +49,7 @@ enum RngSequence
     RNG_SEQ_CARD_LUCKY_MONEY,
     RNG_SEQ_CARD_GLASS,
     RNG_SEQ_PACK_CONTENTS,
+    RNG_SEQ_SHOP_PACKS, // Type of the Booster Packs for sale in the Shop
 
     RNG_SEQ_MAX
 };

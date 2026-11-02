@@ -9,7 +9,9 @@
 #include "audio_utils.h"
 #include "background_shop_gfx.h"
 #include "bitset.h"
+#include "booster_pack.h"
 #include "button.h"
+#include "card.h"
 #include "consumable.h"
 #include "game.h"
 #include "game/blind_select.h"
@@ -47,6 +49,13 @@
 // Weights of the top row item types, as in the original game (Tarots will add 4)
 #define SHOP_JOKER_WEIGHT    20
 #define SHOP_PLANET_WEIGHT   4
+#define SHOP_PACK_WEIGHT     8 // Booster Packs share the top row since there is no room for a second
+
+// Opened Booster Pack
+#define PACK_CHOICES_SPACING_PX 36
+#define PACK_TITLE_POS_Y        56
+#define PACK_CARD_INFO_POS_Y    112
+#define PACK_HINT_POS_Y         124
 #define NEXT_ROUND_BTN_SEL_X 0
 
 // Palette IDs
@@ -105,6 +114,7 @@ enum GameShopStates
     GAME_SHOP_ACTIVE,
     GAME_SHOP_SHOW_ITEM_DESC,
     GAME_SHOP_HIDE_ITEM_DESC,
+    GAME_SHOP_PACK_OPEN,
     GAME_SHOP_EXIT,
     GAME_SHOP_MAX
 };
@@ -117,6 +127,7 @@ static void shop_show_item_desc_on_update(void);
 static void shop_hide_item_desc_on_init(void);
 static void shop_hide_item_desc_on_update(void);
 static void shop_hide_item_desc_on_exit(void);
+static void shop_pack_open_on_update(void);
 static void shop_outro(void);
 
 // clang-format off
@@ -130,6 +141,7 @@ static StateInfo shop_state_actions[GAME_SHOP_MAX] = {
     [GAME_SHOP_HIDE_ITEM_DESC] = {.on_init   = shop_hide_item_desc_on_init,
                                   .on_update = shop_hide_item_desc_on_update,
                                   .on_exit   = shop_hide_item_desc_on_exit},
+    [GAME_SHOP_PACK_OPEN]      = STATE_INFO_UPDATE_FN_ONLY(shop_pack_open_on_update),
     [GAME_SHOP_EXIT]           = STATE_INFO_UPDATE_FN_ONLY(shop_outro),
 };
 // clang-format on
@@ -287,7 +299,17 @@ static void shop_redeem_skip_tags(void)
  */
 static Item* shop_create_top_row_item(void)
 {
-    u32 roll = rng_get_u32(RNG_SEQ_SHOP_ITEM_TYPE) % (SHOP_JOKER_WEIGHT + SHOP_PLANET_WEIGHT);
+    u32 roll = rng_get_u32(RNG_SEQ_SHOP_ITEM_TYPE) %
+               (SHOP_JOKER_WEIGHT + SHOP_PLANET_WEIGHT + SHOP_PACK_WEIGHT);
+
+    if (roll >= SHOP_JOKER_WEIGHT + SHOP_PLANET_WEIGHT)
+    {
+        // NULL when no pack sprite is free: fall back to a Joker or a Planet
+        Item* pack = item_roll_new(ITEM_TYPE_PACK, RNG_SEQ_SHOP_PACKS);
+        if (pack != NULL)
+            return pack;
+        roll = 0;
+    }
 
     if (roll < SHOP_JOKER_WEIGHT)
     {
@@ -396,6 +418,9 @@ static int shop_top_row_get_size(void)
 /**
  * @brief Called when pressing A on a Shop Joker to buy it.
  */
+static BoosterPackObject* s_opened_pack = NULL;
+static bool s_pack_open_requested = false;
+
 static inline void shop_buy_item(int shop_item_idx)
 {
     List* shop_items_list = &s_shop_items_list;
@@ -405,9 +430,20 @@ static inline void shop_buy_item(int shop_item_idx)
     display_money();
     sprite_object_erase_text_under((SpriteObject*)item);
     sprite_object_set_focus((SpriteObject*)item, false);
+    list_remove_at_idx(shop_items_list, shop_item_idx); // Remove the item from the shop
+
+    if (item->type == ITEM_TYPE_PACK)
+    {
+        // Packs are opened right away instead of being acquired
+        s_opened_pack = (BoosterPackObject*)item;
+        s_pack_open_requested = true;
+        return;
+    }
+
     item_acquire(item);
-    list_remove_at_idx(shop_items_list, shop_item_idx); // Remove the joker from the shop
 }
+
+static void shop_pack_open_start(void);
 
 /**
  * @brief Handle button inputs for the "Next Round" button and shop Jokers.
@@ -432,6 +468,12 @@ static void shop_top_row_on_key_transit(SelectionGrid* selection_grid, Selection
 
         shop_buy_item(shop_item_idx);
         selection_grid_move_selection_horz(selection_grid, -1);
+
+        if (s_pack_open_requested)
+        {
+            s_pack_open_requested = false;
+            shop_pack_open_start();
+        }
     }
 }
 
@@ -868,6 +910,199 @@ static void shop_hide_item_desc_on_exit(void)
 
     s_description_item = NULL;
 }
+
+
+#pragma region Booster Pack opening
+
+static const PackInfo* s_pack_info = NULL;
+static Item* s_pack_choices[MAX_PACK_CHOICES];
+static int s_pack_nb_choices = 0;
+static int s_pack_selected = 0;
+static int s_pack_picks_left = 0;
+
+static void shop_pack_print_texts(void)
+{
+    tte_erase_rect_wrapper(SHOP_PRICES_TEXT_RECT);
+
+    const char* name = s_pack_info->name;
+    tte_printf(
+        TTE_WHITE_TAG "#{P:%d,%d}%*s%s",
+        SHOP_PRICES_TEXT_RECT.left,
+        PACK_TITLE_POS_Y,
+        (24 - (int)strlen(name)) / 2,
+        "",
+        name
+    );
+
+    // Enhancement and seal of the selected card
+    Item* choice = s_pack_choices[s_pack_selected];
+    if (choice != NULL && choice->type == ITEM_TYPE_PLAYING_CARD)
+    {
+        const Card* card = ((CardObject*)choice)->card;
+        const char* enhancement = card_get_enhancement_name(card);
+        const char* seal = card_get_seal_name(card);
+        tte_printf(
+            TTE_WHITE_TAG "#{P:%d,%d}%s %s",
+            SHOP_PRICES_TEXT_RECT.left,
+            PACK_CARD_INFO_POS_Y,
+            enhancement != NULL ? enhancement : "",
+            seal != NULL ? seal : ""
+        );
+    }
+
+    tte_printf(
+        TTE_WHITE_TAG "#{P:%d,%d}Взять: A  Пропуск: START",
+        SHOP_PRICES_TEXT_RECT.left,
+        PACK_HINT_POS_Y
+    );
+}
+
+static void shop_pack_set_selected(int idx)
+{
+    if (s_pack_choices[s_pack_selected] != NULL)
+        sprite_object_set_focus((SpriteObject*)s_pack_choices[s_pack_selected], false);
+    s_pack_selected = idx;
+    if (s_pack_choices[s_pack_selected] != NULL)
+        sprite_object_set_focus((SpriteObject*)s_pack_choices[s_pack_selected], true);
+    shop_pack_print_texts();
+}
+
+static void shop_pack_open_start(void)
+{
+    s_pack_info = booster_pack_get_info(s_opened_pack->pack_type);
+    booster_pack_destroy(&s_opened_pack);
+
+    // Move the other shop items out of the way
+    ListItr itr = list_itr_create(&s_shop_items_list);
+    Item* item;
+    while ((item = list_itr_next(&itr)))
+    {
+        sprite_object_set_focus((SpriteObject*)item, false);
+        item->ty = int2fx(SHOP_JOKER_SPRITES_INIT_POS.y + TILE_SIZE);
+    }
+
+    s_pack_nb_choices = 0;
+    int nb_choices = s_pack_info->nb_choices;
+    if (nb_choices > MAX_PACK_CHOICES)
+        nb_choices = MAX_PACK_CHOICES;
+
+    int start_x = (SCREEN_WIDTH - (nb_choices * PACK_CHOICES_SPACING_PX - 4)) / 2;
+    for (int i = 0; i < nb_choices; i++)
+    {
+        Item* choice = s_pack_info->roll_choice(i);
+        s_pack_choices[i] = choice;
+        if (choice == NULL)
+            continue;
+        choice->x = int2fx(start_x + i * PACK_CHOICES_SPACING_PX);
+        choice->y = int2fx(SHOP_JOKER_SPRITES_INIT_POS.y);
+        choice->tx = choice->x;
+        choice->ty = int2fx(ITEM_SHOP_Y);
+        s_pack_nb_choices++;
+    }
+    for (int i = nb_choices; i < MAX_PACK_CHOICES; i++)
+        s_pack_choices[i] = NULL;
+
+    s_pack_picks_left = s_pack_info->nb_picks;
+    s_pack_selected = 0;
+    while (s_pack_selected < nb_choices - 1 && s_pack_choices[s_pack_selected] == NULL)
+        s_pack_selected++;
+
+    s_timer = TM_ZERO;
+    state_machine_change_state(&shop_sm, GAME_SHOP_PACK_OPEN);
+    shop_pack_set_selected(s_pack_selected);
+}
+
+static void shop_pack_close(void)
+{
+    for (int i = 0; i < MAX_PACK_CHOICES; i++)
+    {
+        if (s_pack_choices[i] != NULL)
+        {
+            sprite_object_set_focus((SpriteObject*)s_pack_choices[i], false);
+            s_pack_info->discard(&s_pack_choices[i]);
+        }
+    }
+    s_pack_nb_choices = 0;
+    s_pack_info = NULL;
+
+    tte_erase_rect_wrapper(SHOP_PRICES_TEXT_RECT);
+
+    // Bring the shop items back
+    ListItr itr = list_itr_create(&s_shop_items_list);
+    Item* item;
+    while ((item = list_itr_next(&itr)))
+    {
+        item->ty = int2fx(ITEM_SHOP_Y);
+        item_print_buy_price_under(item);
+    }
+
+    // Re-highlight what the shop selection points to
+    int sel_x = shop_selection_grid.selection.x;
+    if (sel_x > NEXT_ROUND_BTN_SEL_X && sel_x - 1 < list_get_len(&s_shop_items_list))
+    {
+        sprite_object_set_focus((SpriteObject*)list_get_at_idx(&s_shop_items_list, sel_x - 1), true);
+    }
+
+    shop_print_reroll_cost();
+    state_machine_change_state(&shop_sm, GAME_SHOP_ACTIVE);
+}
+
+static void shop_pack_open_on_update(void)
+{
+    if (s_timer < 2)
+        return;
+
+    if (key_hit(KEY_START))
+    {
+        shop_pack_close();
+        return;
+    }
+
+    int dir = 0;
+    if (key_hit(KEY_LEFT))
+        dir = -1;
+    else if (key_hit(KEY_RIGHT))
+        dir = 1;
+
+    if (dir != 0)
+    {
+        int idx = s_pack_selected;
+        do
+        {
+            idx += dir;
+        } while (idx >= 0 && idx < MAX_PACK_CHOICES && s_pack_choices[idx] == NULL);
+
+        if (idx >= 0 && idx < MAX_PACK_CHOICES)
+            shop_pack_set_selected(idx);
+    }
+    else if (key_hit(KEY_CONFIRM) && s_pack_choices[s_pack_selected] != NULL)
+    {
+        sprite_object_set_focus((SpriteObject*)s_pack_choices[s_pack_selected], false);
+        s_pack_info->pick(&s_pack_choices[s_pack_selected]);
+        s_pack_nb_choices--;
+        s_pack_picks_left--;
+
+        if (s_pack_picks_left <= 0 || s_pack_nb_choices <= 0)
+        {
+            shop_pack_close();
+            return;
+        }
+
+        // Move to the closest remaining choice
+        for (int i = 0; i < MAX_PACK_CHOICES; i++)
+        {
+            if (s_pack_choices[i] != NULL)
+            {
+                s_pack_selected = i;
+                break;
+            }
+        }
+        sprite_object_set_focus((SpriteObject*)s_pack_choices[s_pack_selected], true);
+        shop_pack_print_texts();
+    }
+}
+
+#pragma endregion
 
 /**
  * @brief Outro sequence substate update.
