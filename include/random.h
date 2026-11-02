@@ -38,6 +38,7 @@ enum RngSequence
 
     // Added after RNG_SEQ_MISC so the states of the sequences above stay the same for a given seed
     RNG_SEQ_BOSS_HOOK,
+    RNG_SEQ_SHOP_VOUCHERS,
 
     RNG_SEQ_MAX
 };

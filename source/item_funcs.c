@@ -6,6 +6,7 @@
 #include "game/shop.h"
 #include "joker.h"
 #include "util.h"
+#include "voucher.h"
 
 static bool item_always_can_acquire(Item* item);
 
@@ -82,7 +83,18 @@ ItemFuncs item_func_table[] = {
         .dispose = consumable_object_dispose,
         .print_description = consumable_object_print_description
     },
-    [ITEM_TYPE_VOUCHER] = ITEM_PLACEHOLDER_FUNCS,
+    [ITEM_TYPE_VOUCHER] = {
+        .roll_new = voucher_object_roll_new,
+        .get_buy_price = voucher_object_get_buy_price,
+        .get_sell_price = voucher_object_get_sell_price,
+        .get_name = voucher_object_get_name,
+        .get_subtype_info = voucher_object_get_subtype_info,
+        .acquire = voucher_object_acquire,
+        .can_acquire = voucher_object_can_acquire,
+        .dispose = voucher_object_dispose,
+        .print_description = voucher_object_print_description
+    },
+
     [ITEM_TYPE_PACK] = ITEM_PLACEHOLDER_FUNCS
 };
 // clang-format on

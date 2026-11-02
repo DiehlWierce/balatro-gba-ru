@@ -5,6 +5,7 @@
 #include "item_funcs.h"
 #include "mgba_logger.h"
 #include "util.h"
+#include "voucher.h"
 
 #include <tonc.h>
 
@@ -46,7 +47,13 @@ int item_get_buy_price(Item* item)
         return UNDEFINED;
     }
 
-    return item_funcs->get_buy_price(item);
+    int price = item_funcs->get_buy_price(item);
+
+    // Clearance Sale / Liquidation: cards in the Shop are cheaper, Vouchers are not
+    if (price != UNDEFINED && item->type != ITEM_TYPE_VOUCHER && !item->is_owned)
+        price = voucher_apply_shop_discount(price);
+
+    return price;
 }
 
 int item_get_sell_price(Item* item)
