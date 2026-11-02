@@ -105,6 +105,7 @@ static void s_joker_pb_remove_sprite_user(int pb);
 static int s_joker_pb_get_num_sprite_users(int joker_pb);
 static int s_get_unused_joker_pb(void);
 static int s_allocate_pb_if_needed(u8 joker_id);
+static void s_joker_draw_sticker_badges(int tile_index, int pb, u8 stickers);
 static enum JokerRarity joker_get_random_rarity(enum RngSequence key);
 
 void joker_init()
@@ -271,6 +272,7 @@ JokerObject* joker_object_new(Joker* joker)
         &joker_gfxTiles[joker_spritesheet_idx][joker_idx * TILE_SIZE * JOKER_SPRITE_TILES],
         TILE_SIZE * JOKER_SPRITE_TILES
     );
+    s_joker_draw_sticker_badges(tile_index, joker_pb, joker->stickers);
 
     sprite_object_set_sprite(
         (SpriteObject*)joker_object,
@@ -579,6 +581,7 @@ void joker_object_set_face_down(JokerObject* joker_object, bool face_down)
             TILE_SIZE * JOKER_SPRITE_TILES
         );
         pb = s_joker_spritesheet_pb_map[spritesheet_idx];
+        s_joker_draw_sticker_badges(tile_index, pb, joker_object->joker->stickers);
     }
 
     sprite->obj->attr2 = (sprite->obj->attr2 & ~ATTR2_PALBANK_MASK) | ATTR2_PALBANK(pb);
@@ -647,6 +650,88 @@ static int s_get_unused_joker_pb()
     }
 
     return UNDEFINED;
+}
+
+// Stake sticker badges drawn into the 32x32 Joker tiles (A9): no sprite and no palette bank of
+// their own. A 7x7 square in the bottom left corner of the card with a 5x5 glyph; the two colors
+// are the darkest and the lightest of the Joker's own palette bank so it reads on any sheet.
+#define STICKER_BADGE_SIZE   7
+#define STICKER_BADGE_X0     4  // Card art starts 4 px into the 32x32 sprite
+#define STICKER_BADGE_Y0     25 // Bottom of the 32 px high sprite
+#define STICKER_BADGE_STRIDE 8
+
+// clang-format off
+static const u8 STICKER_GLYPHS[][5] = {
+    // Eternal: infinity
+    {0b00000, 0b01010, 0b10101, 0b01010, 0b00000},
+    // Perishable: hourglass
+    {0b11111, 0b01110, 0b00100, 0b01110, 0b11111},
+    // Rental: $
+    {0b01110, 0b10100, 0b01110, 0b00101, 0b01110},
+};
+// clang-format on
+
+static int s_color_luma(COLOR color)
+{
+    // BGR555, weights 2:5:1 are good enough to tell dark from light
+    return 2 * (color & 31) + 5 * ((color >> 5) & 31) + ((color >> 10) & 31);
+}
+
+static void s_joker_set_tile_pixel(int tile_index, int x, int y, u32 color_idx)
+{
+    // 1D mapping, 4 tiles per row of the 32x32 sprite, 8 words of 8 4bpp pixels per tile
+    u32* word = &((u32*)&tile_mem[TILE_MEM_OBJ_CHARBLOCK0_IDX][tile_index + (y / 8) * 4 + (x / 8)])
+                    [y % 8];
+    int shift = (x % 8) * 4;
+    *word = (*word & ~(0xFu << shift)) | (color_idx << shift);
+}
+
+static void s_joker_draw_sticker_badges(int tile_index, int pb, u8 stickers)
+{
+    if (stickers == 0)
+        return;
+
+    u32 dark = 1, light = 1;
+    int dark_luma = 0x7FFF, light_luma = -1;
+    for (int i = 1; i < PAL_ROW_LEN; i++)
+    {
+        int luma = s_color_luma(pal_obj_mem[pb * PAL_ROW_LEN + i]);
+        if (luma < dark_luma)
+        {
+            dark_luma = luma;
+            dark = i;
+        }
+        if (luma > light_luma)
+        {
+            light_luma = luma;
+            light = i;
+        }
+    }
+
+    int badge = 0;
+    for (int glyph_idx = 0; glyph_idx < 3; glyph_idx++)
+    {
+        if (!(stickers & (1 << glyph_idx))) // JOKER_STICKER_ETERNAL, PERISHABLE, RENTAL in order
+            continue;
+
+        int x0 = STICKER_BADGE_X0 + badge * STICKER_BADGE_STRIDE;
+        for (int y = 0; y < STICKER_BADGE_SIZE; y++)
+        {
+            for (int x = 0; x < STICKER_BADGE_SIZE; x++)
+            {
+                bool border = x == 0 || y == 0 || x == STICKER_BADGE_SIZE - 1 ||
+                              y == STICKER_BADGE_SIZE - 1;
+                bool ink = !border && ((STICKER_GLYPHS[glyph_idx][y - 1] >> (5 - x)) & 1);
+                s_joker_set_tile_pixel(
+                    tile_index,
+                    x0 + x,
+                    STICKER_BADGE_Y0 + y,
+                    (border || ink) ? dark : light
+                );
+            }
+        }
+        badge++;
+    }
 }
 
 static int s_allocate_pb_if_needed(u8 joker_id)
