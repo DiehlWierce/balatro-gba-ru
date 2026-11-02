@@ -2,11 +2,11 @@
 """Generates modifiers.txt: every card of the deck gets an enhancement and a seal.
 
 Card i of the Card pool gets enhancement (i % 8) + 1 and seal i % 5, written with poke8
-(struct Card: suit, rank, enhancement, seal, debuffed, face_down, played_ante — 7 bytes).
+(struct Card: suit, rank, enhancement, seal, debuffed, face_down, played_ante, bonus_chips — 8 bytes).
 """
 import os
 
-CARD_SIZE = 7
+CARD_SIZE = 8
 OFF_ENHANCEMENT = 2
 OFF_SEAL = 3
 

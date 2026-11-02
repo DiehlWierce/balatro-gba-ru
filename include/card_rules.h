@@ -75,6 +75,7 @@ typedef struct Card
     bool debuffed;       // Set by Boss Blinds: the card doesn't score and doesn't trigger Jokers
     bool face_down;      // Set by Boss Blinds: the card is drawn face down
     uint8_t played_ante; // Last Ante the card was played in, 0 if never (The Pillar)
+    uint8_t bonus_chips; // Chips added for good by Hiker
 } Card;
 
 /**

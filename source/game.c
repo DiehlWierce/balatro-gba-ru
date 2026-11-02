@@ -230,6 +230,7 @@ void game_init()
     g_game_vars.best_hand_score = 0;
     g_game_vars.nb_skipped_rounds = 0;
     g_game_vars.nb_unused_discards = 0;
+    g_game_vars.tarots_used = 0;
     g_game_vars.current_blind = BLIND_TYPE_SMALL;
     g_game_vars.blinds_states[0] = BLIND_STATE_CURRENT;
     g_game_vars.blinds_states[1] = BLIND_STATE_UPCOMING;
@@ -736,6 +737,25 @@ void display_discards(void)
 int deck_get_size(void)
 {
     return s_deck_top + 1;
+}
+
+int game_count_deck_enhancement(u8 enhancement)
+{
+    int count = 0;
+    for (int i = 0; i <= s_deck_top; i++)
+    {
+        if (s_deck[i] != NULL && s_deck[i]->enhancement == enhancement)
+            count++;
+    }
+
+    CardObject** hand = get_hand_array();
+    for (int i = 0; i <= get_hand_top(); i++)
+    {
+        if (hand[i] != NULL && hand[i]->card != NULL && hand[i]->card->enhancement == enhancement)
+            count++;
+    }
+
+    return count + round_count_enhancement(enhancement);
 }
 
 static int deck_get_max_size(void)

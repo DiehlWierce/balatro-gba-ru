@@ -77,6 +77,7 @@ Card* card_new(u8 suit, u8 rank)
     card->debuffed = false;
     card->face_down = false;
     card->played_ante = 0;
+    card->bonus_chips = 0;
 
     return card;
 }
@@ -115,10 +116,10 @@ u8 card_get_value(Card* card)
 int card_get_chips(Card* card)
 {
     if (card->enhancement == CARD_ENHANCEMENT_STONE)
-        return STONE_CARD_CHIPS;
+        return STONE_CARD_CHIPS + card->bonus_chips;
     if (card->enhancement == CARD_ENHANCEMENT_BONUS)
-        return card_get_value(card) + BONUS_CARD_CHIPS;
-    return card_get_value(card);
+        return card_get_value(card) + BONUS_CARD_CHIPS + card->bonus_chips;
+    return card_get_value(card) + card->bonus_chips;
 }
 
 // clang-format off

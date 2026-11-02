@@ -576,6 +576,7 @@ bool consumable_object_use(ConsumableObject* consumable_object)
         tarot_use(consumable_object->id, consumable_object->x, consumable_object->y);
     else
         planet_use(consumable_object->id);
+    joker_on_consumable_used(is_tarot(consumable_object));
 
     item_start_discard_animation((Item*)consumable_object);
     return true;

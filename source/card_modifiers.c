@@ -48,6 +48,7 @@ CardScoreResult card_modifiers_on_scored(Card* card)
                 result.mult = LUCKY_MULT;
             if (roll_one_in(RNG_SEQ_CARD_LUCKY_MONEY, LUCKY_MONEY_CHANCE))
                 result.money += LUCKY_MONEY;
+            result.lucky_triggered = result.mult > 0 || result.money > 0;
             break;
         case CARD_ENHANCEMENT_GLASS:
             result.xmult = true;

@@ -1,0 +1,202 @@
+# A8 batch 3: Vampire and Midas Mask forced into the Shop, needs: make DEBUG_JOKER0=82 DEBUG_JOKER1=83 (touch source/joker.c first).
+# All 52 cards are Kings and Bonus cards (enhancement 1). Seed GBARU1: win the Small Blind,
+# buy both Jokers, play the 5 leftmost cards on the Big Blind: Vampire eats the Bonus enhancement of the scoring cards
+# and grows, Midas Mask turns the scoring face cards into Gold cards.
+
+wait 460
+press START
+wait 60
+press A
+wait 60
+pokestr {sym:s_seed_str} GBARU1
+poke8 {sym:use_seed} 1
+press DOWN
+wait 10
+press A
+wait 120
+poke8 {sym:Card_storage+1} 11
+poke8 {sym:Card_storage+9} 11
+poke8 {sym:Card_storage+17} 11
+poke8 {sym:Card_storage+25} 11
+poke8 {sym:Card_storage+33} 11
+poke8 {sym:Card_storage+41} 11
+poke8 {sym:Card_storage+49} 11
+poke8 {sym:Card_storage+57} 11
+poke8 {sym:Card_storage+65} 11
+poke8 {sym:Card_storage+73} 11
+poke8 {sym:Card_storage+81} 11
+poke8 {sym:Card_storage+89} 11
+poke8 {sym:Card_storage+97} 11
+poke8 {sym:Card_storage+105} 11
+poke8 {sym:Card_storage+113} 11
+poke8 {sym:Card_storage+121} 11
+poke8 {sym:Card_storage+129} 11
+poke8 {sym:Card_storage+137} 11
+poke8 {sym:Card_storage+145} 11
+poke8 {sym:Card_storage+153} 11
+poke8 {sym:Card_storage+161} 11
+poke8 {sym:Card_storage+169} 11
+poke8 {sym:Card_storage+177} 11
+poke8 {sym:Card_storage+185} 11
+poke8 {sym:Card_storage+193} 11
+poke8 {sym:Card_storage+201} 11
+poke8 {sym:Card_storage+209} 11
+poke8 {sym:Card_storage+217} 11
+poke8 {sym:Card_storage+225} 11
+poke8 {sym:Card_storage+233} 11
+poke8 {sym:Card_storage+241} 11
+poke8 {sym:Card_storage+249} 11
+poke8 {sym:Card_storage+257} 11
+poke8 {sym:Card_storage+265} 11
+poke8 {sym:Card_storage+273} 11
+poke8 {sym:Card_storage+281} 11
+poke8 {sym:Card_storage+289} 11
+poke8 {sym:Card_storage+297} 11
+poke8 {sym:Card_storage+305} 11
+poke8 {sym:Card_storage+313} 11
+poke8 {sym:Card_storage+321} 11
+poke8 {sym:Card_storage+329} 11
+poke8 {sym:Card_storage+337} 11
+poke8 {sym:Card_storage+345} 11
+poke8 {sym:Card_storage+353} 11
+poke8 {sym:Card_storage+361} 11
+poke8 {sym:Card_storage+369} 11
+poke8 {sym:Card_storage+377} 11
+poke8 {sym:Card_storage+385} 11
+poke8 {sym:Card_storage+393} 11
+poke8 {sym:Card_storage+401} 11
+poke8 {sym:Card_storage+409} 11
+poke8 {sym:Card_storage+2} 1
+poke8 {sym:Card_storage+10} 1
+poke8 {sym:Card_storage+18} 1
+poke8 {sym:Card_storage+26} 1
+poke8 {sym:Card_storage+34} 1
+poke8 {sym:Card_storage+42} 1
+poke8 {sym:Card_storage+50} 1
+poke8 {sym:Card_storage+58} 1
+poke8 {sym:Card_storage+66} 1
+poke8 {sym:Card_storage+74} 1
+poke8 {sym:Card_storage+82} 1
+poke8 {sym:Card_storage+90} 1
+poke8 {sym:Card_storage+98} 1
+poke8 {sym:Card_storage+106} 1
+poke8 {sym:Card_storage+114} 1
+poke8 {sym:Card_storage+122} 1
+poke8 {sym:Card_storage+130} 1
+poke8 {sym:Card_storage+138} 1
+poke8 {sym:Card_storage+146} 1
+poke8 {sym:Card_storage+154} 1
+poke8 {sym:Card_storage+162} 1
+poke8 {sym:Card_storage+170} 1
+poke8 {sym:Card_storage+178} 1
+poke8 {sym:Card_storage+186} 1
+poke8 {sym:Card_storage+194} 1
+poke8 {sym:Card_storage+202} 1
+poke8 {sym:Card_storage+210} 1
+poke8 {sym:Card_storage+218} 1
+poke8 {sym:Card_storage+226} 1
+poke8 {sym:Card_storage+234} 1
+poke8 {sym:Card_storage+242} 1
+poke8 {sym:Card_storage+250} 1
+poke8 {sym:Card_storage+258} 1
+poke8 {sym:Card_storage+266} 1
+poke8 {sym:Card_storage+274} 1
+poke8 {sym:Card_storage+282} 1
+poke8 {sym:Card_storage+290} 1
+poke8 {sym:Card_storage+298} 1
+poke8 {sym:Card_storage+306} 1
+poke8 {sym:Card_storage+314} 1
+poke8 {sym:Card_storage+322} 1
+poke8 {sym:Card_storage+330} 1
+poke8 {sym:Card_storage+338} 1
+poke8 {sym:Card_storage+346} 1
+poke8 {sym:Card_storage+354} 1
+poke8 {sym:Card_storage+362} 1
+poke8 {sym:Card_storage+370} 1
+poke8 {sym:Card_storage+378} 1
+poke8 {sym:Card_storage+386} 1
+poke8 {sym:Card_storage+394} 1
+poke8 {sym:Card_storage+402} 1
+poke8 {sym:Card_storage+410} 1
+press A
+wait 180
+poke32 {gv:score} 100000
+press A
+press L
+wait 1100
+press A
+wait 200
+poke32 {gv:money} 500
+shot 00_shop
+
+# Buy both Shop Jokers
+press RIGHT
+wait 20
+hold B
+wait 90
+shot 01_desc_first
+release B
+wait 20
+press A
+wait 60
+press RIGHT
+wait 20
+hold B
+wait 90
+shot 02_desc_second
+release B
+wait 20
+press A
+wait 60
+shot 03_bought
+
+# Next round, Big Blind
+press DOWN
+wait 20
+press LEFT
+wait 20
+press UP
+wait 20
+press A
+wait 200
+press RIGHT
+wait 20
+press A
+wait 200
+shot 04_round
+
+# Play one hand of the 5 leftmost cards, shots while it is scored
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+wait 10
+shot 05_selected
+press L
+wait 60
+shot 10_scoring
+wait 60
+shot 11_scoring
+wait 60
+shot 12_scoring
+wait 60
+shot 13_scoring
+wait 60
+shot 14_scoring
+wait 60
+shot 15_scoring
+wait 60
+shot 16_scoring
+wait 60
+shot 17_scoring
+wait 60
+shot 18_scoring
+wait 60
+shot 19_scoring
+wait 500
+shot 30_after_hand
