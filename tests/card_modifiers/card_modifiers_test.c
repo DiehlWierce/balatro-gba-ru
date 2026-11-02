@@ -50,6 +50,13 @@ enum HandType planet_get_hand_type(enum PlanetType planet)
 }
 
 static int s_planets_created;
+static int s_tarots_created;
+bool consumable_create_random_tarot(enum RngSequence key, FIXED x, FIXED y)
+{
+    (void)key; (void)x; (void)y;
+    s_tarots_created++;
+    return true;
+}
 static int s_last_planet;
 static int s_consumables_destroyed;
 static bool s_can_acquire;
@@ -317,12 +324,13 @@ static void test_blue_seal_without_planet_or_slot(void)
     assert(s_items_acquired == 0);
 }
 
-static void test_purple_seal_has_no_effect_yet(void)
+static void test_purple_seal_creates_tarot(void)
 {
-    // TODO(A7): Tarot creation on discard is not implemented, drop this test when it lands
     reset();
+    s_tarots_created = 0;
     Card card = make(CARD_ENHANCEMENT_NONE, CARD_SEAL_PURPLE);
-    assert(!card_modifiers_on_discarded(&card));
+    assert(card_modifiers_on_discarded(&card, 0, 0));
+    assert(s_tarots_created == 1);
 }
 
 static void test_debuffed_card_is_inert(void)
@@ -368,7 +376,7 @@ static void test_null_card_is_inert(void)
     assert(!card_modifiers_breaks_after_scoring(NULL));
     assert(!card_modifiers_has_retrigger(NULL));
     assert(!card_modifiers_on_round_won(NULL, PAIR, 0, 0));
-    assert(!card_modifiers_on_discarded(NULL));
+    assert(!card_modifiers_on_discarded(NULL, 0, 0));
 }
 
 int main(void)
@@ -389,7 +397,7 @@ int main(void)
     test_blue_seal_creates_planet_of_last_hand();
     test_blue_seal_royal_flush_gives_neptune();
     test_blue_seal_without_planet_or_slot();
-    test_purple_seal_has_no_effect_yet();
+    test_purple_seal_creates_tarot();
     test_debuffed_card_is_inert();
     test_null_card_is_inert();
     printf("Card Modifiers Tests Passed :)\n");
