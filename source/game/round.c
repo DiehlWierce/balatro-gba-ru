@@ -7,6 +7,7 @@
 
 #include "audio_utils.h"
 #include "background_gfx.h"
+#include "blind_effects.h"
 #include "button.h"
 #include "game.h"
 #include "game/common_ui.h"
@@ -461,6 +462,9 @@ static inline void round_execute_discard(void)
     --g_game_vars.discards;
     display_discards();
     compute_hand_value_info();
+
+    BlindEventData blind_event_data = {.nb_cards = hand_get_nb_selected_cards()};
+    blind_effects_trigger(BLIND_EVENT_ON_DISCARD, &blind_event_data);
 }
 
 /**
@@ -507,6 +511,12 @@ static inline void round_execute_play_hand(void)
     display_hands();
 
     g_game_vars.nb_played_hands[get_hand_type() - 1]++;
+
+    BlindEventData blind_event_data = {
+        .hand_type = get_hand_type(),
+        .nb_cards = hand_get_nb_selected_cards()
+    };
+    blind_effects_trigger(BLIND_EVENT_ON_HAND_PLAYED, &blind_event_data);
 }
 
 /**
@@ -728,6 +738,8 @@ static inline void round_process_hand_select_input(void)
 static inline void round_handle_round_over(void)
 {
     enum GameState next_state = GAME_STATE_ROUND_END;
+
+    blind_effects_trigger(BLIND_EVENT_ON_ROUND_END, NULL);
 
     if (g_game_vars.score >= blind_get_requirement(g_game_vars.current_blind, g_game_vars.ante))
     {
@@ -1153,6 +1165,9 @@ static inline void card_draw(void)
 
     set_hand_top(get_hand_top() + 1);
     get_hand_array()[get_hand_top()] = card_object;
+
+    BlindEventData blind_event_data = {.card = card_object->card};
+    blind_effects_trigger(BLIND_EVENT_ON_CARD_DRAWN, &blind_event_data);
 
     // Sort the hand after drawing a card
     sort_cards();
@@ -1762,6 +1777,9 @@ static inline bool play_scoring_cards_update(void)
             g_game_vars.chips = u32_protected_add(g_game_vars.chips, card_value);
             display_chips();
 
+            BlindEventData blind_event_data = {.card = scored_card_object->card};
+            blind_effects_trigger(BLIND_EVENT_ON_CARD_SCORED, &blind_event_data);
+
             // Allow Joker scoring
             s_joker_scored_itr = list_itr_create(get_jokers_list());
             s_joker_card_scored_end_itr = list_itr_create(get_jokers_list());
@@ -2189,6 +2207,8 @@ void round_on_init(void)
         TTE_YELLOW_PB,
         blind_get_reward(g_game_vars.current_blind)
     ); // Blind reward
+
+    blind_effects_trigger(BLIND_EVENT_ON_BLIND_SELECTED, NULL);
 
     deck_shuffle(); // Shuffle the deck at the start of the round
 

@@ -41,11 +41,45 @@
 #define DEFAULT_HIGH_CONTRAST false
 #define DEFAULT_MORE_READABLE false
 
+/**
+ * @brief Card enhancements, a card has at most one (none by default)
+ */
+enum CardEnhancement
+{
+    CARD_ENHANCEMENT_NONE,
+    CARD_ENHANCEMENT_BONUS, // +30 chips
+    CARD_ENHANCEMENT_MULT,  // +4 mult
+    CARD_ENHANCEMENT_WILD,  // Counts as every suit
+    CARD_ENHANCEMENT_GLASS, // X2 mult, 1 in 4 chance to be destroyed
+    CARD_ENHANCEMENT_STEEL, // X1.5 mult while held in hand
+    CARD_ENHANCEMENT_STONE, // +50 chips, no rank or suit, always scores
+    CARD_ENHANCEMENT_GOLD,  // $3 if held in hand at the end of the round
+    CARD_ENHANCEMENT_LUCKY, // 1 in 5 chance of +20 mult, 1 in 15 chance of $20
+    CARD_ENHANCEMENT_MAX
+};
+
+/**
+ * @brief Card seals, a card has at most one (none by default)
+ */
+enum CardSeal
+{
+    CARD_SEAL_NONE,
+    CARD_SEAL_GOLD,   // $3 when scored
+    CARD_SEAL_RED,    // Retrigger the card
+    CARD_SEAL_BLUE,   // Creates the Planet of the final hand if held at the end of the round
+    CARD_SEAL_PURPLE, // Creates a Tarot when discarded
+    CARD_SEAL_MAX
+};
+
 // Card types
 typedef struct Card
 {
     u8 suit;
     u8 rank;
+    u8 enhancement; // enum CardEnhancement
+    u8 seal;        // enum CardSeal
+    bool debuffed;  // Set by Boss Blinds: the card doesn't score and doesn't trigger Jokers
+    bool face_down; // Set by Boss Blinds: the card is drawn face down
 } Card;
 
 typedef struct CardObject

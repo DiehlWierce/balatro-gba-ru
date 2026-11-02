@@ -24,10 +24,11 @@ enum ItemType
     ITEM_TYPE_JOKER,
     ITEM_TYPE_PLAYING_CARD,
 
-    // Future planned item types
-    // ITEM_TYPE_CONSUMABLE, // Expand to PLANET, TAROT, and SPECTRAL?
-    // ITEM_TYPE_VOUCHER,
-    // ITEM_TYPE_PACK
+    // Declared but not implemented yet: placeholder functions in item_funcs.c,
+    // they never appear in the Shop.
+    ITEM_TYPE_CONSUMABLE, // Planet, Tarot and Spectral cards
+    ITEM_TYPE_VOUCHER,
+    ITEM_TYPE_PACK, // Booster Packs
 
     ITEM_NUM_TYPES
 };

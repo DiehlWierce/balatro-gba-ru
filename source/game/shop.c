@@ -299,7 +299,11 @@ static void shop_create_top_row_items(void)
     list_clear(shop_items_list);
     *shop_items_list = list_init();
 
-    for (int i = 0; i < MAX_SHOP_ITEMS; i++)
+    int shop_slots = g_game_vars.shop_slots;
+    if (shop_slots > MAX_SHOP_ITEMS)
+        shop_slots = MAX_SHOP_ITEMS;
+
+    for (int i = 0; i < shop_slots; i++)
     {
         Item* item = shop_create_top_row_item();
 

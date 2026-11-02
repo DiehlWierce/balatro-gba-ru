@@ -108,6 +108,18 @@ GameVariables g_game_vars = {
     .deck = DECK_TYPE_RED,
     .nb_played_hands = {0},
 
+    .hands_per_round = MAX_HANDS,
+    .discards_per_round = MAX_DISCARDS,
+    .base_hand_size = DEFAULT_HAND_SIZE,
+    .joker_slots = DEFAULT_JOKER_SLOTS,
+    .consumable_slots = DEFAULT_CONSUMABLE_SLOTS,
+    .shop_slots = DEFAULT_SHOP_SLOTS,
+    .interest_cap = DEFAULT_INTEREST_CAP,
+    .stake = STAKE_WHITE,
+    // Set to DEFAULT_HAND_LEVEL in game_init()
+    .hand_levels = {0},
+    .owned_vouchers = 0,
+
     .best_hand_score = 0,
     .nb_skipped_rounds = 0,
     .nb_unused_discards = 0,
@@ -195,6 +207,17 @@ void game_init()
     g_game_vars.deck = DECK_TYPE_RED;
     for (int i = 0; i < HAND_TYPE_MAX; i++)
         g_game_vars.nb_played_hands[i] = 0;
+    g_game_vars.hands_per_round = MAX_HANDS;
+    g_game_vars.discards_per_round = MAX_DISCARDS;
+    g_game_vars.base_hand_size = DEFAULT_HAND_SIZE;
+    g_game_vars.joker_slots = DEFAULT_JOKER_SLOTS;
+    g_game_vars.consumable_slots = DEFAULT_CONSUMABLE_SLOTS;
+    g_game_vars.shop_slots = DEFAULT_SHOP_SLOTS;
+    g_game_vars.interest_cap = DEFAULT_INTEREST_CAP;
+    g_game_vars.stake = STAKE_WHITE;
+    for (int i = 0; i < HAND_TYPE_MAX; i++)
+        g_game_vars.hand_levels[i] = DEFAULT_HAND_LEVEL;
+    g_game_vars.owned_vouchers = 0;
     g_game_vars.best_hand_score = 0;
     g_game_vars.nb_skipped_rounds = 0;
     g_game_vars.nb_unused_discards = 0;
@@ -296,7 +319,7 @@ static inline void held_jokers_update_loop(void)
 bool joker_object_can_acquire(Item* joker_object)
 {
     GBAL_RETURN_IF_NULL(joker_object, false);
-    return (list_get_len(get_jokers_list()) < MAX_JOKERS_HELD_SIZE);
+    return (list_get_len(get_jokers_list()) < g_game_vars.joker_slots);
 }
 
 static inline void expired_jokers_update_loop(void)
@@ -662,8 +685,12 @@ void game_start(void)
     affine_background_change_background(AFFINE_BG_GAME);
     tte_colors_setup();
 
-    g_game_vars.hands = MAX_HANDS;
-    g_game_vars.discards = MAX_DISCARDS;
+    // Deck effects change the run's base values set by game_init()
+    deck_apply_start_effects(g_game_vars.deck);
+
+    g_game_vars.hands = g_game_vars.hands_per_round;
+    g_game_vars.discards = g_game_vars.discards_per_round;
+    g_game_vars.hand_size = g_game_vars.base_hand_size;
 
     // Fill the deck with all the cards. Later on this can be replaced with a more dynamic system
     // that allows for different decks and card types.

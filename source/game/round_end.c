@@ -162,8 +162,8 @@ static StateMachine round_end_sm = STATE_MACHINE_DEFINE(state_info, ROUND_END_ST
 static int calculate_interest_reward(void)
 {
     int reward = (g_game_vars.money / 5) * INTEREST_PER_5;
-    if (reward > MAX_INTEREST)
-        reward = MAX_INTEREST;
+    if (reward > g_game_vars.interest_cap)
+        reward = g_game_vars.interest_cap;
     return reward;
 }
 
@@ -448,8 +448,8 @@ static inline void round_end_cashout(void)
     g_game_vars.money += s_cashout;
     display_money();
 
-    g_game_vars.hands = MAX_HANDS;       // Reset the hands to the maximum
-    g_game_vars.discards = MAX_DISCARDS; // Reset the discards to the maximum
+    g_game_vars.hands = g_game_vars.hands_per_round;       // Reset the hands to the maximum
+    g_game_vars.discards = g_game_vars.discards_per_round; // Reset the discards to the maximum
     // TODO: these can just be in one spot, passing global to global
     display_hands();    // Set the hands display
     display_discards(); // Set the discards display
@@ -522,7 +522,7 @@ void round_end_change_background(void)
 void round_end_on_init(void)
 {
     // Reset hand size in case it was increased by the Juggle Tag
-    g_game_vars.hand_size = DEFAULT_HAND_SIZE;
+    g_game_vars.hand_size = g_game_vars.base_hand_size;
     g_game_vars.timer = 0;
     g_game_vars.nb_unused_discards += g_game_vars.discards;
     state_machine_register(&round_end_sm);

@@ -71,6 +71,10 @@ Card* card_new(u8 suit, u8 rank)
 
     card->suit = suit;
     card->rank = rank;
+    card->enhancement = CARD_ENHANCEMENT_NONE;
+    card->seal = CARD_SEAL_NONE;
+    card->debuffed = false;
+    card->face_down = false;
 
     return card;
 }

@@ -112,3 +112,19 @@ void print_deck_description(enum DeckType deck, BG_POINT pos)
         }
     }
 }
+
+void deck_apply_start_effects(enum DeckType deck)
+{
+    switch (deck)
+    {
+        // TODO: Deck effects. The Red Deck's +1 discard is still included in MAX_DISCARDS.
+        case DECK_TYPE_RED:
+        case DECK_TYPE_BLUE:
+        case DECK_TYPE_YELLOW:
+        case DECK_TYPE_GREEN:
+        case DECK_TYPE_BLACK:
+        case DECK_TYPE_PAINTED:
+        default:
+            break;
+    }
+}

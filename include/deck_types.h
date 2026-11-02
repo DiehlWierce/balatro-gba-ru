@@ -40,4 +40,15 @@ void print_deck_name(enum DeckType deck, BG_POINT pos);
  */
 void print_deck_description(enum DeckType deck, BG_POINT pos);
 
+/**
+ * @brief Applies the effects of a Deck at the start of a run.
+ *
+ * Called once by game_start(), after game_init() has reset the run's base values
+ * (g_game_vars.hands_per_round, discards_per_round, base_hand_size, joker_slots, money...) and
+ * before the first round. Effects change these base values, not the current round's ones.
+ *
+ * @param deck DeckType chosen for the run.
+ */
+void deck_apply_start_effects(enum DeckType deck);
+
 #endif // DECK_TYPES_H

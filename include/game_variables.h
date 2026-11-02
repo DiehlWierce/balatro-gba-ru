@@ -9,6 +9,7 @@
 #include "blind.h"
 #include "hand.h"
 #include "random.h"
+#include "stake.h"
 
 #include <tonc.h>
 
@@ -24,10 +25,20 @@
 #define DEFAULT_MUSIC_VOLUME VOLUME_OPTION_MAX
 #define DEFAULT_SOUND_VOLUME VOLUME_OPTION_MAX
 
+// Default per-round hands and discards of a run, before Deck/Voucher effects.
+// NOTE: MAX_DISCARDS still includes the +1 discard of the Red Deck (the only Deck for now).
 #define MAX_HANDS    4
 #define MAX_DISCARDS 4
 
 #define DEFAULT_HAND_SIZE 8
+
+// Default run limits, changed by Decks, Vouchers and Stakes
+#define DEFAULT_JOKER_SLOTS      5 // Must not exceed MAX_JOKERS_HELD_SIZE (game.h)
+#define DEFAULT_CONSUMABLE_SLOTS 2
+#define DEFAULT_SHOP_SLOTS       2 // Must not exceed MAX_SHOP_ITEMS (game.h)
+#define DEFAULT_INTEREST_CAP     5 // Maximum interest in $ at the end of a round
+
+#define DEFAULT_HAND_LEVEL 1
 
 /**
  * @brief A central location for all game variables.
@@ -57,7 +68,24 @@ typedef struct
     s32 ante;
     s32 round;
     s32 deck;
+    // Indexed by `hand_type - 1`: HAND_TYPE_MAX is the last hand type (FLUSH_FIVE), not a count
     u32 nb_played_hands[HAND_TYPE_MAX];
+
+    // Run limits: base values reset by game_init() and changed by Deck, Voucher and Stake effects
+    s32 hands_per_round;    // Hands given at the start of each round
+    s32 discards_per_round; // Discards given at the start of each round
+    s32 base_hand_size;     // Hand size restored at the end of each round
+    s32 joker_slots;
+    s32 consumable_slots;
+    s32 shop_slots;   // Number of items in the top row of the Shop
+    s32 interest_cap; // Maximum interest in $ at the end of a round
+    enum Stake stake;
+
+    // Level of each poker hand, indexed by `hand_type - 1` like nb_played_hands
+    u16 hand_levels[HAND_TYPE_MAX];
+
+    // Bit `i` is set when the Voucher with index `i` is owned (32 Vouchers in the base game)
+    u32 owned_vouchers;
 
     // Hidden variables
 
