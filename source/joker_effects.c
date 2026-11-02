@@ -104,6 +104,21 @@ DECLARE_JOKER_DESC_FUNC(spare_trousers_joker_desc)
 DECLARE_JOKER_DESC_FUNC(wee_joker_desc)
 DECLARE_JOKER_DESC_FUNC(onyx_agate_joker_desc)
 DECLARE_JOKER_DESC_FUNC(arrowhead_joker_desc)
+DECLARE_JOKER_DESC_FUNC(golden_joker_desc)
+DECLARE_JOKER_DESC_FUNC(delayed_gratification_joker_desc)
+DECLARE_JOKER_DESC_FUNC(to_the_moon_joker_desc)
+DECLARE_JOKER_DESC_FUNC(rocket_joker_desc)
+DECLARE_JOKER_DESC_FUNC(egg_joker_desc)
+DECLARE_JOKER_DESC_FUNC(credit_card_joker_desc)
+DECLARE_JOKER_DESC_FUNC(juggler_joker_desc)
+DECLARE_JOKER_DESC_FUNC(drunkard_joker_desc)
+DECLARE_JOKER_DESC_FUNC(troubadour_joker_desc)
+DECLARE_JOKER_DESC_FUNC(merry_andy_joker_desc)
+DECLARE_JOKER_DESC_FUNC(stuntman_joker_desc)
+DECLARE_JOKER_DESC_FUNC(gift_card_joker_desc)
+DECLARE_JOKER_DESC_FUNC(swashbuckler_joker_desc)
+DECLARE_JOKER_DESC_FUNC(golden_ticket_joker_desc)
+DECLARE_JOKER_DESC_FUNC(rough_gem_joker_desc)
 
 // Joker Effect functions
 
@@ -175,6 +190,11 @@ DECLARE_JOKER_EFFECT_FUNC(spare_trousers_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(wee_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(onyx_agate_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(arrowhead_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(rocket_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(stuntman_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(swashbuckler_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(golden_ticket_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(rough_gem_joker_effect)
 
 /* The index of a joker in the registry matches its ID.
  *
@@ -268,6 +288,22 @@ const JokerInfo joker_registry[] =
     { "Малыш Джокер", RARE_JOKER, 8, false, wee_joker_desc, wee_joker_effect }, // 61
     { "Чёрный агат", UNCOMMON_JOKER, 7, false, onyx_agate_joker_desc, onyx_agate_joker_effect }, // 62
     { "Наконечник", UNCOMMON_JOKER, 7, false, arrowhead_joker_desc, arrowhead_joker_effect }, // 63
+
+    { "Золотой Джокер", COMMON_JOKER, 6, false, golden_joker_desc, joker_effect_noop }, // 64
+    { "Отсрочка", COMMON_JOKER, 4, false, delayed_gratification_joker_desc, joker_effect_noop }, // 65
+    { "К Луне", UNCOMMON_JOKER, 5, false, to_the_moon_joker_desc, joker_effect_noop }, // 66
+    { "Ракета", UNCOMMON_JOKER, 6, false, rocket_joker_desc, rocket_joker_effect }, // 67
+    { "Яйцо", COMMON_JOKER, 4, false, egg_joker_desc, joker_effect_noop }, // 68
+    { "Кредитка", COMMON_JOKER, 1, false, credit_card_joker_desc, joker_effect_noop }, // 69
+    { "Жонглёр", COMMON_JOKER, 4, false, juggler_joker_desc, joker_effect_noop }, // 70
+    { "Пьяница", COMMON_JOKER, 4, false, drunkard_joker_desc, joker_effect_noop }, // 71
+    { "Трубадур", UNCOMMON_JOKER, 6, false, troubadour_joker_desc, joker_effect_noop }, // 72
+    { "Весёлый Энди", UNCOMMON_JOKER, 7, false, merry_andy_joker_desc, joker_effect_noop }, // 73
+    { "Каскадёр", RARE_JOKER, 7, false, stuntman_joker_desc, stuntman_joker_effect }, // 74
+    { "Подарочная карта", UNCOMMON_JOKER, 6, false, gift_card_joker_desc, joker_effect_noop }, // 75
+    { "Головорез", COMMON_JOKER, 4, false, swashbuckler_joker_desc, swashbuckler_joker_effect }, // 76
+    { "Золотой билет", COMMON_JOKER, 5, false, golden_ticket_joker_desc, golden_ticket_joker_effect }, // 77
+    { "Грубый алмаз", UNCOMMON_JOKER, 7, false, rough_gem_joker_desc, rough_gem_joker_effect }, // 78
 
     // The following jokers don't have sprites yet,
     // uncomment them when their sprites are added.
@@ -834,6 +870,134 @@ static int arrowhead_joker_desc(Joker* joker, Rect dest_rect)
 {
     static const char desc[] =
         TTE_BLACK_TAG "Сыгранные карты масти " TTE_YELLOW_TAG "Пики " TTE_BLACK_TAG "дают " TTE_BLUE_TAG "+50 " TTE_BLACK_TAG "фишек при подсчёте";
+    return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
+}
+
+static int swashbuckler_get_mult(const Joker* joker)
+{
+    int mult = 0;
+    ListItr itr = list_itr_create(get_jokers_list());
+    JokerObject* other;
+    while ((other = list_itr_next(&itr)))
+    {
+        if (other->joker != joker)
+            mult += joker_get_sell_value(other->joker);
+    }
+    return mult;
+}
+
+static int golden_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_BLACK_TAG "В конце раунда даёт " TTE_YELLOW_TAG "$4";
+    return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
+}
+
+static int delayed_gratification_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_YELLOW_TAG "$2" TTE_BLACK_TAG " за каждый оставшийся сброс в конце раунда, если сбросы не " "использовались";
+    return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
+}
+
+static int to_the_moon_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_BLACK_TAG "Дополнительно " TTE_YELLOW_TAG "$1" TTE_BLACK_TAG " процента за каждые " TTE_YELLOW_TAG "$5" TTE_BLACK_TAG " в конце раунда";
+    return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
+}
+
+static int rocket_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc_format[] =
+        TTE_BLACK_TAG "В конце раунда даёт " TTE_YELLOW_TAG "$%ld" TTE_BLACK_TAG "\n\nВыплата растёт на " TTE_YELLOW_TAG "$1" TTE_BLACK_TAG " за каждого босса";
+    const u32 desc_max_size = 220;
+
+    char desc[desc_max_size];
+    snprintf(desc, desc_max_size, desc_format, joker->persistent_state);
+
+    return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
+}
+
+static int egg_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_BLACK_TAG "Цена продажи растёт на " TTE_YELLOW_TAG "$3" TTE_BLACK_TAG " в конце каждого раунда";
+    return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
+}
+
+static int credit_card_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_BLACK_TAG "Можно уйти в долг до " TTE_YELLOW_TAG "$20";
+    return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
+}
+
+static int juggler_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_BLUE_TAG "+1" TTE_BLACK_TAG " к размеру руки";
+    return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
+}
+
+static int drunkard_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_RED_TAG "+1" TTE_BLACK_TAG " сброс за раунд";
+    return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
+}
+
+static int troubadour_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_BLUE_TAG "+2" TTE_BLACK_TAG " к размеру руки, " TTE_RED_TAG "-1" TTE_BLACK_TAG " рука за раунд";
+    return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
+}
+
+static int merry_andy_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_RED_TAG "+3" TTE_BLACK_TAG " сброса за раунд, " TTE_BLUE_TAG "-1" TTE_BLACK_TAG " к размеру руки";
+    return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
+}
+
+static int stuntman_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_BLUE_TAG "+250" TTE_BLACK_TAG " фишек, " TTE_BLUE_TAG "-2" TTE_BLACK_TAG " к размеру руки";
+    return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
+}
+
+static int gift_card_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_BLACK_TAG "Цена продажи всех джокеров растёт на " TTE_YELLOW_TAG "$1" TTE_BLACK_TAG " в конце каждого раунда";
+    return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
+}
+
+static int swashbuckler_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc_format[] =
+        TTE_BLACK_TAG "Множитель равен сумме цен продажи остальных джокеров\n\n(Сейчас " TTE_RED_TAG "+%d" TTE_BLACK_TAG " множ.)";
+    const u32 desc_max_size = 220;
+
+    char desc[desc_max_size];
+    snprintf(desc, desc_max_size, desc_format, swashbuckler_get_mult(joker));
+
+    return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
+}
+
+static int golden_ticket_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_BLACK_TAG "Сыгранные " TTE_YELLOW_TAG "Золотые" TTE_BLACK_TAG " карты дают " TTE_YELLOW_TAG "$4" TTE_BLACK_TAG " при подсчёте";
+    return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
+}
+
+static int rough_gem_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_BLACK_TAG "Сыгранные карты масти " TTE_YELLOW_TAG "Бубны " TTE_BLACK_TAG "дают " TTE_YELLOW_TAG "$1" TTE_BLACK_TAG " при подсчёте";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
@@ -2534,6 +2698,90 @@ static u32 arrowhead_joker_effect(
     }
 
     return effect_flags_ret;
+}
+
+static u32 rocket_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    // The payout is read from the persistent state when the round ends
+    if (joker_event == JOKER_EVENT_ON_JOKER_CREATED)
+        joker->persistent_state = ROCKET_START_MONEY;
+
+    return JOKER_EFFECT_FLAG_NONE;
+}
+
+static u32 stuntman_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    SCORE_ON_EVENT_ONLY(JOKER_EVENT_INDEPENDENT, joker_event)
+
+    *joker_effect = &s_shared_joker_effect;
+
+    (*joker_effect)->chips = 250;
+    return JOKER_EFFECT_FLAG_CHIPS;
+}
+
+static u32 swashbuckler_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    SCORE_ON_EVENT_ONLY(JOKER_EVENT_INDEPENDENT, joker_event)
+
+    int mult = swashbuckler_get_mult(joker);
+    if (mult <= 0)
+        return JOKER_EFFECT_FLAG_NONE;
+
+    *joker_effect = &s_shared_joker_effect;
+
+    (*joker_effect)->mult = mult;
+    return JOKER_EFFECT_FLAG_MULT;
+}
+
+static u32 golden_ticket_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    SCORE_ON_EVENT_ONLY_WITH_CARD(scored_card, JOKER_EVENT_ON_CARD_SCORED, joker_event)
+
+    if (scored_card->enhancement != CARD_ENHANCEMENT_GOLD)
+        return JOKER_EFFECT_FLAG_NONE;
+
+    *joker_effect = &s_shared_joker_effect;
+
+    (*joker_effect)->money = 4;
+    return JOKER_EFFECT_FLAG_MONEY;
+}
+
+static u32 rough_gem_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    SCORE_ON_EVENT_ONLY_WITH_CARD(scored_card, JOKER_EVENT_ON_CARD_SCORED, joker_event)
+
+    if (!card_has_suit(scored_card, DIAMONDS))
+        return JOKER_EFFECT_FLAG_NONE;
+
+    *joker_effect = &s_shared_joker_effect;
+
+    (*joker_effect)->money = 1;
+    return JOKER_EFFECT_FLAG_MONEY;
 }
 
 #pragma endregion

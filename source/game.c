@@ -403,6 +403,40 @@ enum GameState game_get_state(void)
     return game_sm.state;
 }
 
+JokerRunBonus game_get_joker_bonus(void)
+{
+    JokerRunBonus bonus = {0};
+    ListItr itr = list_itr_create(&s_owned_jokers_list);
+    JokerObject* joker_object;
+    while ((joker_object = list_itr_next(&itr)))
+    {
+        const Joker* joker = joker_object->joker;
+        if (!joker_is_perished(joker))
+            joker_run_bonus_add(&bonus, joker->id, joker->persistent_state);
+    }
+    return bonus;
+}
+
+int game_get_hands_per_round(void)
+{
+    return joker_economy_limit(g_game_vars.hands_per_round, game_get_joker_bonus().hands, 1);
+}
+
+int game_get_discards_per_round(void)
+{
+    return joker_economy_limit(g_game_vars.discards_per_round, game_get_joker_bonus().discards, 0);
+}
+
+int game_get_hand_size(void)
+{
+    return joker_economy_limit(g_game_vars.base_hand_size, game_get_joker_bonus().hand_size, 1);
+}
+
+bool game_can_afford(int price)
+{
+    return g_game_vars.money - price >= -game_get_joker_bonus().debt_limit;
+}
+
 bool is_joker_owned(int joker_id)
 {
     ListItr itr = list_itr_create(&s_owned_jokers_list);
@@ -439,8 +473,28 @@ int get_straight_and_flush_size(void)
                                           : STRAIGHT_AND_FLUSH_SIZE_DEFAULT;
 }
 
+/**
+ * @brief Applies the change of the Joker bonus to the current hands, discards and hand size,
+ *         so buying or selling a Joker takes effect (and rolls back) immediately
+ */
+static void apply_joker_bonus_change(const JokerRunBonus* before)
+{
+    JokerRunBonus after = game_get_joker_bonus();
+    g_game_vars.hands = joker_economy_limit(g_game_vars.hands, after.hands - before->hands, 0);
+    g_game_vars.discards =
+        joker_economy_limit(g_game_vars.discards, after.discards - before->discards, 0);
+    g_game_vars.hand_size =
+        joker_economy_limit(g_game_vars.hand_size, after.hand_size - before->hand_size, 1);
+    if (g_game_vars.hand_size > MAX_HAND_SIZE)
+        g_game_vars.hand_size = MAX_HAND_SIZE;
+
+    display_hands();
+    display_discards();
+}
+
 void add_joker(JokerObject* joker_object)
 {
+    JokerRunBonus bonus_before = game_get_joker_bonus();
     list_push_back(&s_owned_jokers_list, joker_object);
     joker_object->ty = int2fx(HELD_JOKERS_POS.y);
 
@@ -456,12 +510,15 @@ void add_joker(JokerObject* joker_object)
     {
         s_shortcut_joker_count++;
     }
+
+    apply_joker_bonus_change(&bonus_before);
 }
 
 void remove_owned_joker(int owned_joker_idx)
 {
     // TODO: Extract to on_joker_removed() callback
     JokerObject* joker_object = list_get_at_idx(&s_owned_jokers_list, owned_joker_idx);
+    JokerRunBonus bonus_before = game_get_joker_bonus();
     blind_effects_on_joker_removed(joker_object, false);
     // In case the player gets multiple Four Fingers Jokers,
     // and only reset the size when all of them have been removed
@@ -478,6 +535,8 @@ void remove_owned_joker(int owned_joker_idx)
     // TODO: Move to site of joker_destroy()?
     joker_set_rollable(joker_object->joker->id, true);
     list_remove_at_idx(&s_owned_jokers_list, owned_joker_idx);
+
+    apply_joker_bonus_change(&bonus_before);
 }
 
 int get_deck_top(void)
@@ -705,9 +764,9 @@ void game_start(void)
     deck_apply_start_effects(g_game_vars.deck);
     stake_apply_start_effects();
 
-    g_game_vars.hands = g_game_vars.hands_per_round;
-    g_game_vars.discards = g_game_vars.discards_per_round;
-    g_game_vars.hand_size = g_game_vars.base_hand_size;
+    g_game_vars.hands = game_get_hands_per_round();
+    g_game_vars.discards = game_get_discards_per_round();
+    g_game_vars.hand_size = game_get_hand_size();
 
     // Fill the deck with all the cards. Later on this can be replaced with a more dynamic system
     // that allows for different decks and card types.

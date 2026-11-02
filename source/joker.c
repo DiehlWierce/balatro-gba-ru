@@ -78,6 +78,7 @@ static const int JOKER_ID_TO_SPRITE_MAP[] = {
     16,
     17,
     18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
+    29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43,
 };
 
 // Map of Spritesheet idx -> first Joker ID in sheet
@@ -86,7 +87,8 @@ static const int JOKER_ID_TO_SPRITE_MAP[] = {
 // Notice how spritesheets with only one Joker have sequential starting IDs.
 static const int SPRITESHEET_IDX_TO_STARTING_JOKER_ID[] = {
      0, 18, 20, 22, 27, 32, 36, 40, 42, 44,
-    45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63
+    45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+    64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78
 };
 
 // Lookup table of Joker Rarity strings. Used to display at the bottom of the description screen.
@@ -676,4 +678,34 @@ static int s_allocate_pb_if_needed(u8 joker_id)
     }
 
     return joker_pb;
+}
+void joker_economy_on_round_end(bool boss_defeated)
+{
+    List* jokers = get_jokers_list();
+
+    ListItr itr = list_itr_create(jokers);
+    JokerObject* joker_object;
+    while ((joker_object = list_itr_next(&itr)))
+    {
+        Joker* joker = joker_object->joker;
+        if (joker_is_perished(joker))
+            continue;
+
+        joker->value = joker_economy_add_value(joker->value, joker_economy_self_value_gain(joker->id));
+
+        int others_gain = joker_economy_others_value_gain(joker->id);
+        if (others_gain > 0)
+        {
+            ListItr other_itr = list_itr_create(jokers);
+            JokerObject* other;
+            while ((other = list_itr_next(&other_itr)))
+            {
+                if (other->joker != joker)
+                    other->joker->value = joker_economy_add_value(other->joker->value, others_gain);
+            }
+        }
+
+        if (joker->id == ROCKET_JOKER_ID)
+            joker->persistent_state = joker_economy_rocket_next(joker->persistent_state, boss_defeated);
+    }
 }

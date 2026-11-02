@@ -33,6 +33,7 @@ enum RewardType
     REWARD_TYPE_DISCARD,
     REWARD_TYPE_INVESTMENT,
     REWARD_TYPE_INTEREST,
+    REWARD_TYPE_JOKERS, // Golden Joker, Rocket, Delayed Gratification
     REWARD_TYPE_RENTAL, // Gold Stake: Rental Jokers cost money at the end of the round
     REWARD_TYPE_MAX
 };
@@ -131,6 +132,13 @@ static RewardTypeData s_reward_data[] = {
         .count = 0,
         .remaining = 0
     },
+    [REWARD_TYPE_JOKERS] = {
+        .text = "Джок.",
+        .text_color = TTE_YELLOW_PB,
+        .multiplier = 1,
+        .count = 0,
+        .remaining = 0
+    },
     [REWARD_TYPE_RENTAL] = {
         .text = "Аренда",
         .text_color = TTE_RED_PB,
@@ -181,13 +189,12 @@ static StateMachine round_end_sm = STATE_MACHINE_DEFINE(state_info, ROUND_END_ST
 
 static int calculate_interest_reward(void)
 {
-    if (g_game_vars.money <= 0)
-        return 0;
-
-    int reward = (g_game_vars.money / 5) * INTEREST_PER_5;
-    if (reward > g_game_vars.interest_cap)
-        reward = g_game_vars.interest_cap;
-    return reward;
+    return joker_economy_interest(
+        g_game_vars.money,
+        INTEREST_PER_5,
+        g_game_vars.interest_cap,
+        game_get_joker_bonus().interest_extra
+    );
 }
 
 static void round_end_start(void)
@@ -215,6 +222,12 @@ static void round_end_start(void)
                                                         ? skip_tag_count(SKIP_TAG_TYPE_INVESTMENT)
                                                         : 0;
         s_reward_data[REWARD_TYPE_INTEREST].count = calculate_interest_reward();
+        JokerRunBonus joker_bonus = game_get_joker_bonus();
+        s_reward_data[REWARD_TYPE_JOKERS].count = joker_economy_round_end_money(
+            &joker_bonus,
+            g_game_vars.discards,
+            game_get_discards_per_round()
+        );
         s_reward_data[REWARD_TYPE_RENTAL].count = stake_get_rental_jokers_count();
 
         s_cashout = blind_get_reward(g_game_vars.current_blind);
@@ -387,6 +400,7 @@ static inline bool s_should_increment_curr_reward(void)
         case REWARD_TYPE_HAND:
         case REWARD_TYPE_DISCARD:
         case REWARD_TYPE_INTEREST:
+        case REWARD_TYPE_JOKERS:
         case REWARD_TYPE_RENTAL:
             return g_game_vars.timer % FRAMES(TM_REWARD_INCREMENT_INTERVAL) == 0;
 
@@ -484,9 +498,10 @@ static inline void round_end_cashout(void)
     // Reward the player
     g_game_vars.money += s_cashout;
     display_money();
+    joker_economy_on_round_end(g_game_vars.current_blind >= BLIND_TYPE_BOSS);
 
-    g_game_vars.hands = g_game_vars.hands_per_round;       // Reset the hands to the maximum
-    g_game_vars.discards = g_game_vars.discards_per_round; // Reset the discards to the maximum
+    g_game_vars.hands = game_get_hands_per_round();       // Reset the hands to the maximum
+    g_game_vars.discards = game_get_discards_per_round(); // Reset the discards to the maximum
     // TODO: these can just be in one spot, passing global to global
     display_hands();    // Set the hands display
     display_discards(); // Set the discards display
@@ -560,10 +575,10 @@ void round_end_change_background(void)
 void round_end_on_init(void)
 {
     // Reset hand size in case it was increased by the Juggle Tag
-    g_game_vars.hand_size = g_game_vars.base_hand_size;
     g_game_vars.timer = 0;
     g_game_vars.nb_unused_discards += g_game_vars.discards;
     stake_on_round_end();
+    g_game_vars.hand_size = game_get_hand_size();
     state_machine_register(&round_end_sm);
     state_machine_change_state(&round_end_sm, ROUND_END_START);
 }

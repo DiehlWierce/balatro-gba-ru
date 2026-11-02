@@ -31,6 +31,21 @@
 #include "joker_gfx26.h"
 #include "joker_gfx27.h"
 #include "joker_gfx28.h"
+#include "joker_gfx29.h"
+#include "joker_gfx30.h"
+#include "joker_gfx31.h"
+#include "joker_gfx32.h"
+#include "joker_gfx33.h"
+#include "joker_gfx34.h"
+#include "joker_gfx35.h"
+#include "joker_gfx36.h"
+#include "joker_gfx37.h"
+#include "joker_gfx38.h"
+#include "joker_gfx39.h"
+#include "joker_gfx40.h"
+#include "joker_gfx41.h"
+#include "joker_gfx42.h"
+#include "joker_gfx43.h"
 
 #endif
 // clang-format on
