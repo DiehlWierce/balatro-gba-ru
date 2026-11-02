@@ -1264,6 +1264,7 @@ static void shop_pack_close(void)
     }
 
     shop_print_reroll_cost();
+    shop_print_voucher_price();
     display_deck_size_max();
     state_machine_change_state(&shop_sm, GAME_SHOP_ACTIVE);
 }
