@@ -10,10 +10,12 @@
 #include "background_shop_gfx.h"
 #include "bitset.h"
 #include "button.h"
+#include "consumable.h"
 #include "game.h"
 #include "game/blind_select.h"
 #include "game/joker_row.h"
 #include "game_variables.h"
+#include "hand.h"
 #include "joker.h"
 #include "layout.h"
 #include "list.h"
@@ -40,7 +42,11 @@
 #define OWNED_ITEMS_HIDE_Y_OFFSET 50
 
 // Shop
-#define REROLL_BASE_COST     5 // Base cost for rerolling the shop items
+#define REROLL_BASE_COST 5 // Base cost for rerolling the shop items
+
+// Weights of the top row item types, as in the original game (Tarots will add 4)
+#define SHOP_JOKER_WEIGHT    20
+#define SHOP_PLANET_WEIGHT   4
 #define NEXT_ROUND_BTN_SEL_X 0
 
 // Palette IDs
@@ -277,13 +283,21 @@ static void shop_redeem_skip_tags(void)
 }
 
 /**
- * @brief Create a shop top row item - jokers, consumables, and possibly playing cards
- * Currently only jokers are implemented.
+ * @brief Create a shop top row item: a Joker or a Planet, possibly playing cards later.
  */
 static Item* shop_create_top_row_item(void)
 {
-    // TODO: Randomize item type when consumables are implemented
-    return item_roll_new(ITEM_TYPE_JOKER, RNG_SEQ_SHOP_ITEMS);
+    u32 roll = rng_get_u32(RNG_SEQ_SHOP_ITEM_TYPE) % (SHOP_JOKER_WEIGHT + SHOP_PLANET_WEIGHT);
+
+    if (roll < SHOP_JOKER_WEIGHT)
+    {
+        Item* joker = item_roll_new(ITEM_TYPE_JOKER, RNG_SEQ_SHOP_ITEMS);
+        // No Joker left to roll: fall back to a Planet
+        if (joker != NULL)
+            return joker;
+    }
+
+    return item_roll_new(ITEM_TYPE_CONSUMABLE, RNG_SEQ_SHOP_PLANETS);
 }
 
 /**
@@ -525,7 +539,7 @@ static inline void shop_reroll(void)
 
     while ((item = list_itr_next(&itr)))
     {
-        if (item != NULL && item->type == ITEM_TYPE_JOKER)
+        if (item != NULL)
         {
             item_dispose(&item);
         }
@@ -601,8 +615,7 @@ static void shop_process_user_input(void)
     {
         case SHOP_GRID_OWNED_ROW:
         {
-            new_description_item =
-                list_get_at_idx(get_jokers_list(), shop_selection_grid.selection.x);
+            new_description_item = owned_items_row_get_item(shop_selection_grid.selection.x);
             break;
         }
 
@@ -651,8 +664,14 @@ static void shop_show_item_desc_on_init(void)
 
     Item* tmp_item = NULL;
 
-    // Owned Jokers
+    // Owned Jokers and consumables
     ListItr itr = list_itr_create(get_jokers_list());
+    while ((tmp_item = (Item*)list_itr_next(&itr)))
+    {
+        if (tmp_item != s_description_item)
+            tmp_item->ty -= int2fx(OWNED_ITEMS_HIDE_Y_OFFSET);
+    }
+    itr = list_itr_create(get_consumables_list());
     while ((tmp_item = (Item*)list_itr_next(&itr)))
     {
         if (tmp_item != s_description_item)
@@ -763,6 +782,12 @@ static void shop_hide_item_desc_on_init(void)
 
     // Owned Items
     ListItr itr = list_itr_create(get_jokers_list());
+    while ((tmp_item = (Item*)list_itr_next(&itr)))
+    {
+        if (tmp_item != s_description_item)
+            tmp_item->ty = int2fx(HELD_JOKERS_POS.y);
+    }
+    itr = list_itr_create(get_consumables_list());
     while ((tmp_item = (Item*)list_itr_next(&itr)))
     {
         if (tmp_item != s_description_item)
@@ -938,6 +963,9 @@ void shop_on_exit(void)
     }
 
     list_clear(shop_items_list);
+
+    // A Planet used in the Shop leaves its hand's values in the left panel
+    hand_clear_level_up_display();
 
     increment_blind(BLIND_STATE_DEFEATED); // TODO: Move to game_round_end()?
 

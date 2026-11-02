@@ -11,6 +11,7 @@
 #include "button.h"
 #include "game.h"
 #include "game/common_ui.h"
+#include "game/hand_levels_screen.h"
 #include "game/joker_row.h"
 #include "graphic_utils.h"
 #include "hand.h"
@@ -612,7 +613,9 @@ static bool round_hand_row_on_selection_changed(
     else
     {
         // select current card if we tried moving it too fast
-        if (key_released(KEY_CARD_SELECT) || (s_card_moved_too_fast && !s_moving_card))
+        // (only when coming from the hand: e.g. using a consumable on A release moves here)
+        if (prev_card_idx != UNDEFINED &&
+            (key_released(KEY_CARD_SELECT) || (s_card_moved_too_fast && !s_moving_card)))
         {
             hand_select_card(prev_card_idx);
             s_card_selected_instead_of_moved = true;
@@ -2223,6 +2226,10 @@ void round_on_init(void)
 
 void round_on_update(void)
 {
+    // The hand levels screen covers the round while it is open
+    if (hand_levels_screen_update())
+        return;
+
     // Background logic (thissss might be moved to the card'ssss logic later. I'm a sssssnake)
     if (get_hand_state() == HAND_TAGS || get_hand_state() == HAND_DRAW ||
         get_hand_state() == HAND_DISCARD || get_hand_state() == HAND_SELECT)

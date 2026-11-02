@@ -1,6 +1,7 @@
 #include "item_funcs.h"
 
 #include "card.h"
+#include "consumable.h"
 #include "game.h"
 #include "game/shop.h"
 #include "joker.h"
@@ -70,7 +71,17 @@ ItemFuncs item_func_table[] = {
         .print_description = NULL
     },
 
-    [ITEM_TYPE_CONSUMABLE] = ITEM_PLACEHOLDER_FUNCS,
+    [ITEM_TYPE_CONSUMABLE] = {
+        .roll_new = consumable_object_roll_new,
+        .get_buy_price = consumable_object_get_buy_price,
+        .get_sell_price = consumable_object_get_sell_price,
+        .get_name = consumable_object_get_name,
+        .get_subtype_info = consumable_object_get_subtype_info,
+        .acquire = consumable_object_acquire,
+        .can_acquire = consumable_object_can_acquire,
+        .dispose = consumable_object_dispose,
+        .print_description = consumable_object_print_description
+    },
     [ITEM_TYPE_VOUCHER] = ITEM_PLACEHOLDER_FUNCS,
     [ITEM_TYPE_PACK] = ITEM_PLACEHOLDER_FUNCS
 };

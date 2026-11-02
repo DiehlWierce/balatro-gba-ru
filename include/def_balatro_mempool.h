@@ -1,4 +1,5 @@
 #include "card.h"
+#include "consumable.h"
 #include "game/common_ui.h"
 #include "joker.h"
 #include "list.h"
@@ -11,4 +12,5 @@ POOL_ENTRY(JokerObject, MAX_ACTIVE_JOKERS, IWRAM);
 POOL_ENTRY(Card, MAX_CARDS, EWRAM);
 POOL_ENTRY(CardObject, MAX_CARDS_ON_SCREEN, IWRAM);
 POOL_ENTRY(SkipTag, MAX_SKIP_TAGS, EWRAM);
+POOL_ENTRY(ConsumableObject, MAX_ACTIVE_CONSUMABLES, EWRAM);
 POOL_ENTRY(ListNode, MAX_LIST_NODES, EWRAM);

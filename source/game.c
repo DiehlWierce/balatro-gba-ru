@@ -6,6 +6,7 @@
 #include "background_main_menu_gfx.h"
 #include "button.h"
 #include "card.h"
+#include "consumable.h"
 #include "game/blind_select.h"
 #include "game/common_ui.h"
 #include "game/game_over.h"
@@ -190,6 +191,7 @@ void game_init()
     s_owned_jokers_list = list_init();
     s_discarded_items_list = list_init();
     s_expired_jokers_list = list_init();
+    consumables_init();
     // TODO: Move this to an initialization of the play scoring states
 
     shop_reset();
@@ -235,6 +237,8 @@ void game_reset()
         remove_owned_joker(0);
         joker_object_destroy(&joker_object);
     }
+
+    consumables_reset();
 
     tte_erase_screen();
 
@@ -370,6 +374,7 @@ void game_update()
     g_game_vars.timer++;
 
     jokers_update_loop();
+    consumables_update_loop(shop_get_description_item());
     discarded_items_update_loop();
 
     state_machine_update();
