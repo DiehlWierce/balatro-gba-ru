@@ -954,7 +954,7 @@ static int to_the_moon_joker_desc(Joker* joker, Rect dest_rect)
 static int rocket_joker_desc(Joker* joker, Rect dest_rect)
 {
     static const char desc_format[] =
-        TTE_BLACK_TAG "В конце раунда даёт " TTE_YELLOW_TAG "$%ld" TTE_BLACK_TAG "\n\nВыплата растёт на " TTE_YELLOW_TAG "$1" TTE_BLACK_TAG " за каждого босса";
+        TTE_BLACK_TAG "В конце раунда даёт " TTE_YELLOW_TAG "$%ld" TTE_BLACK_TAG "\n\nВыплата растёт на " TTE_YELLOW_TAG "$2" TTE_BLACK_TAG " за каждого босса";
     const u32 desc_max_size = 220;
 
     char desc[desc_max_size];

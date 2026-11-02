@@ -93,7 +93,7 @@ static void test_values(void)
     assert(value == JOKER_VALUE_MAX);
 
     assert(joker_economy_rocket_next(1, false) == 1);
-    assert(joker_economy_rocket_next(1, true) == 2);
+    assert(joker_economy_rocket_next(1, true) == 3);
 }
 
 int main(void)
