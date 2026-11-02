@@ -99,8 +99,17 @@ static void test_no_flush_without_wild(void)
     assert(ranks[NINE] == 0);
 }
 
+static void test_effective_rank(void)
+{
+    Card stone = make(KING, SPADES, CARD_ENHANCEMENT_STONE);
+    Card king = make(KING, SPADES, CARD_ENHANCEMENT_NONE);
+    assert(card_effective_rank(&stone) == NUM_RANKS); // The hidden rank never matches
+    assert(card_effective_rank(&king) == KING);
+}
+
 int main(void)
 {
+    test_effective_rank();
     test_wild_counts_for_every_suit();
     test_stone_has_no_rank_nor_suit();
     test_flush_five_with_wild_cards();

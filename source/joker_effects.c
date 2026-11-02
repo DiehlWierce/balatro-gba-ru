@@ -1252,7 +1252,7 @@ static u32 walkie_talkie_joker_effect(
 
     u32 effect_flags_ret = JOKER_EFFECT_FLAG_NONE;
 
-    if (scored_card->rank == TEN || scored_card->rank == FOUR)
+    if (card_effective_rank(scored_card) == TEN || card_effective_rank(scored_card) == FOUR)
     {
         *joker_effect = &s_shared_joker_effect;
 
@@ -1275,7 +1275,7 @@ static u32 fibonnaci_joker_effect(
 
     u32 effect_flags_ret = JOKER_EFFECT_FLAG_NONE;
 
-    switch (scored_card->rank)
+    switch (card_effective_rank(scored_card))
     {
         case ACE:
         case TWO:
@@ -1491,7 +1491,7 @@ static u32 scholar_joker_effect(
 
     u32 effect_flags_ret = JOKER_EFFECT_FLAG_NONE;
 
-    if (scored_card->rank == ACE)
+    if (card_effective_rank(scored_card) == ACE)
     {
         *joker_effect = &s_shared_joker_effect;
 
@@ -1601,7 +1601,7 @@ static u32 even_steven_joker_effect(
 
     u32 effect_flags_ret = JOKER_EFFECT_FLAG_NONE;
 
-    switch (scored_card->rank)
+    switch (card_effective_rank(scored_card))
     {
         case KING:
         case QUEEN:
@@ -1848,7 +1848,7 @@ static u32 shoot_the_moon_joker_effect(
 
     u32 effect_flags_ret = JOKER_EFFECT_FLAG_NONE;
 
-    if (scored_card->rank == QUEEN)
+    if (card_effective_rank(scored_card) == QUEEN)
     {
         *joker_effect = &s_shared_joker_effect;
 
@@ -2047,7 +2047,7 @@ static u32 hack_joker_effect(
 
         case JOKER_EVENT_ON_CARD_SCORED_END:
             // Works the same way as Dusk, but check what rank the card is
-            switch (scored_card->rank)
+            switch (card_effective_rank(scored_card))
             {
                 case TWO:
                 case THREE:
@@ -2190,7 +2190,7 @@ static u32 baron_joker_effect(
     u32 effect_flags_ret = JOKER_EFFECT_FLAG_NONE;
 
     // Mult is integer only, so X1.5 is applied as + half of the current mult
-    if (scored_card->rank == KING && g_game_vars.mult > 1)
+    if (card_effective_rank(scored_card) == KING && g_game_vars.mult > 1)
     {
         *joker_effect = &s_shared_joker_effect;
 
@@ -2381,7 +2381,7 @@ static u32 wee_joker_effect(
     switch (joker_event)
     {
         case JOKER_EVENT_ON_CARD_SCORED:
-            if (scored_card->rank == TWO)
+            if (card_effective_rank(scored_card) == TWO)
             {
                 joker->persistent_state += 8;
             }
@@ -2503,7 +2503,7 @@ static u32 onyx_agate_joker_effect(
 
     u32 effect_flags_ret = JOKER_EFFECT_FLAG_NONE;
 
-    if (scored_card->suit == CLUBS)
+    if (card_has_suit(scored_card, CLUBS))
     {
         *joker_effect = &s_shared_joker_effect;
 
@@ -2525,7 +2525,7 @@ static u32 arrowhead_joker_effect(
 
     u32 effect_flags_ret = JOKER_EFFECT_FLAG_NONE;
 
-    if (scored_card->suit == SPADES)
+    if (card_has_suit(scored_card, SPADES))
     {
         *joker_effect = &s_shared_joker_effect;
 

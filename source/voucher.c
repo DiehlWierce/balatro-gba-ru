@@ -203,6 +203,8 @@ static void voucher_lower_ante(void)
 {
     g_game_vars.ante--;
     clamp_min(&g_game_vars.ante, 1);
+    // The Voucher offer of this Ante was already bought, lowering the Ante must not roll a new one
+    s_offer_ante = g_game_vars.ante;
     display_ante();
 }
 

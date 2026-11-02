@@ -32,7 +32,7 @@ static inline bool roll_one_in(enum RngSequence key, u32 chance)
 CardScoreResult card_modifiers_on_scored(Card* card)
 {
     CardScoreResult result = {0};
-    if (card == NULL)
+    if (card == NULL || card->debuffed)
         return result;
 
     result.chips = card_get_chips(card);
@@ -71,12 +71,12 @@ CardScoreResult card_modifiers_on_scored(Card* card)
 
 bool card_modifiers_has_retrigger(const Card* card)
 {
-    return card != NULL && card->seal == CARD_SEAL_RED;
+    return card != NULL && !card->debuffed && card->seal == CARD_SEAL_RED;
 }
 
 bool card_modifiers_on_held(Card* card)
 {
-    if (card == NULL || card->enhancement != CARD_ENHANCEMENT_STEEL)
+    if (card == NULL || card->debuffed || card->enhancement != CARD_ENHANCEMENT_STEEL)
         return false;
 
     // The mult is an integer: round X1.5 to the nearest (1 -> 2, 3 -> 5) so Steel always counts
@@ -87,7 +87,7 @@ bool card_modifiers_on_held(Card* card)
 
 bool card_modifiers_breaks_after_scoring(const Card* card)
 {
-    if (card == NULL || card->enhancement != CARD_ENHANCEMENT_GLASS)
+    if (card == NULL || card->debuffed || card->enhancement != CARD_ENHANCEMENT_GLASS)
         return false;
 
     return roll_one_in(RNG_SEQ_CARD_GLASS, GLASS_BREAK_CHANCE);
@@ -139,7 +139,7 @@ static bool blue_seal_create_planet(int last_hand_type, FIXED x, FIXED y)
 
 bool card_modifiers_on_round_won(Card* card, int last_hand_type, FIXED x, FIXED y)
 {
-    if (card == NULL)
+    if (card == NULL || card->debuffed)
         return false;
 
     bool triggered = false;

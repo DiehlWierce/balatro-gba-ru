@@ -96,6 +96,14 @@ static inline bool card_has_suit(const Card* card, uint8_t suit)
 }
 
 /**
+ * @brief Rank of the card for effects that compare ranks: NUM_RANKS (matches nothing) for Stone cards.
+ */
+static inline uint8_t card_effective_rank(const Card* card)
+{
+    return card_has_rank(card) ? card->rank : NUM_RANKS;
+}
+
+/**
  * @brief Whether both cards have a rank and it is the same.
  */
 static inline bool cards_same_rank(const Card* a, const Card* b)
