@@ -1,0 +1,120 @@
+# Boss Blinds that act on Jokers, needs a debug build: make clean && make DEBUG_BOSS=-1
+# usage: run.py scenarios/boss_jokers.txt OUT -D boss=<BlindType number>
+#   Amber Acorn 25, Verdant Leaf 26, Crimson Heart 28
+# Seed GBARU1: win the Small Blind (score forced), buy the Shop items with $500 (and once more
+# after a reroll), then the Boss round starts on the Big Blind. Plays 2 hands, sells a Joker.
+
+wait 460
+press START
+wait 60
+press A
+wait 60
+pokestr {sym:s_seed_str} GBARU1
+poke8 {sym:use_seed} 1
+press DOWN
+wait 10
+press A
+wait 120
+press A
+wait 180
+poke32 {gv:score} 100000
+press A
+press L
+wait 1100
+press A
+wait 200
+poke32 {gv:money} 500
+
+# Buy both Shop items, reroll, buy both again
+press RIGHT
+wait 20
+press A
+wait 40
+press DOWN
+wait 20
+press RIGHT
+wait 20
+press A
+wait 40
+press DOWN
+wait 20
+press LEFT
+wait 20
+press LEFT
+wait 20
+press A
+wait 60
+press UP
+wait 20
+press RIGHT
+wait 20
+press A
+wait 40
+press DOWN
+wait 20
+press RIGHT
+wait 20
+press A
+wait 40
+shot 00_shop_bought
+
+# Next round
+press DOWN
+wait 20
+press LEFT
+wait 20
+press UP
+wait 20
+press A
+wait 200
+
+# The Boss round on the Big Blind
+poke32 {gv:current_blind} {def:boss}
+press A
+wait 200
+shot 01_round_start
+
+# Hand 1: the first card alone
+press A
+press L
+wait 90
+shot 02_hand1_playing
+wait 500
+shot 03_hand1_done
+peek32 {gv:score}
+
+# Hand 2: the first card alone
+press A
+press L
+wait 600
+shot 04_hand2_done
+peek32 {gv:score}
+
+# Sell the first Joker (up to the Joker row, L sells)
+press UP
+wait 20
+press UP
+wait 20
+shot 05_joker_row
+press L
+wait 60
+shot 06_sold
+press DOWN
+wait 20
+press DOWN
+wait 20
+shot 07_after_sell
+
+# Win the round: Jokers are face up again and none is disabled in the Shop
+poke32 {gv:score} 100000
+press UP
+wait 20
+press A
+wait 10
+shot 08_selected
+press L
+wait 1100
+shot 09_round_end
+press A
+wait 200
+shot 10_shop_after_boss

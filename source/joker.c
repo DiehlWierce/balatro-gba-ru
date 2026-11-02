@@ -290,12 +290,13 @@ void joker_object_destroy(JokerObject** joker_object)
     s16 layer = sprite_get_layer(joker_object_get_sprite(*joker_object)) -
                 sprite_get_starting_layer(JOKER_SPRITE);
     s_used_layers[layer] = false;
-    s_joker_pb_remove_sprite_user(sprite_get_pb(joker_object_get_sprite(*joker_object)));
-    if (s_joker_pb_get_num_sprite_users((sprite_get_pb(joker_object_get_sprite(*joker_object)))) ==
-        0)
+    // Not the sprite's bank: a face down Joker uses the Deck's palette bank
+    int spritesheet_idx = s_joker_get_spritesheet_idx((*joker_object)->joker->id);
+    int joker_pb = s_joker_spritesheet_pb_map[spritesheet_idx];
+    s_joker_pb_remove_sprite_user(joker_pb);
+    if (s_joker_pb_get_num_sprite_users(joker_pb) == 0)
     {
-        s_joker_spritesheet_pb_map[s_joker_get_spritesheet_idx((*joker_object)->joker->id)] =
-            UNDEFINED;
+        s_joker_spritesheet_pb_map[spritesheet_idx] = UNDEFINED;
     }
 
     sprite_object_destroy((SpriteObject*)(*joker_object));
@@ -545,6 +546,47 @@ static inline enum JokerRarity joker_get_random_rarity(enum RngSequence key)
     }
 
     return joker_rarity;
+}
+
+void joker_object_set_face_down(JokerObject* joker_object, bool face_down)
+{
+    GBAL_RETURN_IF_NULL(joker_object, RET_NONE);
+    Sprite* sprite = joker_object_get_sprite(joker_object);
+    GBAL_RETURN_IF_NULL(sprite, RET_NONE);
+
+    int tile_index = sprite->obj->attr2 & ATTR2_ID_MASK;
+    int pb = DECK_PB;
+    if (face_down)
+    {
+        card_copy_deck_back_tiles(&tile_mem[TILE_MEM_OBJ_CHARBLOCK0_IDX][tile_index]);
+    }
+    else
+    {
+        int spritesheet_idx = s_joker_get_spritesheet_idx(joker_object->joker->id);
+        int joker_idx = s_joker_get_sprite_idx_in_sheet(joker_object->joker->id, spritesheet_idx);
+        memcpy32(
+            &tile_mem[TILE_MEM_OBJ_CHARBLOCK0_IDX][tile_index],
+            &joker_gfxTiles[spritesheet_idx][joker_idx * TILE_SIZE * JOKER_SPRITE_TILES],
+            TILE_SIZE * JOKER_SPRITE_TILES
+        );
+        pb = s_joker_spritesheet_pb_map[spritesheet_idx];
+    }
+
+    sprite->obj->attr2 = (sprite->obj->attr2 & ~ATTR2_PALBANK_MASK) | ATTR2_PALBANK(pb);
+}
+
+void joker_object_set_disabled_look(JokerObject* joker_object, bool disabled)
+{
+    GBAL_RETURN_IF_NULL(joker_object, RET_NONE);
+    Sprite* sprite = joker_object_get_sprite(joker_object);
+    GBAL_RETURN_IF_NULL(sprite, RET_NONE);
+
+    // Mosaic only applies to sprites with ATTR0_MOSAIC, the size is shared by all of them
+    REG_MOSAIC = MOS_BUILD(0, 0, 2, 2);
+    if (disabled)
+        sprite->obj->attr0 |= ATTR0_MOSAIC;
+    else
+        sprite->obj->attr0 &= ~ATTR0_MOSAIC;
 }
 
 Sprite* joker_object_get_sprite(JokerObject* joker_object)
