@@ -240,6 +240,7 @@ void game_init()
 
 // The back of the run's Deck in the bottom right corner. It uses the DECK_SPRITE slot (free during
 // a run: the Run Setup one is destroyed when leaving it), the DECK_PB palette and no affine matrix.
+// The red Deck that used to be drawn in the round, shop and blind select backgrounds is gone.
 static Sprite* s_deck_sprite = NULL;
 
 void game_reset()
@@ -763,7 +764,7 @@ void deck_shuffle(void)
     }
 }
 
-#define DECK_SPRITE_X 205 // Card art starts 4 px into the 32x32 sprite, on the baked Deck at x=209
+#define DECK_SPRITE_X 204 // Card art starts 4 px into the 32x32 sprite, the baked Deck was at x=208
 #define DECK_SPRITE_Y 115
 
 static void game_deck_sprite_create(void)
@@ -780,7 +781,13 @@ static void game_deck_sprite_create(void)
         sprite_get_starting_layer(DECK_SPRITE)
     );
     if (s_deck_sprite != NULL)
+    {
+        // Priority 2: over the affine background (2) but under the main background (1) and the
+        // text (0), so Joker description popups and the "44/52" text cover it like the old
+        // Deck. The Deck pixels were removed from the backgrounds (the shadow stays).
+        s_deck_sprite->obj->attr2 |= ATTR2_PRIO(2);
         sprite_position(s_deck_sprite, DECK_SPRITE_X, DECK_SPRITE_Y);
+    }
 }
 
 void game_deck_sprite_set_hidden(bool hidden)
