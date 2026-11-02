@@ -102,7 +102,7 @@ static const BG_POINT SHOP_JOKER_SPRITES_INIT_POS = {120, 160};
 // The Voucher sits in the bottom right box of the Shop panel (the ticket is 28 pixels wide
 // inside its 32 pixels sprite), its price on its right
 static const BG_POINT SHOP_VOUCHER_POS            = {135, 113};
-static const Rect     SHOP_VOUCHER_PRICE_RECT     = {166, 125, 189, 132 };
+static const Rect     SHOP_VOUCHER_PRICE_RECT     = {169, 125, 192, 132 };
 static const BG_POINT ITEM_DESCRIPTION_SPRITE_POS = {135,   9};
 static const Rect     SHOP_PRICES_TEXT_RECT       = { 72,  56, 192, 160 };
 static const Rect     SHOP_REROLL_RECT            = { 88,  96, UNDEFINED, UNDEFINED };
