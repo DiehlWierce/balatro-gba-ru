@@ -238,6 +238,10 @@ void game_init()
     g_game_vars.blinds_states[2] = BLIND_STATE_UPCOMING;
 }
 
+// The back of the run's Deck in the bottom right corner. It uses the DECK_SPRITE slot (free during
+// a run: the Run Setup one is destroyed when leaving it), the DECK_PB palette and no affine matrix.
+static Sprite* s_deck_sprite = NULL;
+
 void game_reset()
 {
     while (list_get_len(&s_owned_jokers_list) > 0)
@@ -248,6 +252,8 @@ void game_reset()
     }
 
     consumables_reset();
+
+    sprite_destroy(&s_deck_sprite);
 
     tte_erase_screen();
 
@@ -757,6 +763,37 @@ void deck_shuffle(void)
     }
 }
 
+#define DECK_SPRITE_X 205 // Card art starts 4 px into the 32x32 sprite, on the baked Deck at x=209
+#define DECK_SPRITE_Y 115
+
+static void game_deck_sprite_create(void)
+{
+    sprite_destroy(&s_deck_sprite);
+
+    int tile_index = sprite_get_tid(DECK_SPRITE, 0);
+    card_copy_deck_back_tiles(&tile_mem[TILE_MEM_OBJ_CHARBLOCK0_IDX][tile_index]);
+    s_deck_sprite = sprite_new(
+        ATTR0_SQUARE | ATTR0_4BPP,
+        ATTR1_SIZE_32,
+        tile_index,
+        DECK_PB,
+        sprite_get_starting_layer(DECK_SPRITE)
+    );
+    if (s_deck_sprite != NULL)
+        sprite_position(s_deck_sprite, DECK_SPRITE_X, DECK_SPRITE_Y);
+}
+
+void game_deck_sprite_set_hidden(bool hidden)
+{
+    if (s_deck_sprite == NULL)
+        return;
+
+    if (hidden)
+        sprite_hide(s_deck_sprite);
+    else
+        sprite_unhide(s_deck_sprite);
+}
+
 void game_start(void)
 {
     affine_background_change_background(AFFINE_BG_GAME);
@@ -769,6 +806,8 @@ void game_start(void)
     g_game_vars.hands = game_get_hands_per_round();
     g_game_vars.discards = game_get_discards_per_round();
     g_game_vars.hand_size = game_get_hand_size();
+
+    game_deck_sprite_create();
 
     // Fill the deck with all the cards. Later on this can be replaced with a more dynamic system
     // that allows for different decks and card types.

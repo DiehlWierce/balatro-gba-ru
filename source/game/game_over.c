@@ -153,6 +153,8 @@ static void game_over_common_init(enum EndCondition init_condition, bool can_con
         sprite_object_hide((SpriteObject*)(joker_object));
     }
 
+    game_deck_sprite_set_hidden(true);
+
     // Destroy any preexisting cards in the deck, which will be present if we restart a run.
     // Endless mode keeps the whole run (deck, Skip Tags), only the sprites are hidden.
     if (!s_can_continue)
@@ -396,6 +398,7 @@ static void new_run_on_pressed(void)
         }
 
         sprite_destroy(&g_game_vars.playing_blind_token);
+        game_deck_sprite_set_hidden(false);
 
         // The win screen erased the text layer: draw the run's values again
         tte_erase_screen();

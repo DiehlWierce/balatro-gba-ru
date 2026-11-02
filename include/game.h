@@ -121,6 +121,12 @@ int get_straight_and_flush_size(void);
 
 void game_start(void);
 
+/**
+ * @brief Shows or hides the sprite with the back of the run's Deck, drawn over the red Deck baked
+ *        into the backgrounds (bottom right corner). It lives from game_start() to game_reset().
+ */
+void game_deck_sprite_set_hidden(bool hidden);
+
 void display_round(void);
 void display_hands(void);
 void display_discards(void);
