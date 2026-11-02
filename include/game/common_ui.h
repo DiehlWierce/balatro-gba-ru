@@ -20,7 +20,9 @@ enum SpritePaletteBanks
     NORMAL_BLIND_PB,
     BOSS_BLIND_PB,
     JOKER_BASE_PB,
-    JOKER_LAST_PB = 15,
+    JOKER_LAST_PB = 14,
+    // Shared by all Planets (and later Tarots/Spectrals), see docs/ru/PALETTES.md
+    CONSUMABLE_PB = 15,
     NUM_PALETTES
 };
 

@@ -19,29 +19,42 @@
 
 #include <tonc.h>
 
-typedef struct
-{
-    u32 chips;
-    u32 mult;
-    char* display_name;
-} HandValues;
-
-static const HandValues HAND_BASE_VALUES[] = {
-    {.chips = 0,   .mult = 0,  .display_name = NULL            }, // NONE
-    {.chips = 5,   .mult = 1,  .display_name = "СТАРШАЯ"}, // HIGH_CARD
-    {.chips = 10,  .mult = 2,  .display_name = "ПАРА"      }, // PAIR
-    {.chips = 20,  .mult = 2,  .display_name = "2 ПАРЫ"    }, // TWO_PAIR
-    {.chips = 30,  .mult = 3,  .display_name = "ТРОЙКА"  }, // THREE_OF_A_KIND
-    {.chips = 30,  .mult = 4,  .display_name = "СТРИТ"    }, // STRAIGHT
-    {.chips = 35,  .mult = 4,  .display_name = "ФЛЕШ"      }, // FLUSH
-    {.chips = 40,  .mult = 4,  .display_name = "ФУЛХАУС"}, // FULL_HOUSE
-    {.chips = 60,  .mult = 7,  .display_name = "КАРЕ"      }, // FOUR_OF_A_KIND
-    {.chips = 100, .mult = 8,  .display_name = "СТРИТ-Ф" }, // STRAIGHT_FLUSH
-    {.chips = 100, .mult = 8,  .display_name = "РОЯЛ-ФЛ" }, // ROYAL_FLUSH
-    {.chips = 120, .mult = 12, .display_name = "ПЯТЕРКА"}, // FIVE_OF_A_KIND
-    {.chips = 140, .mult = 14, .display_name = "ФЛ-ХАУС" }, // FLUSH_HOUSE
-    {.chips = 160, .mult = 16, .display_name = "ФЛЕШ 5"    }  // FLUSH_FIVE
+// clang-format off
+static const char* const HAND_NAMES[] = {
+    [NONE]            = NULL,
+    [HIGH_CARD]       = "СТАРШАЯ",
+    [PAIR]            = "ПАРА",
+    [TWO_PAIR]        = "2 ПАРЫ",
+    [THREE_OF_A_KIND] = "ТРОЙКА",
+    [STRAIGHT]        = "СТРИТ",
+    [FLUSH]           = "ФЛЕШ",
+    [FULL_HOUSE]      = "ФУЛХАУС",
+    [FOUR_OF_A_KIND]  = "КАРЕ",
+    [STRAIGHT_FLUSH]  = "СТРИТ-Ф",
+    [ROYAL_FLUSH]     = "РОЯЛ-ФЛ",
+    [FIVE_OF_A_KIND]  = "ПЯТЕРКА",
+    [FLUSH_HOUSE]     = "ФЛ-ХАУС",
+    [FLUSH_FIVE]      = "ФЛЕШ 5",
 };
+
+// Names in descriptions (Planet cards) and on the hand levels screen
+static const char* const HAND_FULL_NAMES[] = {
+    [NONE]            = "",
+    [HIGH_CARD]       = "Старшая карта",
+    [PAIR]            = "Пара",
+    [TWO_PAIR]        = "Две пары",
+    [THREE_OF_A_KIND] = "Тройка",
+    [STRAIGHT]        = "Стрит",
+    [FLUSH]           = "Флеш",
+    [FULL_HOUSE]      = "Фулхаус",
+    [FOUR_OF_A_KIND]  = "Каре",
+    [STRAIGHT_FLUSH]  = "Стрит-флеш",
+    [ROYAL_FLUSH]     = "Роял-флеш",
+    [FIVE_OF_A_KIND]  = "Пятёрка",
+    [FLUSH_HOUSE]     = "Флеш-хаус",
+    [FLUSH_FIVE]      = "Флеш-пятёрка",
+};
+// clang-format on
 
 // clang-format off
 // Rects for TTE (in pixels)        left   top    right  bottom
@@ -84,7 +97,50 @@ const char* get_hand_type_name(enum HandType hand_type)
     if (hand_type <= NONE || hand_type > FLUSH_FIVE)
         return NULL;
 
-    return HAND_BASE_VALUES[hand_type].display_name;
+    return HAND_NAMES[hand_type];
+}
+
+const char* get_hand_type_full_name(enum HandType hand_type)
+{
+    if (hand_type <= NONE || hand_type > HAND_TYPE_MAX)
+        return HAND_FULL_NAMES[NONE];
+
+    return HAND_FULL_NAMES[hand_type];
+}
+
+/**
+ * @brief Index in g_game_vars.hand_levels of a hand type. A Royal Flush is a Straight Flush
+ *        for levels, as in the original game (both are leveled up by Neptune).
+ */
+static inline int hand_level_idx(enum HandType hand_type)
+{
+    if (hand_type == ROYAL_FLUSH)
+        hand_type = STRAIGHT_FLUSH;
+
+    return hand_type - 1;
+}
+
+int hand_get_level(enum HandType hand_type)
+{
+    if (hand_type <= NONE || hand_type > HAND_TYPE_MAX)
+        return HAND_LEVEL_MIN;
+
+    return g_game_vars.hand_levels[hand_level_idx(hand_type)];
+}
+
+void hand_level_up(enum HandType hand_type, int nb_levels)
+{
+    if (hand_type <= NONE || hand_type > HAND_TYPE_MAX)
+        return;
+
+    int idx = hand_level_idx(hand_type);
+    int level = g_game_vars.hand_levels[idx] + nb_levels;
+    g_game_vars.hand_levels[idx] = (level < HAND_LEVEL_MIN) ? HAND_LEVEL_MIN : level;
+}
+
+HandLevelValues hand_get_values(enum HandType hand_type)
+{
+    return hand_level_values(hand_type, hand_get_level(hand_type));
 }
 
 // Hand Struct Manipulation
@@ -168,19 +224,43 @@ void hand_display_boss_caption(void)
     print_hand_type(caption, TTE_RED_PB);
 }
 
+void hand_show_level_up(enum HandType hand_type)
+{
+    HandLevelValues hand_values = hand_get_values(hand_type);
+
+    g_game_vars.chips = hand_values.chips;
+    g_game_vars.mult = hand_values.mult;
+
+    tte_erase_rect_wrapper(HAND_TYPE_RECT);
+    print_hand_type(get_hand_type_name(hand_type), TTE_WHITE_PB);
+    display_chips();
+    display_mult();
+}
+
+void hand_clear_level_up_display(void)
+{
+    g_game_vars.chips = 0;
+    g_game_vars.mult = 0;
+
+    tte_erase_rect_wrapper(HAND_TYPE_RECT);
+    display_chips();
+    display_mult();
+}
+
 void compute_hand_value_info(void)
 {
     tte_erase_rect_wrapper(HAND_TYPE_RECT);
     s_hand.contained_hands = compute_contained_hand_types();
     s_hand.hand_type = compute_hand_type(s_hand.contained_hands);
 
-    HandValues hand_values = HAND_BASE_VALUES[s_hand.hand_type];
+    HandLevelValues hand_values = hand_get_values(s_hand.hand_type);
 
     g_game_vars.chips = hand_values.chips;
     g_game_vars.mult = hand_values.mult;
 
-    if (hand_values.display_name != NULL)
-        print_hand_type(hand_values.display_name, TTE_WHITE_PB);
+    const char* hand_name = get_hand_type_name(s_hand.hand_type);
+    if (hand_name != NULL)
+        print_hand_type(hand_name, TTE_WHITE_PB);
     else
         hand_display_boss_caption();
 

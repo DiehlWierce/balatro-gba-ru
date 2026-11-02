@@ -1,0 +1,102 @@
+# Seed GBARU1: buy a Planet in the Shop, read its description, take it to the next round,
+# check the hand levels screen (SELECT), use the Planet and see the leveled-up hand score.
+
+wait 460
+press START
+wait 60
+press A
+wait 60
+pokestr {sym:s_seed_str} GBARU1
+poke8 {sym:use_seed} 1
+press DOWN
+wait 10
+press A
+wait 120
+
+# Small Blind won with a forced score, cash out
+press A
+wait 180
+poke32 {gv:score} 100000
+press A
+press L
+wait 1100
+press A
+wait 200
+
+# Reroll 3 times (money forced): the third Shop has a Planet in its second slot
+poke32 {gv:money} 100
+press DOWN
+wait 20
+press A
+wait 60
+press A
+wait 60
+press A
+wait 60
+shot 00_shop_with_planet
+
+# Planet description, then buy it: it goes to the consumables panel
+press UP
+wait 20
+press RIGHT
+wait 20
+press RIGHT
+wait 20
+hold B
+wait 90
+shot 01_planet_description
+release B
+wait 30
+press A
+wait 60
+shot 02_planet_bought
+
+# Owned row: the Planet is the only owned item, show its description there too
+press UP
+wait 20
+hold B
+wait 90
+shot 03_owned_planet_description
+release B
+wait 30
+
+# Down from the owned row lands on the "Next round" button, then select the Big Blind
+press DOWN
+wait 20
+shot 04_next_round_selected
+press A
+wait 200
+shot 05_blind_select_with_planet
+press A
+wait 200
+shot 06_round_with_planet
+
+# Hand levels screen before using the Planet
+press SELECT
+wait 20
+shot 07_hand_levels_before
+press SELECT
+wait 20
+shot 08_back_to_round
+
+# Use the Planet (owned row is above the hand), then select one card: High Card
+press UP
+wait 20
+shot 09_planet_selected
+press A
+wait 60
+shot 10_planet_used
+press A
+wait 30
+shot 11_high_card_leveled
+press SELECT
+wait 20
+shot 12_hand_levels_after
+press B
+wait 20
+shot 13_closed_selection_kept
+
+# Play the High Card and check the scoring starts from the leveled values
+press L
+wait 300
+shot 14_scored

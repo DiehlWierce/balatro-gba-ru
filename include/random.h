@@ -28,6 +28,10 @@ enum RngSequence
     RNG_SEQ_JOKER_BUSINESS_CARD,
     RNG_SEQ_TAG_TOP_UP,
 
+    // Shop: type of each top row item (Joker or Planet), then which Planet
+    RNG_SEQ_SHOP_ITEM_TYPE,
+    RNG_SEQ_SHOP_PLANETS,
+
     // For non-gameplay related things such as sound effects or visual effects, so as to not
     // interfere with important stuff like Shop rolls or Joker effects.
     RNG_SEQ_MISC,

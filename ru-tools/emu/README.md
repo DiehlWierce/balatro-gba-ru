@@ -38,6 +38,7 @@ python3 ru-tools/emu/run.py ru-tools/emu/scenarios/smoke_shop.txt /tmp/shots
 переменная `g_debug_forced_boss`, которую сценарий записывает до начала забега. Номер босса —
 его значение в `enum BlindType` (`include/blind.h`), список реализованных есть в начале
 `boss_round.txt`. Сборка с `DEBUG_BOSS=BLIND_TYPE_HOOK` (или номером) всегда даёт этого босса.
+| `scenarios/planets.txt` | Сид `GBARU1`: Планета в лавке (Плутон после трёх рероллов), описание, покупка, панель расходников, экран «Уровни рук» (SELECT), использование в раунде, Старшая карта 15×2 и счёт 52 за туза |
 
 Команды сценария описаны в начале `gbarun.c`. Адреса можно писать символами:
 `{sym:s_seed_str}` — адрес символа из ELF (в том числе static), `{gv:score}` — адрес поля

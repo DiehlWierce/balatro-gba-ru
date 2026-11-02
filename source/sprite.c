@@ -1,6 +1,7 @@
 #include "sprite.h"
 
 #include "audio_utils.h"
+#include "consumable.h"
 #include "game.h"
 #include "game_variables.h"
 #include "graphic_utils.h"
@@ -52,14 +53,16 @@ static const int s_sprite_counts[MAX_SPRITE_TYPE] = {
     [BLIND_TOKEN_SPRITE] = MAX_BLIND_TOKEN,
     [SKIP_TAG_SPRITE]    = MAX_SKIP_TAGS,
     [JOKER_SPRITE]       = MAX_ACTIVE_JOKERS,
-    [DECK_SPRITE]        = 1
+    [DECK_SPRITE]        = 1,
+    [CONSUMABLE_SPRITE]  = MAX_ACTIVE_CONSUMABLES
 };
 static const int s_sprite_sizes[MAX_SPRITE_TYPE] = {
     [CARD_SPRITE]        = CARD_SPRITE_TILES,
     [BLIND_TOKEN_SPRITE] = BLIND_SPRITE_TILES,
     [SKIP_TAG_SPRITE]    = SKIP_TAG_SPRITE_TILES,
     [JOKER_SPRITE]       = JOKER_SPRITE_TILES,
-    [DECK_SPRITE]        = CARD_SPRITE_TILES
+    [DECK_SPRITE]        = CARD_SPRITE_TILES,
+    [CONSUMABLE_SPRITE]  = CONSUMABLE_SPRITE_TILES
 };
 // clang-format on
 

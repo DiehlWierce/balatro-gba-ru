@@ -7,11 +7,19 @@
 #ifndef GAME_JOKER_ROW_H
 #define GAME_JOKER_ROW_H
 
+#include "item.h"
 #include "selection_grid.h"
 
 /**
- * @brief Returns the size of the Jokers' row at the top of the game screen.
- *         Is equal to the number of Jokers owned.
+ * @brief Item at @p idx in the owned items row: the owned Jokers, then the owned consumables.
+ *
+ * @return the Joker or consumable, NULL if @p idx is out of the row
+ */
+Item* owned_items_row_get_item(int idx);
+
+/**
+ * @brief Returns the size of the owned items row at the top of the game screen:
+ *         the number of Jokers plus the number of consumables owned.
  *
  * @return int
  */

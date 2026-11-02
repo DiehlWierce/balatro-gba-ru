@@ -8,6 +8,8 @@
 #define HAND_H
 
 #include "card.h"
+#include "hand_levels.h"
+#include "hand_type.h"
 
 #include <tonc.h>
 
@@ -22,25 +24,6 @@ enum HandState
     HAND_DISCARD,
     HAND_PLAY,
     HAND_PLAYING
-};
-
-enum HandType
-{
-    NONE,
-    HIGH_CARD,
-    PAIR,
-    TWO_PAIR,
-    THREE_OF_A_KIND,
-    STRAIGHT,
-    FLUSH,
-    FULL_HOUSE,
-    FOUR_OF_A_KIND,
-    STRAIGHT_FLUSH,
-    ROYAL_FLUSH,
-    FIVE_OF_A_KIND,
-    FLUSH_HOUSE,
-    FLUSH_FIVE,
-    HAND_TYPE_MAX = FLUSH_FIVE
 };
 
 // clang-format off
@@ -74,6 +57,39 @@ typedef struct ContainedHandTypes
 // Misc Hand Functions
 
 const char* get_hand_type_name(enum HandType hand_type);
+
+/**
+ * @brief Long name of a poker hand ("Две пары"), "" for NONE.
+ */
+const char* get_hand_type_full_name(enum HandType hand_type);
+
+/**
+ * @brief Shows a poker hand and its chips and mult in the left panel after it was leveled up.
+ */
+void hand_show_level_up(enum HandType hand_type);
+
+/**
+ * @brief Clears what hand_show_level_up() printed, chips and mult back to 0.
+ */
+void hand_clear_level_up_display(void);
+
+/**
+ * @brief Level of a poker hand in the current run (HAND_LEVEL_MIN by default).
+ */
+int hand_get_level(enum HandType hand_type);
+
+/**
+ * @brief Changes the level of a poker hand, it never goes below HAND_LEVEL_MIN.
+ *
+ * @param hand_type the poker hand
+ * @param nb_levels levels to add, negative to remove levels (e.g. The Arm)
+ */
+void hand_level_up(enum HandType hand_type, int nb_levels);
+
+/**
+ * @brief Chips and mult a poker hand starts scoring with at its current level.
+ */
+HandLevelValues hand_get_values(enum HandType hand_type);
 
 // Hand Structure Manipulation
 
