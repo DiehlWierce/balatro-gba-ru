@@ -44,10 +44,10 @@ enum TarotType
     TAROT_TYPE_MAX
 };
 
-#define TAROT_HERMIT_MAX_MONEY      20
-#define TAROT_TEMPERANCE_MAX_MONEY  50
-#define TAROT_CREATE_MAX            2 // High Priestess and Emperor
-#define TAROT_MAX_TARGETS           3
+#define TAROT_HERMIT_MAX_MONEY     20
+#define TAROT_TEMPERANCE_MAX_MONEY 50
+#define TAROT_CREATE_MAX           2 // High Priestess and Emperor
+#define TAROT_MAX_TARGETS          3
 
 /**
  * @brief Whether the Tarot is implemented and can appear in the Shop and Packs.

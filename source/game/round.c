@@ -480,7 +480,8 @@ static inline void round_execute_discard(void)
     CardObject** hand = get_hand_array();
     for (int i = 0; i <= get_hand_top(); i++)
     {
-        if (card_object_is_selected(hand[i]) && card_modifiers_on_discarded(hand[i]->card, hand[i]->x, hand[i]->y))
+        if (card_object_is_selected(hand[i]) &&
+            card_modifiers_on_discarded(hand[i]->card, hand[i]->x, hand[i]->y))
             card_object_shake(hand[i], SFX_CARD_SELECT);
     }
 }

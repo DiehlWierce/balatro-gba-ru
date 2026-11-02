@@ -12,8 +12,8 @@
 #include "consumable.h"
 #include "game.h"
 #include "graphic_utils.h"
-#include "pool.h"
 #include "item.h"
+#include "pool.h"
 #include "random.h"
 #include "sprite.h"
 #include "util.h"
@@ -157,8 +157,7 @@ const PackInfo* booster_pack_get_info(enum PackType pack_type)
 bool booster_pack_is_rollable(enum PackType pack_type)
 {
     const PackInfo* info = booster_pack_get_info(pack_type);
-    return info != NULL && info->roll_choice != NULL && info->pick != NULL &&
-           info->discard != NULL;
+    return info != NULL && info->roll_choice != NULL && info->pick != NULL && info->discard != NULL;
 }
 
 #pragma region Sprite

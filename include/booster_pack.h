@@ -28,7 +28,7 @@ enum PackType
 
 typedef struct BoosterPackObject
 {
-    Item; // First member struct inheritance
+    Item;         // First member struct inheritance
     u8 pack_type; // enum PackType
     s8 layer;     // Layer of the PACK_SPRITE used by this pack
 } BoosterPackObject;

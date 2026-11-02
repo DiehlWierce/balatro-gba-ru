@@ -244,7 +244,6 @@ static void planet_use(enum PlanetType planet)
     hand_show_level_up(hand_type);
 }
 
-
 // Tarots
 
 enum TarotType tarot_roll(enum RngSequence key)
@@ -500,7 +499,8 @@ ConsumableObject* consumable_object_new(enum ConsumableType type, int id)
     // Planets and Tarots share one palette bank, see docs/ru/PALETTES.md
     memcpy16(&pal_obj_mem[PAL_ROW_LEN * CONSUMABLE_PB], planet_gfxPal, PAL_ROW_LEN);
 
-    const unsigned int* gfx_tiles = (type == CONSUMABLE_TYPE_TAROT) ? tarot_gfxTiles : planet_gfxTiles;
+    const unsigned int* gfx_tiles =
+        (type == CONSUMABLE_TYPE_TAROT) ? tarot_gfxTiles : planet_gfxTiles;
     int tile_index = sprite_get_tid(CONSUMABLE_SPRITE, layer);
     memcpy32(
         &tile_mem[TILE_MEM_OBJ_CHARBLOCK0_IDX][tile_index],
@@ -613,7 +613,7 @@ int consumable_object_get_buy_price(Item* item)
 {
     GBAL_RETURN_IF_NULL(item, UNDEFINED);
     return ((ConsumableObject*)item)->consumable_type == CONSUMABLE_TYPE_TAROT ? TAROT_BUY_PRICE
-                                                                              : PLANET_BUY_PRICE;
+                                                                               : PLANET_BUY_PRICE;
 }
 
 int consumable_object_get_sell_price(Item* item)
