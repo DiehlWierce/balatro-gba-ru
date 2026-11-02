@@ -96,11 +96,23 @@ static void seed_keyboard_substate_update(void);
 
 static void resume_substate_init(void);
 
-static StateInfo state_info[] = {
-    STATE_INFO_INIT_UPDATE_FN(choose_deck_substate_init, choose_deck_substate_update),
-    STATE_INFO_INIT_UPDATE_FN(seed_keyboard_substate_init, seed_keyboard_substate_update),
-    STATE_INFO_INIT_UPDATE_FN(resume_substate_init, noop)
+// clang-format off
+static StateInfo state_info[] =
+{
+    [RUN_SETUP_SUBSTATE_CHOOSE_DECK] = STATE_INFO_INIT_UPDATE_FN(
+        choose_deck_substate_init, 
+        choose_deck_substate_update
+    ),
+    [RUN_SETUP_SUBSTATE_CHOOSE_SEED] = STATE_INFO_INIT_UPDATE_FN(
+        seed_keyboard_substate_init,
+        seed_keyboard_substate_update
+    ),
+    [RUN_SETUP_SUBSTATE_RESUME] = STATE_INFO_INIT_UPDATE_FN(
+        resume_substate_init, 
+        noop
+    )
 };
+// clang-format on
 
 static StateMachine run_setup_sm = {
     .state_infos = &state_info[0],
@@ -565,7 +577,7 @@ enum RunSetupResumeRows
  * STATE FUNCTIONS
  ******************************************************************************/
 
-void game_run_setup_change_background(void)
+void run_setup_change_background(void)
 {
     tte_erase_screen();
     GRIT_CPY(pal_bg_mem, background_run_setup_gfxPal);
@@ -573,10 +585,10 @@ void game_run_setup_change_background(void)
     GRIT_CPY(&se_mem[MAIN_BG_SBB], background_run_setup_gfxMap);
 }
 
-void game_run_setup_on_init(void)
+void run_setup_on_init(void)
 {
     state_machine_register(&run_setup_sm);
-    game_run_setup_change_background();
+    run_setup_change_background();
 
     // Apply the current use_seed value if seed is UNDEFINED
     if (g_game_vars.rng_info.seed == UNDEFINED)
@@ -620,12 +632,12 @@ void game_run_setup_on_init(void)
     state_machine_change_state(&run_setup_sm, RUN_SETUP_SUBSTATE_CHOOSE_DECK);
 }
 
-void game_run_setup_on_update(void)
+void run_setup_on_update(void)
 {
     run_setup_tabs_update();
 }
 
-void game_run_setup_on_exit(void)
+void run_setup_on_exit(void)
 {
     state_machine_remove(&run_setup_sm);
 
@@ -785,7 +797,7 @@ static int seed_play_get_row_size(void)
  */
 static void seed_play_row_on_key_transit(SelectionGrid* selection_grid, Selection* selection)
 {
-    if (key_hit(SELECT_CARD))
+    if (key_hit(KEY_CONFIRM))
         button_press(&choose_deck_bottom_buttons[selection->x]);
 }
 
@@ -965,10 +977,10 @@ static void keyboard_button_on_pressed(void)
     if (s_seed_cursor_pos > BASE36_MAX_DIGITS)
         s_seed_cursor_pos = BASE36_MAX_DIGITS;
 
-    if (key_hit(DESELECT_CARDS))
+    if (key_hit(KEY_CANCEL))
         delete_seed_char();
 
-    else if (key_hit(SELECT_CARD))
+    else if (key_hit(KEY_CONFIRM))
     {
         // Get keyboard button index from selection
         enum RunSetupKeyboardButtons key =
@@ -1027,8 +1039,7 @@ static inline Button* choose_seed_get_button_from_sel(const Selection* sel)
  */
 static void choose_seed_row_on_key_transit(SelectionGrid* selection_grid, Selection* selection)
 {
-    if (key_hit(SELECT_CARD) ||
-        (selection->y <= RUN_SETUP_SEED_ROW_KEY3 && key_hit(DESELECT_CARDS)))
+    if (key_hit(KEY_CONFIRM) || (selection->y <= RUN_SETUP_SEED_ROW_KEY3 && key_hit(KEY_CANCEL)))
     {
         button_press(choose_seed_get_button_from_sel(selection));
     }
@@ -1225,13 +1236,13 @@ static void run_setup_tabs_update(void)
         return;
 
     // Not all the way to the right and pressed R
-    if (key_hit(TAB_RIGHT) && current_tab < RUN_SETUP_TAB_MAX - 1)
+    if (key_hit(KEY_TAB_RIGHT) && current_tab < RUN_SETUP_TAB_MAX - 1)
     {
         button_set_highlight(&tabs_buttons[current_tab], false);
         current_tab++;
     }
     // Not all the way to the left and pressed L
-    else if (key_hit(TAB_LEFT) && current_tab > 0)
+    else if (key_hit(KEY_TAB_LEFT) && current_tab > 0)
     {
         button_set_highlight(&tabs_buttons[current_tab], false);
         current_tab--;
@@ -1266,7 +1277,7 @@ static int back_row_get_size()
 
 static void back_row_on_key_transit(SelectionGrid* selection_grid, Selection* selection)
 {
-    if (key_hit(SELECT_CARD))
+    if (key_hit(KEY_CONFIRM))
         button_press(&back_button);
 }
 
