@@ -79,10 +79,12 @@ enum JokerEvent
 #define FOUR_FINGERS_JOKER_ID 50
 #define BLUEPRINT_JOKER_ID    52
 
-typedef struct
+typedef struct Joker
 {
     u8 id; // Unique ID for the joker, used to identify different jokers
     u8 value;
+    u8 stickers;      // JOKER_STICKER_* flags given by the Stake (see stake.h)
+    u8 perish_rounds; // Rounds left before a Perishable Joker stops working
     enum JokerRarity rarity;
 
     // General purpose values that are interpreted differently for each Joker (scaling, last
@@ -90,6 +92,15 @@ typedef struct
     s32 scoring_state;
     s32 persistent_state;
 } Joker;
+
+// Stickers given to Shop Jokers by the Stake, they can be combined (Eternal and Perishable can't)
+#define JOKER_STICKER_ETERNAL    (1 << 0) // Can't be sold
+#define JOKER_STICKER_PERISHABLE (1 << 1) // Stops working after PERISHABLE_JOKER_ROUNDS rounds
+#define JOKER_STICKER_RENTAL     (1 << 2) // Costs RENTAL_JOKER_BUY_PRICE, -$RENTAL_JOKER_COST per round
+
+#define PERISHABLE_JOKER_ROUNDS 5
+#define RENTAL_JOKER_BUY_PRICE  1
+#define RENTAL_JOKER_COST       3
 
 typedef struct JokerObject
 {
@@ -157,6 +168,16 @@ u32 joker_get_score_effect(
  * @return UNDEFINED if error occurred, the joker's sell value otherwise
  */
 int joker_get_sell_value(const Joker* joker);
+
+/**
+ * @brief Whether the Joker can be sold: Eternal Jokers (Black Stake) can't
+ */
+bool joker_can_be_sold(const Joker* joker);
+
+/**
+ * @brief Whether a Perishable Joker (Orange Stake) has run out of rounds and stopped working
+ */
+bool joker_is_perished(const Joker* joker);
 
 /**
  * @brief Returns the buy price of the joker

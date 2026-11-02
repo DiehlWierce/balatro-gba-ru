@@ -7,6 +7,7 @@
 #include "joker.h"
 #include "layout.h"
 #include "list.h"
+#include "soundbank.h"
 #include "sprite.h"
 #include "util.h"
 
@@ -171,7 +172,12 @@ void jokers_sel_row_on_key_transit(SelectionGrid* selection_grid, Selection* sel
         }
     }
 
-    if (key_hit(KEY_SELL))
+    // Eternal Jokers (Black Stake) can't be sold
+    if (key_hit(KEY_SELL) && joker_object != NULL && !joker_can_be_sold(joker_object->joker))
+    {
+        joker_object_shake(joker_object, SFX_CARD_SELECT);
+    }
+    else if (key_hit(KEY_SELL))
     {
         int sold_joker_idx = selection->x;
 
