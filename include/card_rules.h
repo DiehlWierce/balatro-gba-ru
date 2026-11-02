@@ -78,6 +78,8 @@ typedef struct Card
     uint8_t bonus_chips; // Chips added for good by Hiker
 } Card;
 
+_Static_assert(sizeof(Card) == 8, "Card pool (MAX_CARDS entries in EWRAM) and its tests assume 8 bytes");
+
 /**
  * @brief Whether the card has a rank (Stone cards have none).
  */
