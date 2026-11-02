@@ -1,10 +1,25 @@
+"""Перерисовывает английские надписи в фонах (graphics/*.png) русскими.
+
+usage: apply23.py ORIG_DIR [REPO_DIR]
+  ORIG_DIR  папка с оригинальными английскими PNG версии v0.2.3, например:
+              mkdir -p /tmp/o23 && for f in $(git ls-tree --name-only 0eb7042 graphics/ | grep png$); do
+                git show 0eb7042:$f > /tmp/o23/$(basename $f); done
+  REPO_DIR  корень репозитория (по умолчанию — на уровень выше ru-tools)
+
+Координаты надписей подобраны под графику v0.2.3. После изменений графики в апстриме
+результат нужно сверять глазами (фоны выбора блайнда и опций уже сведены вручную).
+"""
 import sys, shutil, os
-sys.path.insert(0,'/tmp/claude-0/-home-claude/40adf7eb-52af-5f18-a6d3-0c8dd38ea351/scratchpad/ru')
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+if len(sys.argv) < 2:
+    sys.exit(__doc__)
+REPO = os.path.abspath(sys.argv[2] if len(sys.argv) > 2 else os.path.join(HERE, '..'))
 from PIL import Image
 from relabel import *
 from tinyfont import F5, F4, F5N, F8
-G='/tmp/claude-0/-home-claude/40adf7eb-52af-5f18-a6d3-0c8dd38ea351/scratchpad/bg23/graphics/'
-ORIG='/tmp/claude-0/-home-claude/40adf7eb-52af-5f18-a6d3-0c8dd38ea351/scratchpad/ru/o23/'
+G=os.path.join(REPO, 'graphics') + os.sep
+ORIG=os.path.abspath(sys.argv[1]) + os.sep
 def load(name): return Image.open(ORIG+name)
 def save(img,name): img.save(G+name, optimize=False)
 
@@ -149,7 +164,7 @@ chips23()
 print('chips ok')
 
 # ================= общие помощники: шрифт 8x8 игры и «большие» буквы =================
-FONT8 = Image.open('/tmp/claude-0/-home-claude/40adf7eb-52af-5f18-a6d3-0c8dd38ea351/scratchpad/bg23/font/gbalatro_sys8.png').convert('L')
+FONT8 = Image.open(os.path.join(REPO, 'font', 'gbalatro_sys8.png')).convert('L')
 def glyph8(ch):
     idx = ch.encode('cp1251')[0] - 32
     r, c = divmod(idx, 16)

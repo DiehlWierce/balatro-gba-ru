@@ -1,7 +1,8 @@
 import sys
 from collections import Counter
 from PIL import Image
-sys.path.insert(0, '/tmp/claude-0/-home-claude/40adf7eb-52af-5f18-a6d3-0c8dd38ea351/scratchpad/ru')
+import os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from tinyfont import F5, F4, text_mask
 
 def is_white(pal, p):
