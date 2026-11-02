@@ -1,5 +1,6 @@
 #include "item_funcs.h"
 
+#include "booster_pack.h"
 #include "card.h"
 #include "consumable.h"
 #include "game.h"
@@ -83,7 +84,17 @@ ItemFuncs item_func_table[] = {
         .print_description = consumable_object_print_description
     },
     [ITEM_TYPE_VOUCHER] = ITEM_PLACEHOLDER_FUNCS,
-    [ITEM_TYPE_PACK] = ITEM_PLACEHOLDER_FUNCS
+    [ITEM_TYPE_PACK] = {
+        .roll_new = booster_pack_roll_new,
+        .get_buy_price = booster_pack_get_buy_price,
+        .get_sell_price = NULL,
+        .get_name = booster_pack_get_name,
+        .get_subtype_info = booster_pack_get_subtype_info,
+        .acquire = booster_pack_acquire,
+        .can_acquire = booster_pack_can_acquire,
+        .dispose = booster_pack_dispose,
+        .print_description = booster_pack_print_description
+    }
 };
 // clang-format on
 

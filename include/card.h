@@ -54,6 +54,11 @@ const char* card_get_enhancement_name(const Card* card);
  */
 const char* card_get_seal_name(const Card* card);
 
+/**
+ * @brief Index in the card palette (CARD_PB) of the colour closest to the given 8 bit RGB.
+ */
+int card_palette_find_color(u8 r, u8 g, u8 b);
+
 // CardObject methods
 CardObject* card_object_new(Card* card);
 void card_object_destroy(CardObject** card_object);

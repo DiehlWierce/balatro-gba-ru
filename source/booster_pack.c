@@ -11,6 +11,7 @@
 #include "card.h"
 #include "game.h"
 #include "graphic_utils.h"
+#include "pool.h"
 #include "item.h"
 #include "random.h"
 #include "sprite.h"

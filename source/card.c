@@ -216,6 +216,11 @@ static int card_palette_closest(Rgb c)
     return best;
 }
 
+int card_palette_find_color(u8 r, u8 g, u8 b)
+{
+    return card_palette_closest((Rgb){r, g, b});
+}
+
 // clang-format off
 // Tint of each enhancement, dithered with the white face
 static const Rgb ENHANCEMENT_TINTS[CARD_ENHANCEMENT_MAX] = {
