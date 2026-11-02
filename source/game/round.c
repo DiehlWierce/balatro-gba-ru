@@ -554,7 +554,8 @@ static inline void round_execute_play_hand(void)
     --g_game_vars.hands;
     display_hands();
 
-    g_game_vars.nb_played_hands[get_hand_type() - 1]++;
+    if (get_hand_type() > NONE && get_hand_type() <= HAND_TYPE_MAX)
+        g_game_vars.nb_played_hands[get_hand_type() - 1]++;
     s_last_played_hand_type = get_hand_type();
 
     // Remember the Ante the played cards were played in (The Pillar)
