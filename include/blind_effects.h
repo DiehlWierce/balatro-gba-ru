@@ -73,4 +73,43 @@ u32 blind_effects_trigger(enum BlindEvent event, const BlindEventData* data);
  */
 bool blind_effects_is_implemented(enum BlindType blind);
 
+/**
+ * @brief Number of cards the current Boss discards from the hand after each played hand.
+ *
+ * @return 0 when the current Blind doesn't discard cards (2 for The Hook)
+ */
+int blind_effects_get_forced_discards(void);
+
+/**
+ * @brief Number of cards drawn after a play or a discard when the current Boss forces it.
+ *
+ * The first draw of the round is never affected. When set, exactly this many cards are drawn,
+ * even if the hand goes over its size.
+ *
+ * @return 0 when the draw is normal (filling the hand), 3 for The Serpent
+ */
+int blind_effects_get_forced_draws(void);
+
+#define BLIND_CAPTION_MAX_LINES 4 // Lines of a Boss rule on the Blind Select screen
+#define BLIND_CAPTION_LINE_LEN  8 // Max characters of a rule line
+#define BLIND_SHORT_CAPTION_LEN 7 // Max characters of the short rule shown during the round
+
+/**
+ * @brief Russian name of a Boss Blind, NULL if it has no caption yet.
+ */
+const char* blind_effects_get_name(enum BlindType blind);
+
+/**
+ * @brief Line @p line of the rule of a Boss Blind for the Blind Select screen.
+ *
+ * @return the line (at most BLIND_CAPTION_LINE_LEN characters), NULL past the last line
+ */
+const char* blind_effects_get_caption_line(enum BlindType blind, int line);
+
+/**
+ * @brief Short rule of a Boss Blind shown during the round (at most BLIND_SHORT_CAPTION_LEN
+ *        characters), NULL if the Blind has none.
+ */
+const char* blind_effects_get_short_caption(enum BlindType blind);
+
 #endif // BLIND_EFFECTS_H

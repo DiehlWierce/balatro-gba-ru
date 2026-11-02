@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Runs a gbarun scenario on build/balatro-gba.gba and saves the screenshots.
 
-usage: run.py SCENARIO OUTDIR [--repo DIR] [--gbarun PATH]
+usage: run.py SCENARIO OUTDIR [--repo DIR] [--gbarun PATH] [-D NAME=VALUE ...]
 
 Placeholders in the scenario are replaced before running:
   {sym:NAME}      address of the ELF symbol NAME (static symbols too, e.g. s_seed_str)
   {gv:FIELD}      address of g_game_vars.FIELD (e.g. {gv:score}, {gv:money})
+  {def:NAME}      VALUE given with -D NAME=VALUE (e.g. -D boss=20)
 
 The ARM toolchain (nm, gcc, objdump) is taken from $DEVKITARM when it is set, otherwise the
 commands run in the project's docker image (docker compose run --rm gbalatro).
@@ -76,6 +77,7 @@ def main():
     ap.add_argument('outdir')
     ap.add_argument('--repo', default=os.path.normpath(os.path.join(HERE, '..', '..')))
     ap.add_argument('--gbarun', default=os.path.join(HERE, 'gbarun'))
+    ap.add_argument('-D', dest='defines', action='append', default=[], metavar='NAME=VALUE')
     args = ap.parse_args()
 
     repo = os.path.abspath(args.repo)
@@ -87,6 +89,12 @@ def main():
                         '-lmgba', '-lpng'], check=True)
 
     text = open(args.scenario).read()
+    for define in args.defines:
+        name, _, value = define.partition('=')
+        text = text.replace('{def:%s}' % name, value)
+    missing = re.findall(r'\{def:(\w+)\}', text)
+    if missing:
+        sys.exit('missing -D for: ' + ', '.join(sorted(set(missing))))
     if '{sym:' in text or '{gv:' in text:
         syms = elf_symbols(repo)
         fields = sorted(set(re.findall(r'\{gv:(\w+)\}', text)))

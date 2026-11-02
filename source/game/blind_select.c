@@ -4,6 +4,7 @@
 #include "audio_utils.h"
 #include "background_blind_select_gfx.h"
 #include "blind.h"
+#include "blind_effects.h"
 #include "button.h"
 #include "game.h"
 #include "game_variables.h"
@@ -101,6 +102,8 @@ static const BG_POINT BIG_BLIND_SKIP_TAG_HIGH_POS     = {115,     132};
 static const BG_POINT BIG_BLIND_SKIP_TAG_LOW_POS      = {115,     140};
 // Rects                                                 left     top     right   bottom
 static const Rect BLIND_SKIP_BTN_GRAY_RECT            = {0,       24,     4,      27};
+// Text rect in pixels, empty top left panel used for the upcoming Boss's rule
+static const Rect BOSS_CAPTION_RECT                   = {0,       0,      68,     44};
 static const Rect BLIND_SKIP_BTN_PREANIM_DEST_RECT    = {9,       29,     19,     31};
 static const Rect SINGLE_BLIND_SEL_REQ_SCORE_RECT     = {80,      120,    104,    128};
 static const Rect SINGLE_BLIND_SELECT_RECT            = {9,       7,      13,     31};
@@ -235,8 +238,39 @@ static inline void blind_select_erase_blind_req_and_reward(enum BlindTokens blin
     tte_erase_rect_wrapper(blind_req_and_reward_rect);
 }
 
+/**
+ * @brief Prints the name and rule of the upcoming Boss in the top left panel.
+ *        Nothing is printed for Bosses without an implemented effect.
+ */
+static void blind_select_print_boss_caption(void)
+{
+    tte_erase_rect_wrapper(BOSS_CAPTION_RECT);
+
+    enum BlindType boss = g_game_vars.next_boss_blind;
+    const char* name = blind_effects_get_name(boss);
+    if (name == NULL)
+        return;
+
+    const int x = BOSS_CAPTION_RECT.left + 3; // Inside the panel border
+    int y = BOSS_CAPTION_RECT.top + 2;
+
+    tte_printf("#{P:%d,%d; cx:0x%X000}%s", x, y, TTE_RED_PB, name);
+
+    for (int line = 0; line < BLIND_CAPTION_MAX_LINES; line++)
+    {
+        const char* text = blind_effects_get_caption_line(boss, line);
+        if (text == NULL)
+            break;
+
+        y += TILE_SIZE;
+        tte_printf("#{P:%d,%d; cx:0x%X000}%s", x, y, TTE_WHITE_PB, text);
+    }
+}
+
 static inline void blind_select_erase_all_blind_reqs_and_rewards(void)
 {
+    tte_erase_rect_wrapper(BOSS_CAPTION_RECT);
+
     for (enum BlindTokens curr_blind = SMALL_BLIND; curr_blind < NUM_BLINDS_PER_ANTE; curr_blind++)
     {
         blind_select_erase_blind_req_and_reward(curr_blind);
@@ -378,11 +412,24 @@ void blind_select_reroll_boss_from_menu(void)
  * @brief Roll a random Boss Blind amongst the ones we haven't beaten yet
  * and set g_game_vars.next_boss_blind to it.
  */
+#ifdef DEBUG_FORCE_BOSS
+/**
+ * @brief Debug builds only (make DEBUG_BOSS=<BlindType>): every rolled Boss is replaced by this
+ *        one when it is a Boss or Showdown Blind. Can be changed from the emulator.
+ */
+volatile int g_debug_forced_boss = DEBUG_FORCE_BOSS;
+#endif
+
 static inline void reroll_boss_blind(void)
 {
     // Showdown blinds only show up on ante 8, 16, etc...
     g_game_vars.next_boss_blind =
         roll_blind_type((g_game_vars.ante % MAX_ANTE == 0) && (g_game_vars.ante > 0));
+
+#ifdef DEBUG_FORCE_BOSS
+    if (g_debug_forced_boss >= BLIND_TYPE_BOSS && g_debug_forced_boss < BLIND_TYPE_MAX)
+        g_game_vars.next_boss_blind = g_debug_forced_boss;
+#endif
     // Apply new blind immediately if Boss Blind is selected, as increment_blind will not be called
     if (g_game_vars.current_blind >= BLIND_TYPE_BOSS)
     {
@@ -397,6 +444,7 @@ static void blind_select_reroll_boss_anim_seq_on_init(void)
     // one finishes, causing glitches
     skip_tag_process_pause();
     blind_select_erase_blind_req_and_reward(BOSS_BLIND);
+    tte_erase_rect_wrapper(BOSS_CAPTION_RECT);
 }
 
 static inline void blind_select_move_boss_blind_panel(enum ScreenVertDir dir)
@@ -650,6 +698,8 @@ static inline void blind_select_print_blind_reward(enum BlindTokens blind)
 
 static void blind_select_print_blinds_reqs_and_rewards(void)
 {
+    blind_select_print_boss_caption();
+
     for (enum BlindTokens curr_blind = 0; curr_blind < NUM_BLINDS_PER_ANTE; curr_blind++)
     {
         blind_select_print_blind_req(curr_blind);

@@ -32,6 +32,9 @@ enum RngSequence
     // interfere with important stuff like Shop rolls or Joker effects.
     RNG_SEQ_MISC,
 
+    // Added after RNG_SEQ_MISC so the states of the sequences above stay the same for a given seed
+    RNG_SEQ_BOSS_HOOK,
+
     RNG_SEQ_MAX
 };
 
