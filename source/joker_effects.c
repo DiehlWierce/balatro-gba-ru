@@ -747,7 +747,7 @@ static int ride_the_bus_joker_desc(Joker* joker, Rect dest_rect)
 static int supernova_joker_desc(Joker* joker, Rect dest_rect)
 {
     static const char desc[] =
-        TTE_BLACK_TAG "Даёт " TTE_RED_TAG "+N" TTE_BLACK_TAG " множ., где N - сколько раз за забег сыграна эта " TTE_YELLOW_TAG "комбинация";
+        TTE_RED_TAG "+1" TTE_BLACK_TAG " множ. за каждый раз, когда эта " TTE_YELLOW_TAG "комбинация" TTE_BLACK_TAG " сыграна за забег";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 

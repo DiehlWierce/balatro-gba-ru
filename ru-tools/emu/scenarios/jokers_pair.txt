@@ -1,0 +1,97 @@
+# Two Jokers forced into the Shop, needs: make DEBUG_JOKER0=<id> DEBUG_JOKER1=<id> (touch source/joker.c first).
+# Seed GBARU1: win the Small Blind (score forced), buy both Shop Jokers with $500, show their
+# descriptions, play 2 hands of the 5 leftmost cards on the Big Blind.
+
+wait 460
+press START
+wait 60
+press A
+wait 60
+pokestr {sym:s_seed_str} GBARU1
+poke8 {sym:use_seed} 1
+press DOWN
+wait 10
+press A
+wait 120
+press A
+wait 180
+poke32 {gv:score} 100000
+press A
+press L
+wait 1100
+press A
+wait 200
+poke32 {gv:money} 500
+shot 00_shop
+
+# Buy both Shop Jokers
+press RIGHT
+wait 20
+hold B
+wait 90
+shot 01_desc_first
+release B
+wait 20
+press A
+wait 60
+press DOWN
+wait 20
+press RIGHT
+wait 20
+hold B
+wait 90
+shot 02_desc_second
+release B
+wait 20
+press A
+wait 60
+shot 03_bought
+
+# Next round, Big Blind
+press DOWN
+wait 20
+press LEFT
+wait 20
+press UP
+wait 20
+press A
+wait 200
+press RIGHT
+wait 20
+press A
+wait 200
+shot 04_round
+
+# Hand 1 and 2: the 5 leftmost cards
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+wait 10
+shot 05_hand1_selected
+press L
+wait 200
+shot 06_hand1_scoring_a
+wait 150
+shot 07_hand1_scoring_b
+wait 400
+shot 08_hand1_done
+peek32 {gv:score}
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press L
+wait 700
+shot 09_hand2_done
+peek32 {gv:score}

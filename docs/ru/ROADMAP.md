@@ -236,6 +236,8 @@
 ### A8. Джокеры (партиями по 10–15)
 
 - **Партия 1** — на существующих событиях: Baron, Shoot the Moon, Joker Stencil, Gros Michel, Cavendish, Ice Cream, Popcorn, Ride the Bus, Green Joker, Supernova (нужны уровни из A4), Runner, Square Joker, Splash и др.
+- **Партия 1, сделано (ветка `a8-jokers-1`, ID 53–63):** Барон, Автобус, Сверхновая, Бегун, Квадрат, Мороженое, Карта лояльности, Запасные штаны, Малыш Джокер, Чёрный агат, Наконечник. Достать луну и Трафарет уже были среди первых 52. Барон считает X1.5 как «+половина текущего множителя» (поле `xmult` целое).
+- **Партия 1, пропущены:** Gros Michel, Cavendish, Popcorn (нужно событие конца раунда: `JOKER_EVENT_ON_ROUND_END` нигде не вызывается), Green Joker (нужно событие сброса: `JOKER_EVENT_ON_HAND_DISCARDED` не вызывается), Splash (меняет определение подсчитываемых карт в `round.c`), Ice Cream сделан без этого.
 - **Партия 2** — экономика и слоты: Golden Joker, Delayed Gratification, To the Moon, Rocket, Egg, Credit Card, Juggler, Drunkard, Troubadour.
 - **Партия 3** — завязаны на A6 и A7: Steel Joker, Glass Joker, Lucky Cat, Vampire, Midas Mask, Cartomancer, Constellation и др.
 - На каждого джокера: спрайт и палитра (через A10), перевод описания, хост-тест эффекта.
