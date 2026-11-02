@@ -1,6 +1,7 @@
 #include "game.h"
 
 #include "affine_background.h"
+#include "ante_table.h"
 #include "affine_background_gfx.h"
 #include "audio_utils.h"
 #include "background_main_menu_gfx.h"
@@ -183,7 +184,7 @@ void display_ante(void)
         TTE_YELLOW_PB,
         g_game_vars.ante,
         TTE_WHITE_PB,
-        MAX_ANTE
+        g_game_vars.ante > MAX_ANTE ? ANTE_LAST : MAX_ANTE
     );
 }
 
@@ -210,6 +211,7 @@ void game_init()
     g_game_vars.money = STARTING_MONEY;
     g_game_vars.hand_size = DEFAULT_HAND_SIZE;
     g_game_vars.ante = STARTING_ANTE;
+    g_game_vars.win_pending = false;
     g_game_vars.round = STARTING_ROUND;
     // g_game_vars.deck is kept: the Run Setup screen shows the last chosen Deck
     for (int i = 0; i < HAND_TYPE_MAX; i++)

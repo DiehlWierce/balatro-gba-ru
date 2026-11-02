@@ -5,6 +5,7 @@
 
 #include "game/round.h"
 
+#include "ante_table.h"
 #include "audio_utils.h"
 #include "background_gfx.h"
 #include "blind_effects.h"
@@ -787,8 +788,13 @@ static inline void round_handle_round_over(void)
     {
         if (g_game_vars.current_blind > BLIND_TYPE_BIG)
         {
-            if (g_game_vars.ante < MAX_ANTE)
+            if (g_game_vars.ante < ANTE_LAST)
             {
+                // Beating the ante 8 Boss wins the run: the win screen comes after the cash out
+                // and offers to go on (Endless mode). The last ante ends the game right away.
+                if (g_game_vars.ante == MAX_ANTE)
+                    g_game_vars.win_pending = true;
+
                 g_game_vars.ante++;
                 display_ante();
 

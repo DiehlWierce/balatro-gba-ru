@@ -52,6 +52,7 @@ static const u32 ROUND_END_REWARD_TEXT_X = 88;
 static const u32 ROUND_END_REWARD_AMOUNT_X = 168;
 
 // clang-format off
+static const int ROUND_END_BLIND_REQ_MAX_CHARS = 8; // Up to the reward text at x=168
 static const Rect ROUND_END_BLIND_REQ_RECT    = {104,     96,     136,       UNDEFINED};
 static const Rect ROUND_END_BLIND_REWARD_RECT = {168,     96,     UNDEFINED, UNDEFINED};
 static const Rect CASHOUT_DEST_RECT           = {10,      8,      23,        10       };
@@ -267,12 +268,13 @@ static void round_end_display_finished_blind(void)
     Rect blind_req_rect = ROUND_END_BLIND_REQ_RECT;
     u32 blind_req = blind_get_requirement(g_game_vars.current_blind, current_ante);
 
-    /* Not bothering to truncate here because there are 8 tiles
-     * and the blind requirement will not increase past ante 8
-     * so there's enough room for sure.
-     */
+    // Endless mode requirements go up to billions: shorten them to the room there is
     char blind_req_str_buff[UINT_MAX_DIGITS + 1];
-    snprintf(blind_req_str_buff, sizeof(blind_req_str_buff), "%lu", blind_req);
+    truncate_uint_to_suffixed_str(
+        blind_req,
+        ROUND_END_BLIND_REQ_MAX_CHARS,
+        blind_req_str_buff
+    );
 
     update_text_rect_to_right_align_str(&blind_req_rect, blind_req_str_buff, OVERFLOW_RIGHT);
 
@@ -551,7 +553,15 @@ static void round_end_dismiss_round_end_panel(void)
     if (g_game_vars.timer >= TM_DISMISS_ROUND_END_TM)
     {
         g_game_vars.timer = TM_ZERO;
-        game_change_state(GAME_STATE_SHOP);
+        if (g_game_vars.win_pending)
+        {
+            g_game_vars.win_pending = false;
+            game_change_state(GAME_STATE_WIN);
+        }
+        else
+        {
+            game_change_state(GAME_STATE_SHOP);
+        }
     }
 }
 

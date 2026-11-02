@@ -1,0 +1,57 @@
+# Endless mode: the ante 8 Boss is beaten, the win screen offers "Дальше", the run goes on at
+# ante 9 (Shop, Blind Select with the new requirements). Then the ante 12 Boss ends the game.
+
+wait 460
+press START
+wait 60
+press A
+wait 60
+pokestr {sym:s_seed_str} GBARU1
+poke8 {sym:use_seed} 1
+poke32 {gv:ante} 8
+press DOWN
+wait 10
+press A
+wait 120
+shot 01_blind_select_ante8
+
+# Round: pretend it is the Boss (Hook, 2) and win it with a forced score
+press A
+wait 180
+poke32 {gv:current_blind} 2
+poke32 {gv:score} 100000
+press A
+press L
+wait 1100
+shot 02_round_end_ante8_boss
+press A
+wait 200
+shot 03_win_screen
+
+# "Дальше": back to the Shop at ante 9
+press A
+wait 200
+shot 04_shop_ante9
+press DOWN
+wait 20
+press LEFT
+wait 20
+press UP
+wait 20
+press A
+wait 200
+shot 05_blind_select_ante9
+
+# Ante 11 and 12 requirements (Big Blind and Boss) are shown shortened
+poke32 {gv:ante} 12
+press A
+wait 100
+shot 06_round_ante12
+
+# Beating the ante 12 Boss: the win screen has no "Дальше" (Заново / В меню)
+poke32 {gv:current_blind} 2
+poke32 {gv:score} 4000000000
+press A
+press L
+wait 1100
+shot 07_win_final

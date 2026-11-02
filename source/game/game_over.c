@@ -1,8 +1,11 @@
 #include "game/game_over.h"
 
 #include "affine_background.h"
+#include "affine_background_gfx.h"
+#include "ante_table.h"
 #include "audio_utils.h"
 #include "background_game_over_gfx.h"
+#include "blind.h"
 #include "button.h"
 #include "card.h"
 #include "game.h"
@@ -131,10 +134,13 @@ static enum EndCondition s_end_condition = END_CONDITION_NONE;
 static u32 s_timer = TM_ZERO;
 static bool s_reuse_seed = false;
 static bool s_continue_run = false;
+/// The win after ante 8: the first button goes on into Endless mode instead of a new run
+static bool s_can_continue = false;
 
-static void game_over_common_init(enum EndCondition init_condition)
+static void game_over_common_init(enum EndCondition init_condition, bool can_continue)
 {
     s_end_condition = init_condition;
+    s_can_continue = can_continue;
     s_timer = TM_ZERO;
     s_reuse_seed = false;
     s_continue_run = false;
@@ -147,21 +153,36 @@ static void game_over_common_init(enum EndCondition init_condition)
         sprite_object_hide((SpriteObject*)(joker_object));
     }
 
-    // Destroy any preexisting cards in the deck, which will be present if we restart a run
-    Card* card = NULL;
-    while (get_deck_top() >= 0)
+    // Destroy any preexisting cards in the deck, which will be present if we restart a run.
+    // Endless mode keeps the whole run (deck, Skip Tags), only the sprites are hidden.
+    if (!s_can_continue)
     {
-        card = deck_pop();
-        card_destroy(&card);
-    }
+        Card* card = NULL;
+        while (get_deck_top() >= 0)
+        {
+            card = deck_pop();
+            card_destroy(&card);
+        }
 
-    remove_all_skip_tags();
+        remove_all_skip_tags();
+    }
 
     // Clears the round end menu
     toggle_windows(false, false);
     GRIT_CPY(pal_bg_mem, background_game_over_gfxPal);
     GRIT_CPY(&tile_mem[MAIN_BG_CBB], background_game_over_gfxTiles);
     GRIT_CPY(&se_mem[MAIN_BG_SBB], background_game_over_gfxMap);
+
+    // The round end destroyed the tokens when the win comes after the cash out
+    if (g_game_vars.playing_blind_token == NULL)
+    {
+        g_game_vars.playing_blind_token = blind_token_new(
+            g_game_vars.current_blind,
+            DEFEATED_BY_TOKEN_INIT_POS.x,
+            DEFEATED_BY_TOKEN_INIT_POS.y,
+            PLAYING_BLIND_TOKEN_LAYER
+        );
+    }
 
     // Move blind token offscreen at initial position before moving it up
     sprite_position(
@@ -187,7 +208,8 @@ void game_win_on_init(void)
 {
     play_sfx(SFX_GAME_WIN, MM_BASE_PITCH_RATE, SFX_DEFAULT_VOLUME);
 
-    game_over_common_init(END_CONDITION_WIN);
+    // After the ante 8 Boss the run can go on; the last ante is the end
+    game_over_common_init(END_CONDITION_WIN, g_game_vars.ante < ANTE_LAST);
     affine_background_set_color(TEXT_CLR_BLUE);
 }
 
@@ -198,7 +220,7 @@ void game_lose_on_init(void)
 
     play_lose_music();
 
-    game_over_common_init(END_CONDITION_LOSS);
+    game_over_common_init(END_CONDITION_LOSS, false);
     affine_background_set_color(TEXT_CLR_RED);
 
     // Change top text to "GAME OVER"
@@ -281,10 +303,11 @@ void game_over_on_update(void)
 
         // Buttons' text
         tte_printf(
-            "#{P:%d,%d; cx:0x%X000}Заново",
+            "#{P:%d,%d; cx:0x%X000}%s",
             NEW_RUN_BTN_TEXT_POS.x,
             NEW_RUN_BTN_TEXT_POS.y,
-            TTE_WHITE_PB
+            TTE_WHITE_PB,
+            s_can_continue ? "Дальше" : "Заново"
         );
         tte_printf(
             "#{P:%d,%d; cx:0x%X000}В меню",
@@ -305,10 +328,12 @@ void game_over_on_exit(void)
     play_regular_music();
     s_end_condition = END_CONDITION_NONE;
 
+    if (s_continue_run)
+        return; // Endless mode goes on with the same run and seed
+
     u32 previous_seed = g_game_vars.rng_info.seed;
 
-    if (!s_continue_run)
-        game_reset();
+    game_reset();
 
     if (s_reuse_seed)
         rng_set_seed(previous_seed);
@@ -358,6 +383,36 @@ static void reuse_seed_on_pressed(void)
 
 static void new_run_on_pressed(void)
 {
+    if (s_can_continue)
+    {
+        // Endless mode: back to the Shop of the run with everything it had
+        s_continue_run = true;
+
+        JokerObject* joker_object = NULL;
+        ListItr itr = list_itr_create(get_jokers_list());
+        while ((joker_object = list_itr_next(&itr)))
+        {
+            sprite_object_unhide((SpriteObject*)(joker_object));
+        }
+
+        sprite_destroy(&g_game_vars.playing_blind_token);
+
+        // The win screen erased the text layer: draw the run's values again
+        tte_erase_screen();
+        display_round();
+        display_score(g_game_vars.score);
+        display_chips();
+        display_mult();
+        display_hands();
+        display_discards();
+        display_money();
+        display_ante();
+
+        affine_background_load_palette(affine_background_gfxPal);
+        game_change_state(GAME_STATE_SHOP);
+        return;
+    }
+
     game_change_state(GAME_STATE_RUN_SETUP);
 }
 

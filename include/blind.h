@@ -8,8 +8,8 @@
 
 #include "sprite.h"
 
-// The GBA's max uint value is around 4 billion, so we're going to not add endless mode for
-// simplicity's sake
+// Ante at which the normal run is won. Endless mode goes on up to ANTE_LAST (ante_table.h): the
+// next ante does not fit in a u32
 #define MAX_ANTE 8
 
 /**

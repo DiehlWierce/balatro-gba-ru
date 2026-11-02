@@ -68,6 +68,8 @@ typedef struct
     s32 hand_size;
     s32 ante;
     s32 round;
+    // The ante 8 Boss was beaten: show the win screen (with Endless mode offer) after the cash out
+    bool win_pending;
     s32 deck;
     // Indexed by `hand_type - 1`: HAND_TYPE_MAX is the last hand type (FLUSH_FIVE), not a count
     u32 nb_played_hands[HAND_TYPE_MAX];
