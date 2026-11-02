@@ -24,3 +24,5 @@ run_test hand_levels
 run_test card_rules
 run_test tarot_rules
 run_test joker_economy
+run_test card_modifiers
+run_test voucher
