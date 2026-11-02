@@ -21,7 +21,7 @@
 enum PackType
 {
     PACK_TYPE_STANDARD,  // Playing cards, added to the deck
-    PACK_TYPE_ARCANA,    // Tarot cards, not implemented yet
+    PACK_TYPE_ARCANA,    // Tarot cards, taken to the consumables row
     PACK_TYPE_CELESTIAL, // Planet cards, not implemented yet
     PACK_TYPE_MAX
 };

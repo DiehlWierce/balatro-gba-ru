@@ -9,6 +9,7 @@
 #include "booster_pack.h"
 
 #include "card.h"
+#include "consumable.h"
 #include "game.h"
 #include "graphic_utils.h"
 #include "pool.h"
@@ -76,6 +77,40 @@ static void standard_pack_discard(Item** choice)
 
 #pragma endregion
 
+#pragma region Arcana Pack
+
+static Item* arcana_pack_roll_choice(int idx)
+{
+    (void)idx;
+    enum TarotType tarot = tarot_roll(RNG_SEQ_PACK_TAROT);
+    if (tarot == TAROT_TYPE_MAX)
+        return NULL;
+    return (Item*)consumable_object_new(CONSUMABLE_TYPE_TAROT, tarot);
+}
+
+static void arcana_pack_pick(Item** choice)
+{
+    ConsumableObject* consumable = (ConsumableObject*)(*choice);
+
+    // The Tarot goes to the consumables row where it is, to be used later on the cards of a round.
+    // Without a free slot it is lost.
+    if (item_can_acquire(*choice))
+        item_acquire(*choice);
+    else
+        consumable_object_destroy(&consumable);
+
+    *choice = NULL;
+}
+
+static void arcana_pack_discard(Item** choice)
+{
+    ConsumableObject* consumable = (ConsumableObject*)(*choice);
+    consumable_object_destroy(&consumable);
+    *choice = NULL;
+}
+
+#pragma endregion
+
 // clang-format off
 static const PackInfo PACK_INFOS[PACK_TYPE_MAX] = {
     [PACK_TYPE_STANDARD] = {
@@ -88,15 +123,14 @@ static const PackInfo PACK_INFOS[PACK_TYPE_MAX] = {
         .discard = standard_pack_discard,
         .body_r = 41, .body_g = 173, .body_b = 255,
     },
-    // TODO(A7): Tarot cards
     [PACK_TYPE_ARCANA] = {
         .name = "Бустер Аркана",
         .price = 4,
         .nb_choices = 3,
         .nb_picks = 1,
-        .roll_choice = NULL,
-        .pick = NULL,
-        .discard = NULL,
+        .roll_choice = arcana_pack_roll_choice,
+        .pick = arcana_pack_pick,
+        .discard = arcana_pack_discard,
         .body_r = 137, .body_g = 105, .body_b = 230,
     },
     // TODO(A7): Planet cards

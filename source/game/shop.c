@@ -1171,6 +1171,16 @@ static void shop_pack_print_texts(void)
         );
     }
 
+    else if (choice != NULL && choice->type == ITEM_TYPE_CONSUMABLE)
+    {
+        tte_printf(
+            TTE_YELLOW_TAG "#{P:%d,%d}%s",
+            PACK_TEXT_POS_X,
+            PACK_CARD_INFO_POS_Y,
+            item_get_name(choice)
+        );
+    }
+
     tte_printf(TTE_WHITE_TAG "#{P:%d,%d}A: взять", PACK_HINT_POS_X, PACK_HINT_POS_Y);
     tte_printf(TTE_WHITE_TAG "#{P:%d,%d}START: пропуск", PACK_HINT_POS_X, PACK_HINT_POS_Y + 10);
     display_deck_size_max();

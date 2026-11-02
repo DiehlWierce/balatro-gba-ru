@@ -18,10 +18,10 @@
 #include <tonc.h>
 
 /**
- * @brief Maximum ConsumableObjects alive at once: owned ones, the ones in the Shop and the ones
- *        flying away after being used or sold.
+ * @brief Maximum ConsumableObjects alive at once: owned ones, the ones in the Shop, the 3 choices
+ *        of an Arcana Pack and the ones flying away after being used or sold.
  */
-#define MAX_ACTIVE_CONSUMABLES 6
+#define MAX_ACTIVE_CONSUMABLES 9
 
 #define PLANET_BUY_PRICE 3
 #define TAROT_BUY_PRICE  3
