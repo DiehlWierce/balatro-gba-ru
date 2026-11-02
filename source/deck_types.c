@@ -7,6 +7,7 @@
 
 #include "game.h"
 
+#include <string.h>
 #include <tonc.h>
 
 #define TTE_COLOR_TEXT_FORMAT "#{cx:0x%X000}%s"
