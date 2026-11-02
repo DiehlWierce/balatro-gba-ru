@@ -4,6 +4,7 @@
 #include "affine_background_gfx.h"
 #include "audio_utils.h"
 #include "background_main_menu_gfx.h"
+#include "blind_effects.h"
 #include "button.h"
 #include "card.h"
 #include "consumable.h"
@@ -220,7 +221,7 @@ void game_init()
     g_game_vars.interest_cap = DEFAULT_INTEREST_CAP;
     g_game_vars.money_per_hand = DEFAULT_MONEY_PER_HAND;
     g_game_vars.money_per_discard = DEFAULT_MONEY_PER_DISCARD;
-    g_game_vars.stake = STAKE_WHITE;
+    // g_game_vars.stake is kept like g_game_vars.deck: the run setup shows the last chosen one
     for (int i = 0; i < HAND_TYPE_MAX; i++)
         g_game_vars.hand_levels[i] = DEFAULT_HAND_LEVEL;
     g_game_vars.owned_vouchers = 0;
@@ -458,6 +459,7 @@ void remove_owned_joker(int owned_joker_idx)
 {
     // TODO: Extract to on_joker_removed() callback
     JokerObject* joker_object = list_get_at_idx(&s_owned_jokers_list, owned_joker_idx);
+    blind_effects_on_joker_removed(joker_object, false);
     // In case the player gets multiple Four Fingers Jokers,
     // and only reset the size when all of them have been removed
     if (joker_object->joker->id == FOUR_FINGERS_JOKER_ID)
@@ -695,8 +697,9 @@ void game_start(void)
     affine_background_change_background(AFFINE_BG_GAME);
     tte_colors_setup();
 
-    // Deck effects change the run's base values set by game_init()
+    // Deck and Stake effects change the run's base values set by game_init()
     deck_apply_start_effects(g_game_vars.deck);
+    stake_apply_start_effects();
 
     g_game_vars.hands = g_game_vars.hands_per_round;
     g_game_vars.discards = g_game_vars.discards_per_round;

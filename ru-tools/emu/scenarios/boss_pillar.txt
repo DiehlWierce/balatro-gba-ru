@@ -1,0 +1,93 @@
+# The Pillar (BlindType 19), needs a debug build: make clean && make DEBUG_BOSS=-1
+# usage: run.py scenarios/boss_pillar.txt OUT -D boss=19
+# Seed GBARU1: plays 4 hands of the 5 leftmost cards on the Small Blind (the last one with the
+# score forced), then The Pillar is played on the Big Blind of the same Ante: the cards played
+# on the Small Blind are drawn debuffed (grey).
+# With -D boss=25 (Amber Acorn) the last screenshot shows the Jokers face up again after the round.
+
+wait 460
+press START
+wait 60
+press A
+wait 60
+pokestr {sym:s_seed_str} GBARU1
+poke8 {sym:use_seed} 1
+press DOWN
+wait 10
+press A
+wait 120
+press A
+wait 180
+
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press L
+wait 600
+
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press L
+wait 600
+
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press L
+wait 600
+
+poke32 {gv:score} 100000
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press L
+wait 1100
+shot 00_round_end
+press A
+wait 200
+
+# Leave the Shop
+press LEFT
+wait 20
+press UP
+wait 20
+press A
+wait 200
+
+# The Boss on the Big Blind
+poke32 {gv:current_blind} {def:boss}
+press A
+wait 200
+shot 01_boss_round_start
+
+# Win it and look at the next screen
+poke32 {gv:score} 100000
+press A
+press L
+wait 1100
+shot 02_boss_round_end

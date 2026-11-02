@@ -59,6 +59,12 @@ CardObject* card_object_new(Card* card);
 void card_object_destroy(CardObject** card_object);
 void card_object_set_sprite(CardObject* card_object, s16 layer);
 void card_object_set_sprite_face_down(CardObject* card_object, enum DeckType deck, s16 layer);
+
+/**
+ * @brief Copies the 32x32 back of the run's Deck (4bpp, palette bank DECK_PB) into @p dst_tiles,
+ *        e.g. to show a face down Joker.
+ */
+void card_copy_deck_back_tiles(void* dst_tiles);
 void card_object_shake(CardObject* card_object, mm_word sound_id);
 
 void card_object_set_selected(CardObject* card_object, bool selected);

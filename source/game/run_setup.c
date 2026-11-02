@@ -163,6 +163,12 @@ static const Rect     RUN_SETUP_CHOOSE_SEED_DECK_BTN_DEST                 = {17,
 static const BG_POINT RUN_SETUP_DECK_NAME_TEXT_POS  = {80 , 40 };
 static const BG_POINT RUN_SETUP_DECK_DESC_TEXT_POS  = {80 , 56 };
 static const Rect     RUN_SETUP_DECK_NAME_DESC_RECT = {80 , 40 ,176, 96 };
+
+// Stake selector, above the Deck panel: "L« name »R" then the Stake's rule
+#define RUN_SETUP_STAKE_LINE_LEN (STAKE_NAME_LEN + 4)
+static const BG_POINT RUN_SETUP_STAKE_NAME_TEXT_POS = {(SCREEN_WIDTH - RUN_SETUP_STAKE_LINE_LEN * TTE_CHAR_SIZE) / 2, 16};
+static const BG_POINT RUN_SETUP_STAKE_RULE_TEXT_POS = {(SCREEN_WIDTH - STAKE_RULE_LEN * TTE_CHAR_SIZE) / 2, 24};
+static const Rect     RUN_SETUP_STAKE_TEXT_RECT     = {32 , 16 ,208, 32 };
 static const BG_POINT RUN_SETUP_SEED_FIELD_TEXT_POS = {96 , 40 };
 static const BG_POINT RUN_SETUP_SEED_DECK_TEXT_POS  = {152, 120};
 static const BG_POINT RUN_SETUP_PLAY_TEXT_POS       = {68 , 120};
@@ -260,6 +266,8 @@ enum RunSetupDeckBottomButtons
 static int change_deck_get_row_size(void);
 static void change_deck_row_on_key_transit(SelectionGrid* selection_grid, Selection* selection);
 static void run_setup_print_deck_info(void);
+static void run_setup_print_stake_info(void);
+static void run_setup_cycle_stake(int direction);
 static void run_setup_cycle_deck(int direction);
 static bool choose_deck_row_on_selection_changed(
     SelectionGrid* selection_grid,
@@ -667,6 +675,7 @@ static void choose_deck_substate_init(void)
     // Show Deck sprite, name and description
     sprite_object_unhide((SpriteObject*)run_setup_deck);
     run_setup_print_deck_info();
+    run_setup_print_stake_info();
 
     // Clean frame and expand 9-patch for the Deck choice background
     main_bg_se_copy_expand_tile(
@@ -717,7 +726,62 @@ static void choose_deck_substate_init(void)
  */
 static void choose_deck_substate_update(void)
 {
+    // L/R cycle through the Stakes from anywhere in this substate
+    if (key_hit(KEY_L))
+        run_setup_cycle_stake(-1);
+    else if (key_hit(KEY_R))
+        run_setup_cycle_stake(1);
+
     selection_grid_process_input(&choose_deck_selection_grid);
+}
+
+/**
+ * @brief Prints the current Stake between "L«" and "»R" and its rule, above the Deck panel.
+ */
+static void run_setup_print_stake_info(void)
+{
+    const char* name = stake_get_name(g_game_vars.stake);
+    int name_len = strlen(name);
+    int pad_left = (STAKE_NAME_LEN - name_len) / 2;
+    int pad_right = STAKE_NAME_LEN - name_len - pad_left;
+
+    tte_erase_rect_wrapper(RUN_SETUP_STAKE_TEXT_RECT);
+    tte_printf(
+        "#{P:%d,%d; cx:0x%X000}L«#{cx:0x%X000}%*s%s%*s#{cx:0x%X000}»R",
+        RUN_SETUP_STAKE_NAME_TEXT_POS.x,
+        RUN_SETUP_STAKE_NAME_TEXT_POS.y,
+        TTE_YELLOW_PB,
+        TTE_WHITE_PB,
+        pad_left,
+        "",
+        name,
+        pad_right,
+        "",
+        TTE_YELLOW_PB
+    );
+
+    const char* rule = stake_get_rule(g_game_vars.stake);
+    int rule_pad = (STAKE_RULE_LEN - (int)strlen(rule)) / 2;
+    tte_printf(
+        "#{P:%d,%d; cx:0x%X000}%*s%s",
+        RUN_SETUP_STAKE_RULE_TEXT_POS.x,
+        RUN_SETUP_STAKE_RULE_TEXT_POS.y,
+        TTE_WHITE_PB,
+        rule_pad,
+        "",
+        rule
+    );
+}
+
+/**
+ * @brief Selects the next or previous Stake and prints it.
+ *
+ * @param direction 1 for the next Stake, -1 for the previous one
+ */
+static void run_setup_cycle_stake(int direction)
+{
+    g_game_vars.stake = wrap(g_game_vars.stake + direction, 0, STAKE_MAX);
+    run_setup_print_stake_info();
 }
 
 /**
@@ -880,6 +944,7 @@ static void seed_keyboard_substate_init(void)
 {
     choose_seed_selection_grid.selection = RUN_SETUP_CHOOSE_SEED_INIT_SEL;
     tte_erase_rect_wrapper(RUN_SETUP_DECK_NAME_DESC_RECT);
+    tte_erase_rect_wrapper(RUN_SETUP_STAKE_TEXT_RECT);
 
     // Hide Deck card sprite
     sprite_object_hide((SpriteObject*)run_setup_deck);

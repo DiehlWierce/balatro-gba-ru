@@ -1,0 +1,88 @@
+# Gold Stake, seed GBARU1, Ante 3: buy the Eternal+Rental Joker ($1) and the Perishable one,
+# try to sell the Eternal one (refused), win the next round: -$3 rent, Perishable counts down.
+
+wait 460
+press START
+wait 60
+press A
+wait 60
+poke32 {gv:stake} 7
+pokestr {sym:s_seed_str} GBARU1
+poke8 {sym:use_seed} 1
+poke32 {gv:ante} 3
+press DOWN
+wait 10
+press A
+wait 120
+
+# Small Blind, forced win
+press A
+wait 180
+poke32 {gv:score} 1000000
+press A
+press L
+wait 1100
+press A
+wait 200
+shot 00_shop
+
+# Buy the first Joker (Eternal + Rental, $1)
+press RIGHT
+wait 20
+press A
+wait 60
+peek32 {gv:money}
+shot 01_bought_rental
+
+# Back to the Shop row, buy the second Joker (Perishable, $4)
+press DOWN
+wait 20
+press RIGHT
+wait 20
+press A
+wait 60
+peek32 {gv:money}
+shot 02_bought_perishable
+
+# Cursor on owned Jokers: go to the first one and try to sell it (L): refused
+press LEFT
+wait 20
+press L
+wait 60
+peek32 {gv:money}
+shot 03_sell_eternal_refused
+
+# Next round: back to the Shop row, Next round button
+press DOWN
+wait 20
+press LEFT
+wait 20
+press UP
+wait 20
+press A
+wait 200
+shot 04_blind_select
+
+# Big Blind, forced win: the rent appears in the rewards
+press A
+wait 180
+poke32 {gv:score} 10000000
+press A
+press L
+wait 1500
+shot 05_round_end_rent
+press A
+wait 200
+peek32 {gv:money}
+shot 06_shop_round2
+
+# Perishable Joker description in the owned row: 4 rounds left
+press UP
+wait 20
+press RIGHT
+wait 20
+hold B
+wait 90
+shot 07_perishable_desc
+release B
+wait 30

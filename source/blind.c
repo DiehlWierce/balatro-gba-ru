@@ -47,7 +47,21 @@ static List s_unbeaten_showdown_blinds = LIST_DEFAULT;
 // Maps the ante number to the base blind requirement for that ante.
 // The game starts at ante 1 which is at index 1 for base requirement 300.
 // Ante 0 is also there in case it is ever reached.
-static const u32 ANTE_LUT[] = {100, 300, 800, 2000, 5000, 11000, 20000, 35000, 50000};
+// Green and Purple Stakes use the faster scaling tables, like in Balatro.
+// clang-format off
+static const u32 ANTE_LUT[] =        {100, 300, 800,  2000, 5000, 11000, 20000, 35000,  50000 };
+static const u32 ANTE_LUT_GREEN[] =  {100, 300, 900,  2600, 8000, 20000, 36000, 60000,  100000};
+static const u32 ANTE_LUT_PURPLE[] = {100, 300, 1000, 3200, 9000, 25000, 60000, 110000, 200000};
+// clang-format on
+
+static inline u32 ante_base_requirement(int ante)
+{
+    if (g_game_vars.stake >= STAKE_PURPLE)
+        return ANTE_LUT_PURPLE[ante];
+    if (g_game_vars.stake >= STAKE_GREEN)
+        return ANTE_LUT_GREEN[ante];
+    return ANTE_LUT[ante];
+}
 
 // clang-format off
 /**
@@ -105,7 +119,7 @@ u32 blind_get_requirement(enum BlindType type, int ante)
     if (ante < 0 || ante > MAX_ANTE)
         ante = 0;
 
-    return fx2int(s_blind_type_map[type].score_req_multiplier * ANTE_LUT[ante]);
+    return fx2int(s_blind_type_map[type].score_req_multiplier * ante_base_requirement(ante));
 }
 
 int blind_get_reward(enum BlindType type)
@@ -113,7 +127,8 @@ int blind_get_reward(enum BlindType type)
     switch (type)
     {
         case BLIND_TYPE_SMALL:
-            return SMALL_BLIND_REWARD;
+            // Red Stake and above: the Small Blind gives no reward money
+            return (g_game_vars.stake >= STAKE_RED) ? 0 : SMALL_BLIND_REWARD;
         case BLIND_TYPE_BIG:
             return BIG_BLIND_REWARD;
         case BLIND_TYPE_BOSS ...(BLIND_TYPE_SHOWDOWN - 1):

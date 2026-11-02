@@ -90,6 +90,40 @@ int blind_effects_get_forced_discards(void);
  */
 int blind_effects_get_forced_draws(void);
 
+typedef struct JokerObject JokerObject;
+
+/**
+ * @brief Called when the hand has finished drawing cards (start of the round and after each play
+ *        or discard): Cerulean Bell forces a card selected, Crimson Heart disables a Joker.
+ */
+void blind_effects_on_draw_complete(void);
+
+/**
+ * @brief Whether a card in hand is forced selected by the current Boss (Cerulean Bell):
+ *        it can't be deselected.
+ */
+bool blind_effects_is_card_forced(const CardObject* card_object);
+
+/**
+ * @brief Whether an owned Joker is disabled by the current Boss (Crimson Heart):
+ *        it doesn't trigger.
+ */
+bool blind_effects_is_joker_disabled(const JokerObject* joker_object);
+
+/**
+ * @brief Called just before an owned Joker is removed (sold, expired or destroyed).
+ *
+ * @param joker_object the removed Joker
+ * @param sold true if the player sold it (Verdant Leaf stops debuffing cards)
+ */
+void blind_effects_on_joker_removed(const JokerObject* joker_object, bool sold);
+
+/**
+ * @brief Clears the Boss state of a card going back to the Deck or discard pile:
+ *        no more debuffed nor face down.
+ */
+void blind_effects_reset_card(Card* card);
+
 #define BLIND_CAPTION_MAX_LINES 4 // Lines of a Boss rule on the Blind Select screen
 #define BLIND_CAPTION_LINE_LEN  8 // Max characters of a rule line
 #define BLIND_SHORT_CAPTION_LEN 7 // Max characters of the short rule shown during the round

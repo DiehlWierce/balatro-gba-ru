@@ -259,6 +259,15 @@ void compute_hand_value_info(void)
     g_game_vars.mult = hand_values.mult;
 
     const char* hand_name = get_hand_type_name(s_hand.hand_type);
+
+    // The hand type of face down cards stays hidden until they are played
+    for (int i = 0; hand_name != NULL && i <= s_hand.hand_top; i++)
+    {
+        if (s_hand.cards[i] != NULL && card_object_is_selected(s_hand.cards[i]) &&
+            s_hand.cards[i]->card->face_down)
+            hand_name = "?????";
+    }
+
     if (hand_name != NULL)
         print_hand_type(hand_name, TTE_WHITE_PB);
     else
@@ -401,6 +410,10 @@ void hand_select_card(int index)
 
     if (card_object_is_selected(s_hand.cards[index]))
     {
+        // The card forced by the Boss (Cerulean Bell) stays selected
+        if (blind_effects_is_card_forced(s_hand.cards[index]))
+            return;
+
         card_object_set_selected(s_hand.cards[index], false);
         s_hand.hand_selections--;
         play_sfx(SFX_CARD_DESELECT, MM_BASE_PITCH_RATE, SFX_DEFAULT_VOLUME);
@@ -419,7 +432,8 @@ void hand_deselect_all_cards(void)
     bool any_cards_deselected = false;
     for (int i = 0; i <= s_hand.hand_top; i++)
     {
-        if (card_object_is_selected(s_hand.cards[i]))
+        if (card_object_is_selected(s_hand.cards[i]) &&
+            !blind_effects_is_card_forced(s_hand.cards[i]))
         {
             card_object_set_selected(s_hand.cards[i], false);
             s_hand.hand_selections--;

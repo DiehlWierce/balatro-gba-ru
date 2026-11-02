@@ -10,6 +10,7 @@
 #include "pool.h"
 #include "random.h"
 #include "soundbank.h"
+#include "stake.h"
 #include "util.h"
 
 // Tiles and palettes
@@ -125,6 +126,8 @@ Joker* joker_new(u8 id)
     joker->id = id;
     joker->value = jinfo->base_value;
     joker->rarity = jinfo->rarity;
+    joker->stickers = 0;
+    joker->perish_rounds = 0;
     joker->scoring_state = 0;
     joker->persistent_state = 0;
 
@@ -149,7 +152,7 @@ u32 joker_get_score_effect(
 )
 {
     const JokerInfo* jinfo = get_joker_registry_entry(joker->id);
-    if (!jinfo)
+    if (!jinfo || joker_is_perished(joker))
         return JOKER_EFFECT_FLAG_NONE;
 
     return jinfo->joker_effect_func(joker, scored_card, joker_event, joker_effect);
@@ -202,6 +205,9 @@ int joker_get_buy_price(const Joker* joker)
 {
     GBAL_RETURN_IF_NULL(joker, UNDEFINED);
 
+    if (joker->stickers & JOKER_STICKER_RENTAL)
+        return RENTAL_JOKER_BUY_PRICE;
+
     return joker->value;
 }
 
@@ -209,7 +215,22 @@ int joker_get_sell_value(const Joker* joker)
 {
     GBAL_RETURN_IF_NULL(joker, UNDEFINED);
 
+    // Rental Jokers are bought for RENTAL_JOKER_BUY_PRICE: they sell for the minimum, $1
+    if (joker->stickers & JOKER_STICKER_RENTAL)
+        return 1;
+
     return joker->value / 2;
+}
+
+bool joker_can_be_sold(const Joker* joker)
+{
+    return joker != NULL && !(joker->stickers & JOKER_STICKER_ETERNAL);
+}
+
+bool joker_is_perished(const Joker* joker)
+{
+    return joker != NULL && (joker->stickers & JOKER_STICKER_PERISHABLE) &&
+           joker->perish_rounds == 0;
 }
 
 // JokerObject methods
@@ -269,12 +290,13 @@ void joker_object_destroy(JokerObject** joker_object)
     s16 layer = sprite_get_layer(joker_object_get_sprite(*joker_object)) -
                 sprite_get_starting_layer(JOKER_SPRITE);
     s_used_layers[layer] = false;
-    s_joker_pb_remove_sprite_user(sprite_get_pb(joker_object_get_sprite(*joker_object)));
-    if (s_joker_pb_get_num_sprite_users((sprite_get_pb(joker_object_get_sprite(*joker_object)))) ==
-        0)
+    // Not the sprite's bank: a face down Joker uses the Deck's palette bank
+    int spritesheet_idx = s_joker_get_spritesheet_idx((*joker_object)->joker->id);
+    int joker_pb = s_joker_spritesheet_pb_map[spritesheet_idx];
+    s_joker_pb_remove_sprite_user(joker_pb);
+    if (s_joker_pb_get_num_sprite_users(joker_pb) == 0)
     {
-        s_joker_spritesheet_pb_map[s_joker_get_spritesheet_idx((*joker_object)->joker->id)] =
-            UNDEFINED;
+        s_joker_spritesheet_pb_map[spritesheet_idx] = UNDEFINED;
     }
 
     sprite_object_destroy((SpriteObject*)(*joker_object));
@@ -310,7 +332,51 @@ int joker_object_print_description(Item* joker_object_item, Rect dest_rect)
     const JokerInfo* info = get_joker_registry_entry(joker->id);
     GBAL_RETURN_IF_NULL(info, 0);
 
-    return info->joker_print_desc(joker, dest_rect);
+    int nb_lines = info->joker_print_desc(joker, dest_rect);
+
+    if (joker->stickers == 0)
+        return nb_lines;
+
+    // Stake stickers on a line below the description
+    char stickers_text[64] = {'\0'};
+    int len = 0;
+    if (joker->stickers & JOKER_STICKER_ETERNAL)
+    {
+        len +=
+            snprintf(stickers_text + len, sizeof(stickers_text) - len, TTE_DARK_BLUE_TAG "Вечный ");
+    }
+    if (joker->stickers & JOKER_STICKER_PERISHABLE)
+    {
+        if (joker->perish_rounds > 0)
+            len += snprintf(
+                stickers_text + len,
+                sizeof(stickers_text) - len,
+                TTE_DARK_GREEN_TAG "Скоропорт. (%d) ",
+                joker->perish_rounds
+            );
+        else
+            len +=
+                snprintf(stickers_text + len, sizeof(stickers_text) - len, TTE_RED_TAG "Испорчен ");
+    }
+    if (joker->stickers & JOKER_STICKER_RENTAL)
+    {
+        snprintf(
+            stickers_text + len,
+            sizeof(stickers_text) - len,
+            TTE_YELLOW_TAG "Аренда $%d",
+            RENTAL_JOKER_COST
+        );
+    }
+
+    Rect stickers_rect = dest_rect;
+    stickers_rect.top += nb_lines;
+    return nb_lines + tte_printf_justified_in_rect(
+                          stickers_text,
+                          stickers_rect,
+                          JUSTIFY_CENTER,
+                          SCREEN_LEFT,
+                          true
+                      );
 }
 
 void joker_object_shake(JokerObject* joker_object, mm_word sound_id)
@@ -445,7 +511,10 @@ Item* joker_object_roll_new(enum RngSequence key)
 
     joker_set_rollable(joker_id, false);
 
-    return (Item*)joker_object_new(joker_new(joker_id));
+    Joker* joker = joker_new(joker_id);
+    stake_roll_joker_stickers(joker);
+
+    return (Item*)joker_object_new(joker);
 }
 
 /**
@@ -477,6 +546,47 @@ static inline enum JokerRarity joker_get_random_rarity(enum RngSequence key)
     }
 
     return joker_rarity;
+}
+
+void joker_object_set_face_down(JokerObject* joker_object, bool face_down)
+{
+    GBAL_RETURN_IF_NULL(joker_object, RET_NONE);
+    Sprite* sprite = joker_object_get_sprite(joker_object);
+    GBAL_RETURN_IF_NULL(sprite, RET_NONE);
+
+    int tile_index = sprite->obj->attr2 & ATTR2_ID_MASK;
+    int pb = DECK_PB;
+    if (face_down)
+    {
+        card_copy_deck_back_tiles(&tile_mem[TILE_MEM_OBJ_CHARBLOCK0_IDX][tile_index]);
+    }
+    else
+    {
+        int spritesheet_idx = s_joker_get_spritesheet_idx(joker_object->joker->id);
+        int joker_idx = s_joker_get_sprite_idx_in_sheet(joker_object->joker->id, spritesheet_idx);
+        memcpy32(
+            &tile_mem[TILE_MEM_OBJ_CHARBLOCK0_IDX][tile_index],
+            &joker_gfxTiles[spritesheet_idx][joker_idx * TILE_SIZE * JOKER_SPRITE_TILES],
+            TILE_SIZE * JOKER_SPRITE_TILES
+        );
+        pb = s_joker_spritesheet_pb_map[spritesheet_idx];
+    }
+
+    sprite->obj->attr2 = (sprite->obj->attr2 & ~ATTR2_PALBANK_MASK) | ATTR2_PALBANK(pb);
+}
+
+void joker_object_set_disabled_look(JokerObject* joker_object, bool disabled)
+{
+    GBAL_RETURN_IF_NULL(joker_object, RET_NONE);
+    Sprite* sprite = joker_object_get_sprite(joker_object);
+    GBAL_RETURN_IF_NULL(sprite, RET_NONE);
+
+    // Mosaic only applies to sprites with ATTR0_MOSAIC, the size is shared by all of them
+    REG_MOSAIC = MOS_BUILD(0, 0, 2, 2);
+    if (disabled)
+        sprite->obj->attr0 |= ATTR0_MOSAIC;
+    else
+        sprite->obj->attr0 &= ~ATTR0_MOSAIC;
 }
 
 Sprite* joker_object_get_sprite(JokerObject* joker_object)

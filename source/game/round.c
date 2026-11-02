@@ -294,6 +294,7 @@ static inline void discard_push(Card* card)
 {
     if (s_discard_top >= MAX_DECK_SIZE - 1)
         return;
+    blind_effects_reset_card(card);
     s_discard_pile[++s_discard_top] = card;
 }
 
@@ -529,6 +530,14 @@ static inline void round_execute_play_hand(void)
 
     g_game_vars.nb_played_hands[get_hand_type() - 1]++;
     s_last_played_hand_type = get_hand_type();
+
+    // Remember the Ante the played cards were played in (The Pillar)
+    CardObject** hand = get_hand_array();
+    for (int i = 0; i <= get_hand_top(); i++)
+    {
+        if (hand[i] != NULL && card_object_is_selected(hand[i]))
+            hand[i]->card->played_ante = g_game_vars.ante;
+    }
 
     BlindEventData blind_event_data = {
         .hand_type = get_hand_type(),
@@ -1225,6 +1234,7 @@ static inline void card_draw(int max_hand_size)
     set_hand_top(get_hand_top() + 1);
     get_hand_array()[get_hand_top()] = card_object;
 
+    blind_effects_reset_card(card_object->card);
     BlindEventData blind_event_data = {.card = card_object->card};
     blind_effects_trigger(BLIND_EVENT_ON_CARD_DRAWN, &blind_event_data);
 
@@ -1260,6 +1270,7 @@ static inline void round_process_card_draw(void)
         s_cards_drawn = 0;
         s_first_draw_done = true;
         g_game_vars.timer = TM_ZERO;
+        blind_effects_on_draw_complete();
         hand_display_boss_caption();
     }
 }
@@ -1770,8 +1781,16 @@ static bool check_and_score_joker_for_event(
 {
     JokerObject* joker;
 
+    // Cards debuffed by the Boss don't trigger Jokers
+    if (card_object != NULL && card_object->card->debuffed)
+        return false;
+
     while ((joker = list_itr_next(starting_joker_itr)))
     {
+        // Jokers disabled by the Boss (Crimson Heart) don't trigger
+        if (blind_effects_is_joker_disabled(joker))
+            continue;
+
         if (joker_object_score(joker, card_object, joker_event))
         {
             return true;
@@ -1928,6 +1947,20 @@ static inline bool play_scoring_cards_update(void)
         tte_erase_rect_wrapper(PLAYED_CARDS_SCORES_RECT);
 
         CardObject* scored_card_object = s_played_hand[s_scored_card_index];
+
+        // A card debuffed by the Boss scores nothing and doesn't trigger Jokers
+        if (scored_card_object->card->debuffed)
+        {
+            tte_printf(
+                "#{P:%d,%d; cx:0x%X000}Откл",
+                fx2int(scored_card_object->x),
+                SCORED_CARD_TEXT_Y,
+                TTE_RED_PB
+            );
+            card_object_shake(scored_card_object, SFX_CARD_SELECT);
+            s_scored_card_index++;
+            return true;
+        }
 
         if (card_object_is_selected(scored_card_object))
         {
@@ -2259,6 +2292,8 @@ static inline void played_cards_update_loop(void)
         {
             // Offset the index so played cards don't overlap with the hand
             // and for example get overwritten when it the hand is reordered
+            // Face down cards are revealed when played
+            s_played_hand[played_idx]->card->face_down = false;
             card_object_set_sprite(s_played_hand[played_idx], MAX_HAND_SIZE + played_idx);
         }
 

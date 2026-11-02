@@ -1,5 +1,6 @@
 #include "game/joker_row.h"
 
+#include "blind_effects.h"
 #include "consumable.h"
 #include "game.h"
 #include "game_variables.h"
@@ -7,6 +8,7 @@
 #include "joker.h"
 #include "layout.h"
 #include "list.h"
+#include "soundbank.h"
 #include "sprite.h"
 #include "util.h"
 
@@ -109,6 +111,7 @@ static inline void sell_joker(int joker_idx)
     }
 
     Item* joker_object = (Item*)list_get_at_idx(owned_jokers_list, joker_idx);
+    blind_effects_on_joker_removed((JokerObject*)joker_object, true);
     item_sell(joker_object);
 
     remove_owned_joker(joker_idx);
@@ -171,7 +174,12 @@ void jokers_sel_row_on_key_transit(SelectionGrid* selection_grid, Selection* sel
         }
     }
 
-    if (key_hit(KEY_SELL))
+    // Eternal Jokers (Black Stake) can't be sold
+    if (key_hit(KEY_SELL) && joker_object != NULL && !joker_can_be_sold(joker_object->joker))
+    {
+        joker_object_shake(joker_object, SFX_CARD_SELECT);
+    }
+    else if (key_hit(KEY_SELL))
     {
         int sold_joker_idx = selection->x;
 
