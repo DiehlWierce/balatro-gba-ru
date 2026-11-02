@@ -1,0 +1,73 @@
+/**
+ * @file card_modifiers.h
+ *
+ * @brief Gameplay effects of card enhancements and seals (see enum CardEnhancement, CardSeal).
+ *
+ * The round calls these functions at the matching moments of the scoring; they apply the effects
+ * to g_game_vars and return what happened so the round can show it.
+ */
+#ifndef CARD_MODIFIERS_H
+#define CARD_MODIFIERS_H
+
+#include "card.h"
+
+#include <tonc.h>
+
+/**
+ * @brief What a scored card gave, for display. Fields are 0 when the effect didn't happen.
+ */
+typedef struct CardScoreResult
+{
+    int chips;  // Chips added (rank value, Bonus, Stone)
+    int mult;   // Mult added (Mult card, Lucky card)
+    bool xmult; // Mult multiplied by 2 (Glass card)
+    int money;  // Money earned (Gold seal, Lucky card)
+} CardScoreResult;
+
+/**
+ * @brief Applies the effects of a played card when it scores: chips, enhancement and seal.
+ *
+ * @param card the scoring card
+ *
+ * @return what the card gave
+ */
+CardScoreResult card_modifiers_on_scored(Card* card);
+
+/**
+ * @brief Whether the card is retriggered once by its Red seal after scoring.
+ */
+bool card_modifiers_has_retrigger(const Card* card);
+
+/**
+ * @brief Applies the effects of a card held in hand while a hand is scored (Steel: X1.5 mult).
+ *
+ * @return true if the card had an effect
+ */
+bool card_modifiers_on_held(Card* card);
+
+/**
+ * @brief Whether a scored card breaks after the hand (Glass: 1 in 4 chance).
+ *        Rolls the chance, call it once per scored card.
+ */
+bool card_modifiers_breaks_after_scoring(const Card* card);
+
+/**
+ * @brief Applies the effects of a card held in hand when the round is won:
+ *        Gold card gives $3, Blue seal creates the Planet of the last played hand.
+ *
+ * @param card the held card
+ * @param last_hand_type the type of the last played hand
+ * @param x, y screen position of the card, where a created Planet appears
+ *
+ * @return true if the card had an effect
+ */
+bool card_modifiers_on_round_won(Card* card, int last_hand_type, FIXED x, FIXED y);
+
+/**
+ * @brief Applies the effects of a discarded card (Purple seal: creates a Tarot).
+ *
+ * @return true if the card had an effect
+ */
+bool card_modifiers_on_discarded(Card* card);
+
+#endif // CARD_MODIFIERS_H

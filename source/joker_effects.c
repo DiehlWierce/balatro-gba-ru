@@ -754,7 +754,7 @@ static u32 sinful_joker_effect(
 
     u32 effect_flags_ret = JOKER_EFFECT_FLAG_NONE;
 
-    if (scored_card->suit == sinful_suit)
+    if (card_has_suit(scored_card, sinful_suit))
     {
         *joker_effect = &s_shared_joker_effect;
 
@@ -1206,8 +1206,8 @@ static u32 blackboard_joker_effect(
     CardObject** hand = get_hand_array();
     for (int i = 0; i < g_game_vars.hand_size; i++)
     {
-        u8 suit = hand[i]->card->suit;
-        if (suit == HEARTS || suit == DIAMONDS)
+        Card* card = hand[i]->card;
+        if (!card_has_suit(card, SPADES) && !card_has_suit(card, CLUBS))
         {
             all_cards_are_spades_or_clubs = false;
             break;

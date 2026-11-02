@@ -39,6 +39,12 @@ enum RngSequence
     // Added after RNG_SEQ_MISC so the states of the sequences above stay the same for a given seed
     RNG_SEQ_BOSS_HOOK,
 
+    // Card enhancements and Booster Packs
+    RNG_SEQ_CARD_LUCKY_MULT,
+    RNG_SEQ_CARD_LUCKY_MONEY,
+    RNG_SEQ_CARD_GLASS,
+    RNG_SEQ_PACK_CONTENTS,
+
     RNG_SEQ_MAX
 };
 
