@@ -39,7 +39,7 @@ enum TarotType
     TAROT_STAR,           // 3 cards become Diamonds
     TAROT_MOON,           // 3 cards become Clubs
     TAROT_SUN,            // 3 cards become Hearts
-    TAROT_JUDGEMENT,      // Not implemented: creates a Joker
+    TAROT_JUDGEMENT,      // Creates a random Joker
     TAROT_WORLD,          // 3 cards become Spades
     TAROT_TYPE_MAX
 };
@@ -54,8 +54,7 @@ enum TarotType
  */
 static inline bool tarot_is_rollable(enum TarotType tarot)
 {
-    return tarot >= 0 && tarot < TAROT_TYPE_MAX && tarot != TAROT_WHEEL &&
-           tarot != TAROT_JUDGEMENT;
+    return tarot >= 0 && tarot < TAROT_TYPE_MAX && tarot != TAROT_WHEEL;
 }
 
 /**

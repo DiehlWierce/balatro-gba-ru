@@ -88,7 +88,7 @@ static const TarotInfo TAROT_INFO[TAROT_TYPE_MAX] = {
     [TAROT_STAR]           = {"Звезда",          B_ "До 3 выбранных карт меняют масть на " Y_ "Бубны"},
     [TAROT_MOON]           = {"Луна",            B_ "До 3 выбранных карт меняют масть на " Y_ "Трефы"},
     [TAROT_SUN]            = {"Солнце",          B_ "До 3 выбранных карт меняют масть на " Y_ "Червы"},
-    [TAROT_JUDGEMENT]      = {"Суд",             B_ "Создаёт случайного джокера, пока не реализовано"},
+    [TAROT_JUDGEMENT]      = {"Суд",             B_ "Создаёт случайного джокера (нужен свободный слот)"},
     [TAROT_WORLD]          = {"Мир",             B_ "До 3 выбранных карт меняют масть на " Y_ "Пики"},
 };
 // clang-format on
@@ -311,6 +311,9 @@ bool tarot_can_use_now(enum TarotType tarot)
     if (tarot == TAROT_FOOL)
         return s_last_used_type != CONSUMABLE_TYPE_MAX;
 
+    if (tarot == TAROT_JUDGEMENT)
+        return list_get_len(get_jokers_list()) < g_game_vars.joker_slots;
+
     return true;
 }
 
@@ -380,6 +383,18 @@ static void tarot_use(enum TarotType tarot, FIXED x, FIXED y)
                 if (planet != PLANET_TYPE_MAX)
                     consumable_create_owned(CONSUMABLE_TYPE_PLANET, planet, x, y);
             }
+        }
+    }
+    else if (tarot == TAROT_JUDGEMENT)
+    {
+        Item* joker = item_roll_new(ITEM_TYPE_JOKER, RNG_SEQ_TAROT_JUDGEMENT);
+        if (joker != NULL)
+        {
+            joker->x = x;
+            joker->y = y;
+            joker->tx = x;
+            joker->ty = y;
+            item_acquire(joker);
         }
     }
     else if (tarot == TAROT_HERMIT)

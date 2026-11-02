@@ -1,0 +1,80 @@
+# Purple seal: every card has one (seal 4, written with poke8 like gen_modifiers.py). Discarding 2 cards
+# creates 2 Tarots in the owned row; a third discard has no room left. Seed GBARU1.
+wait 460
+press START
+wait 60
+press A
+wait 60
+pokestr {sym:s_seed_str} GBARU1
+poke8 {sym:use_seed} 1
+press DOWN
+wait 10
+press A
+wait 120
+poke8 {sym:Card_storage+3} 4
+poke8 {sym:Card_storage+10} 4
+poke8 {sym:Card_storage+17} 4
+poke8 {sym:Card_storage+24} 4
+poke8 {sym:Card_storage+31} 4
+poke8 {sym:Card_storage+38} 4
+poke8 {sym:Card_storage+45} 4
+poke8 {sym:Card_storage+52} 4
+poke8 {sym:Card_storage+59} 4
+poke8 {sym:Card_storage+66} 4
+poke8 {sym:Card_storage+73} 4
+poke8 {sym:Card_storage+80} 4
+poke8 {sym:Card_storage+87} 4
+poke8 {sym:Card_storage+94} 4
+poke8 {sym:Card_storage+101} 4
+poke8 {sym:Card_storage+108} 4
+poke8 {sym:Card_storage+115} 4
+poke8 {sym:Card_storage+122} 4
+poke8 {sym:Card_storage+129} 4
+poke8 {sym:Card_storage+136} 4
+poke8 {sym:Card_storage+143} 4
+poke8 {sym:Card_storage+150} 4
+poke8 {sym:Card_storage+157} 4
+poke8 {sym:Card_storage+164} 4
+poke8 {sym:Card_storage+171} 4
+poke8 {sym:Card_storage+178} 4
+poke8 {sym:Card_storage+185} 4
+poke8 {sym:Card_storage+192} 4
+poke8 {sym:Card_storage+199} 4
+poke8 {sym:Card_storage+206} 4
+poke8 {sym:Card_storage+213} 4
+poke8 {sym:Card_storage+220} 4
+poke8 {sym:Card_storage+227} 4
+poke8 {sym:Card_storage+234} 4
+poke8 {sym:Card_storage+241} 4
+poke8 {sym:Card_storage+248} 4
+poke8 {sym:Card_storage+255} 4
+poke8 {sym:Card_storage+262} 4
+poke8 {sym:Card_storage+269} 4
+poke8 {sym:Card_storage+276} 4
+poke8 {sym:Card_storage+283} 4
+poke8 {sym:Card_storage+290} 4
+poke8 {sym:Card_storage+297} 4
+poke8 {sym:Card_storage+304} 4
+poke8 {sym:Card_storage+311} 4
+poke8 {sym:Card_storage+318} 4
+poke8 {sym:Card_storage+325} 4
+poke8 {sym:Card_storage+332} 4
+poke8 {sym:Card_storage+339} 4
+poke8 {sym:Card_storage+346} 4
+poke8 {sym:Card_storage+353} 4
+poke8 {sym:Card_storage+360} 4
+press A
+wait 240
+shot 00_round_purple_seals
+press A
+press RIGHT
+press A
+wait 10
+press R
+wait 200
+shot 01_two_discarded
+press A
+wait 10
+press R
+wait 200
+shot 02_third_discard_no_room

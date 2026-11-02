@@ -124,7 +124,8 @@ static void test_rollable(void)
     int count = 0;
     for (int tarot = 0; tarot < TAROT_TYPE_MAX; tarot++)
         count += tarot_is_rollable(tarot);
-    assert(count == TAROT_TYPE_MAX - 2);
+    assert(count == TAROT_TYPE_MAX - 1);
+    assert(tarot_is_rollable(TAROT_JUDGEMENT));
     assert(!tarot_is_rollable(TAROT_WHEEL));
     assert(!tarot_is_rollable(TAROT_TYPE_MAX));
 }

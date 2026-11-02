@@ -123,3 +123,23 @@ wait 20
 press A
 wait 90
 shot 12_hermit_used
+
+# Judgement creates a Joker, then The Fool copies the last used Tarot (Judgement)
+poke32 {sym:g_debug_give_tarot} 20
+wait 30
+poke32 {sym:g_debug_give_tarot} 0
+wait 60
+press UP
+press LEFT
+press LEFT
+wait 20
+press A
+wait 120
+shot 13_judgement_used
+press UP
+press RIGHT
+press RIGHT
+wait 20
+press A
+wait 120
+shot 14_fool_used

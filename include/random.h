@@ -58,6 +58,7 @@ enum RngSequence
     RNG_SEQ_TAROT_CREATE,         // Planets of the High Priestess, Tarots of the Emperor
     RNG_SEQ_TAROT_PURPLE_SEAL,    // Tarot created by a discarded card with a Purple seal
     RNG_SEQ_PACK_TAROT,           // Tarots of an Arcana Pack
+    RNG_SEQ_TAROT_JUDGEMENT,      // The Joker created by Judgement
 
     RNG_SEQ_MAX
 };
