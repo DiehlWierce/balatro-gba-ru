@@ -328,12 +328,6 @@ DECLARE_JOKER_EFFECT_FUNC(satellite_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(hologram_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(burnt_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(invisible_joker_effect)
-DECLARE_JOKER_EFFECT_FUNC(showman_joker_effect)
-DECLARE_JOKER_EFFECT_FUNC(diet_cola_joker_effect)
-DECLARE_JOKER_EFFECT_FUNC(smeared_joker_effect)
-DECLARE_JOKER_EFFECT_FUNC(matador_joker_effect)
-DECLARE_JOKER_EFFECT_FUNC(mime_joker_effect)
-DECLARE_JOKER_EFFECT_FUNC(oops_joker_effect)
 
 /* The index of a joker in the registry matches its ID.
  *
@@ -515,12 +509,12 @@ const JokerInfo joker_registry[] =
     { "Голограмма", UNCOMMON_JOKER, 7, false, hologram_joker_desc, hologram_joker_effect }, // 140
     { "Огненный", RARE_JOKER, 8, false, burnt_joker_desc, burnt_joker_effect }, // 141
     { "Невидимый", RARE_JOKER, 8, false, invisible_joker_desc, invisible_joker_effect }, // 142
-    { "Шоумен", UNCOMMON_JOKER, 5, false, showman_joker_desc, showman_joker_effect }, // 143
-    { "Диет. кола", UNCOMMON_JOKER, 6, false, diet_cola_joker_desc, diet_cola_joker_effect }, // 144
-    { "Размытый", UNCOMMON_JOKER, 7, false, smeared_joker_desc, smeared_joker_effect }, // 145
-    { "Ой, все шестёрки", UNCOMMON_JOKER, 4, false, oops_joker_desc, oops_joker_effect }, // 146
-    { "Матадор", UNCOMMON_JOKER, 7, false, matador_joker_desc, matador_joker_effect }, // 147
-    { "Мим", UNCOMMON_JOKER, 5, false, mime_joker_desc, mime_joker_effect }, // 148
+    { "Шоумен", UNCOMMON_JOKER, 5, false, showman_joker_desc, joker_effect_noop }, // 143
+    { "Диет. кола", UNCOMMON_JOKER, 6, false, diet_cola_joker_desc, joker_effect_noop }, // 144
+    { "Размытый", UNCOMMON_JOKER, 7, false, smeared_joker_desc, joker_effect_noop }, // 145
+    { "Ой, все шестёрки", UNCOMMON_JOKER, 4, false, oops_joker_desc, joker_effect_noop }, // 146
+    { "Матадор", UNCOMMON_JOKER, 7, false, matador_joker_desc, joker_effect_noop }, // 147
+    { "Мим", UNCOMMON_JOKER, 5, false, mime_joker_desc, joker_effect_noop }, // 148
 
     // The following jokers don't have sprites yet,
     // uncomment them when their sprites are added.
@@ -4807,16 +4801,6 @@ static u32 invisible_joker_effect(
     return JOKER_EFFECT_FLAG_NONE;
 }
 
-// Showman: works in joker_object_roll_new() (joker.c)
-static u32 showman_joker_effect(
-    Joker* joker,
-    Card* scored_card,
-    enum JokerEvent joker_event,
-    JokerEffect** joker_effect
-)
-{
-    return JOKER_EFFECT_FLAG_NONE;
-}
 
 static int diet_cola_joker_desc(Joker* joker, Rect dest_rect)
 {
@@ -4825,16 +4809,6 @@ static int diet_cola_joker_desc(Joker* joker, Rect dest_rect)
     return print_desc(desc, dest_rect);
 }
 
-// Diet Cola: gives a Double Tag when sold (joker_on_joker_sold() in joker.c)
-static u32 diet_cola_joker_effect(
-    Joker* joker,
-    Card* scored_card,
-    enum JokerEvent joker_event,
-    JokerEffect** joker_effect
-)
-{
-    return JOKER_EFFECT_FLAG_NONE;
-}
 
 static int smeared_joker_desc(Joker* joker, Rect dest_rect)
 {
@@ -4843,16 +4817,6 @@ static int smeared_joker_desc(Joker* joker, Rect dest_rect)
     return print_desc(desc, dest_rect);
 }
 
-// Smeared Joker: works through g_card_rules_smeared (card_rules.h, set in game.c)
-static u32 smeared_joker_effect(
-    Joker* joker,
-    Card* scored_card,
-    enum JokerEvent joker_event,
-    JokerEffect** joker_effect
-)
-{
-    return JOKER_EFFECT_FLAG_NONE;
-}
 
 static int oops_joker_desc(Joker* joker, Rect dest_rect)
 {
@@ -4861,16 +4825,6 @@ static int oops_joker_desc(Joker* joker, Rect dest_rect)
     return print_desc(desc, dest_rect);
 }
 
-// Oops! All 6s: works through g_probability_mult (probability.h, set in game.c)
-static u32 oops_joker_effect(
-    Joker* joker,
-    Card* scored_card,
-    enum JokerEvent joker_event,
-    JokerEffect** joker_effect
-)
-{
-    return JOKER_EFFECT_FLAG_NONE;
-}
 
 static int matador_joker_desc(Joker* joker, Rect dest_rect)
 {
@@ -4879,16 +4833,6 @@ static int matador_joker_desc(Joker* joker, Rect dest_rect)
     return print_desc(desc, dest_rect);
 }
 
-// Matador: paid by joker_on_boss_triggered() (joker.c), called when the played hand triggers the Boss
-static u32 matador_joker_effect(
-    Joker* joker,
-    Card* scored_card,
-    enum JokerEvent joker_event,
-    JokerEffect** joker_effect
-)
-{
-    return JOKER_EFFECT_FLAG_NONE;
-}
 
 static int mime_joker_desc(Joker* joker, Rect dest_rect)
 {
@@ -4897,13 +4841,3 @@ static int mime_joker_desc(Joker* joker, Rect dest_rect)
     return print_desc(desc, dest_rect);
 }
 
-// Mime: the round scores the held cards again, see joker_mime_extra_passes() (joker.c)
-static u32 mime_joker_effect(
-    Joker* joker,
-    Card* scored_card,
-    enum JokerEvent joker_event,
-    JokerEffect** joker_effect
-)
-{
-    return JOKER_EFFECT_FLAG_NONE;
-}

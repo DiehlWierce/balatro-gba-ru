@@ -74,7 +74,16 @@ void game_update(void);
 void game_change_state(enum GameState new_game_state);
 enum GameState game_get_state(void);
 
+/**
+ * @brief Whether the Joker is owned and working (a perished Joker is disabled).
+ */
 bool is_joker_owned(int joker_id);
+
+/**
+ * @brief Recomputes the global rules switched by Jokers (Smeared Joker, Oops! All 6s): call it when
+ *        the owned Jokers change or one of them perishes.
+ */
+void game_refresh_joker_rules(void);
 
 /**
  * @brief Sums the effects of the owned Jokers on the run limits (see joker_economy.h)

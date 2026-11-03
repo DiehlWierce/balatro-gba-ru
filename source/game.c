@@ -487,12 +487,18 @@ bool is_joker_owned(int joker_id)
 
     while ((joker = list_itr_next(&itr)))
     {
-        if (joker->joker->id == joker_id)
+        if (joker->joker->id == joker_id && !joker_is_perished(joker->joker))
         {
             return true;
         }
     }
     return false;
+}
+
+void game_refresh_joker_rules(void)
+{
+    g_card_rules_smeared = is_joker_owned(SMEARED_JOKER_ID);     // Smeared Joker
+    g_probability_mult = is_joker_owned(OOPS_JOKER_ID) ? 2 : 1; // Oops! All 6s
 }
 
 List* get_jokers_list(void)
@@ -554,8 +560,7 @@ void add_joker(JokerObject* joker_object)
         s_shortcut_joker_count++;
     }
 
-    g_card_rules_smeared = is_joker_owned(SMEARED_JOKER_ID); // Smeared Joker
-    g_probability_mult = is_joker_owned(OOPS_JOKER_ID) ? 2 : 1;  // Oops! All 6s
+    game_refresh_joker_rules();
 
     apply_joker_bonus_change(&bonus_before);
 }
@@ -581,8 +586,7 @@ void remove_owned_joker(int owned_joker_idx)
     // TODO: Move to site of joker_destroy()?
     joker_set_rollable(joker_object->joker->id, true);
     list_remove_at_idx(&s_owned_jokers_list, owned_joker_idx);
-    g_card_rules_smeared = is_joker_owned(SMEARED_JOKER_ID); // Smeared Joker
-    g_probability_mult = is_joker_owned(OOPS_JOKER_ID) ? 2 : 1;  // Oops! All 6s
+    game_refresh_joker_rules();
 
     apply_joker_bonus_change(&bonus_before);
 }

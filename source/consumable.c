@@ -682,7 +682,7 @@ static bool spectral_can_use_now(enum SpectralType spectral)
     {
         case SPECTRAL_SCOPE_ANYWHERE:
             if (spectral == SPECTRAL_WRAITH || spectral == SPECTRAL_SOUL)
-                return list_get_len(get_jokers_list()) < g_game_vars.joker_slots;
+                return jokers_get_used_slots() < g_game_vars.joker_slots;
             if (spectral == SPECTRAL_ECTOPLASM || spectral == SPECTRAL_HEX)
                 return wheel_pick_joker(0) != NULL; // Needs a Joker without edition
             if (spectral == SPECTRAL_ANKH)
@@ -759,11 +759,11 @@ static void spectral_add_card_to_hand(Card* card, FIXED x, FIXED y)
         joker_on_card_added(); // Hologram
 }
 
-static void spectral_create_joker(enum JokerRarity rarity, enum RngSequence key, FIXED x, FIXED y)
+static bool spectral_create_joker(enum JokerRarity rarity, enum RngSequence key, FIXED x, FIXED y)
 {
     int joker_id = joker_roll_id(rarity, key);
     if (joker_id == UNDEFINED)
-        return;
+        return false;
 
     joker_set_rollable(joker_id, false);
     Joker* joker = joker_new(joker_id);
@@ -772,7 +772,7 @@ static void spectral_create_joker(enum JokerRarity rarity, enum RngSequence key,
     {
         joker_set_rollable(joker_id, true);
         joker_destroy(&joker);
-        return;
+        return false;
     }
 
     Item* item = (Item*)joker_object;
@@ -781,13 +781,17 @@ static void spectral_create_joker(enum JokerRarity rarity, enum RngSequence key,
     item->tx = x;
     item->ty = y;
     item_acquire(item);
+    return true;
 }
 
 bool consumable_copy_random_joker(const void* sold_joker, enum RngSequence key, FIXED x, FIXED y)
 {
     const Joker* sold = sold_joker;
     List* jokers = get_jokers_list();
-    if (list_get_len(jokers) - 1 >= g_game_vars.joker_slots)
+    // The sold Joker is still in the list, its slot is about to be free (Negative ones have none)
+    const Joker* sold_ref = sold;
+    int used_slots = jokers_get_used_slots() - (sold_ref->edition != EDITION_NEGATIVE ? 1 : 0);
+    if (used_slots >= g_game_vars.joker_slots)
         return false;
 
     int nb_candidates = 0;
@@ -832,9 +836,7 @@ bool consumable_copy_random_joker(const void* sold_joker, enum RngSequence key, 
 
 bool consumable_create_joker(int rarity, enum RngSequence key, FIXED x, FIXED y)
 {
-    int before = list_get_len(get_jokers_list());
-    spectral_create_joker(rarity, key, x, y);
-    return list_get_len(get_jokers_list()) > before;
+    return spectral_create_joker(rarity, key, x, y);
 }
 
 /**
@@ -861,7 +863,7 @@ static void spectral_ankh(FIXED x, FIXED y)
         item_start_discard_animation((Item*)joker_object);
     }
 
-    if (list_get_len(jokers) >= g_game_vars.joker_slots)
+    if (jokers_get_used_slots() >= g_game_vars.joker_slots)
         return;
 
     Joker* joker = joker_new(copy_src.id);
@@ -920,9 +922,12 @@ static void spectral_use(enum SpectralType spectral, FIXED x, FIXED y)
         case SPECTRAL_SCOPE_ANYWHERE:
             if (spectral == SPECTRAL_WRAITH)
             {
-                spectral_create_joker(RARE_JOKER, RNG_SEQ_SPECTRAL_WRAITH, x, y);
-                g_game_vars.money = 0;
-                display_money();
+                // The money is lost only if the Joker was created
+                if (spectral_create_joker(RARE_JOKER, RNG_SEQ_SPECTRAL_WRAITH, x, y))
+                {
+                    g_game_vars.money = 0;
+                    display_money();
+                }
             }
             else if (spectral == SPECTRAL_SOUL)
             {

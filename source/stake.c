@@ -109,6 +109,7 @@ void stake_on_round_end(void)
         if ((joker->stickers & JOKER_STICKER_PERISHABLE) && joker->perish_rounds > 0)
             joker->perish_rounds--;
     }
+    game_refresh_joker_rules(); // A Joker that just perished stops working
 }
 
 int stake_get_rental_jokers_count(void)

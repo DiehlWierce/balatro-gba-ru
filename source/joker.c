@@ -1294,7 +1294,8 @@ bool joker_mr_bones_saves(u32 score, u32 requirement)
     while ((joker_object = list_itr_next(&itr)))
     {
         Joker* joker = joker_object->joker;
-        if (joker->id != MR_BONES_JOKER_ID || joker_is_perished(joker))
+        if (joker->id != MR_BONES_JOKER_ID || joker_is_perished(joker) ||
+            blind_effects_is_joker_disabled(joker_object))
             continue;
         joker_object_expire(joker_object);
         return true;
