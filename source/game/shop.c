@@ -329,8 +329,23 @@ static void shop_redeem_skip_tags(void)
 /**
  * @brief Create a shop top row item: a Joker or a Planet, possibly playing cards later.
  */
+#ifdef DEBUG_GIVE_TAROT
+// The emulator pokes 1 (Pack), 2 (playing card) or 3 (Planet or Tarot) here to force the item type
+// of the top row (0: roll it normally)
+volatile int g_debug_force_top_row = 0;
+#endif
+
 static Item* shop_create_top_row_item(void)
 {
+#ifdef DEBUG_GIVE_TAROT
+    if (g_debug_force_top_row == 1)
+        return item_roll_new(ITEM_TYPE_PACK, RNG_SEQ_SHOP_PACKS);
+    if (g_debug_force_top_row == 2)
+        return item_roll_new(ITEM_TYPE_PLAYING_CARD, RNG_SEQ_SHOP_PLAYING_CARDS);
+    if (g_debug_force_top_row == 3)
+        return item_roll_new(ITEM_TYPE_CONSUMABLE, RNG_SEQ_SHOP_PLANETS);
+#endif
+
     // Smallest integer weights, so that the default 20:4 odds use the same modulus as before
     // and a given seed keeps rolling the same Shops
     // A slot of consumables (Planet or Tarot) weighs the mean of both: 4 without Vouchers

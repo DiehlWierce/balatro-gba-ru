@@ -1,6 +1,8 @@
 # Seed GBARU1: buy a Standard Pack in the Shop (the 9th Shop has one in its first slot), look at
 # the choices, take the second card, check the deck size and the Shop afterwards.
 
+# Needs a debug build (touch source/consumable.c && make DEBUG_TAROT=1): the Packs of the Shop are
+# forced to Standard (g_debug_force_pack), because the Pack type is rolled among 4 types.
 wait 460
 press START
 wait 60
@@ -12,6 +14,7 @@ press DOWN
 wait 10
 press A
 wait 120
+poke32 {sym:g_debug_force_pack} 0
 
 # Small Blind won with a forced score, cash out
 press A

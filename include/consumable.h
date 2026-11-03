@@ -26,6 +26,7 @@
 
 #define PLANET_BUY_PRICE 3
 #define TAROT_BUY_PRICE  3
+#define SPECTRAL_BUY_PRICE 4
 
 enum ConsumableType
 {

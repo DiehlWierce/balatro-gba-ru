@@ -1,0 +1,125 @@
+# Spectral cards in a round, needs a debug build: touch source/consumable.c && make DEBUG_TAROT=1
+# Seed GBARU1, Small Blind round. Spectrals are given with g_debug_give_spectral (SpectralType:
+# Familiar 0, Talisman 3, Sigil 6, Immolate 9, Cryptid 15, Black Hole 17).
+# Familiar (3 cards are added), Sigil (one suit), Talisman (Gold seal), Cryptid (2 copies),
+# Immolate (5 cards destroyed, +$20), Black Hole (all hands +1 level).
+
+wait 460
+press START
+wait 60
+press A
+wait 60
+pokestr {sym:s_seed_str} GBARU1
+poke8 {sym:use_seed} 1
+press DOWN
+wait 10
+press A
+wait 120
+press A
+wait 240
+shot 00_round
+
+# Familiar: one random card of the hand is destroyed, 3 enhanced face cards are added (10 cards)
+poke32 {sym:g_debug_give_spectral} 0
+wait 30
+poke32 {sym:g_debug_give_spectral} 6
+wait 90
+shot 01_familiar_and_sigil
+press UP
+wait 20
+press A
+wait 150
+shot 02_familiar_used
+
+# Sigil: every card of the hand takes one suit
+press UP
+wait 20
+press A
+wait 150
+shot 03_sigil_used
+
+# Talisman and Cryptid on the selected card
+poke32 {sym:g_debug_give_spectral} 3
+wait 30
+poke32 {sym:g_debug_give_spectral} 15
+wait 90
+press A
+wait 20
+press UP
+wait 20
+press A
+wait 120
+shot 04_talisman_used
+press A
+wait 20
+press UP
+wait 20
+press A
+wait 150
+shot 05_cryptid_used
+
+# Immolate: 5 random cards are destroyed, money +$20
+poke32 {sym:g_debug_give_spectral} 9
+wait 90
+press UP
+wait 20
+press A
+wait 150
+shot 06_immolate_used
+
+# Black Hole: every poker hand gains a level (the level screen is SELECT)
+poke32 {sym:g_debug_give_spectral} 17
+wait 90
+press UP
+wait 20
+press A
+wait 90
+press SELECT
+wait 60
+shot 07_black_hole_levels
+
+# Observatory (bit 11): a Planet of the hand in the row multiplies its mult by 1.5. Black Hole
+# raises High Card to level 2 (25 x 2), Pluto stays in the row and the single selected card shows
+# 25 x 3 instead of 25 x 2.
+poke32 {gv:owned_vouchers} 2048
+wait 30
+press B
+wait 30
+poke32 {sym:g_debug_give_planet} 8
+wait 90
+shot 08_pluto_in_row
+press LEFT
+press LEFT
+press LEFT
+press LEFT
+press LEFT
+press LEFT
+press LEFT
+wait 10
+press A
+wait 30
+shot 09_observatory_high_card
+
+# Pluto is used (High Card level 3), then Wraith creates a random Rare Joker and sets the money to
+# $0, then Ankh copies the only Joker
+press UP
+wait 20
+press A
+wait 90
+poke32 {sym:g_debug_give_spectral} 5
+wait 60
+press UP
+wait 20
+press A
+wait 150
+shot 10_wraith_used
+poke32 {sym:g_debug_give_spectral} 10
+wait 60
+# Up goes to the Joker, then right to the consumables row
+press UP
+wait 20
+press RIGHT
+wait 20
+press A
+wait 150
+shot 11_ankh_copy

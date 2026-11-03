@@ -674,11 +674,11 @@ int card_object_print_description(Item* item, Rect dest_rect)
     snprintf(
         desc,
         sizeof(desc),
-        TTE_YELLOW_TAG "%s%s%s" TTE_BLACK_TAG "%sКарта добавляется в вашу колоду",
+        TTE_BLACK_TAG "Карта добавляется в вашу колоду%s" TTE_YELLOW_TAG "%s%s%s",
+        (enhancement != NULL || seal != NULL) ? ": " : "",
         enhancement != NULL ? enhancement : "",
         enhancement != NULL && seal != NULL ? ", " : "",
-        seal != NULL ? seal : "",
-        (enhancement != NULL || seal != NULL) ? ". " : ""
+        seal != NULL ? seal : ""
     );
 
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);

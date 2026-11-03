@@ -386,8 +386,18 @@ void booster_pack_destroy(BoosterPackObject** pack)
     *pack = NULL;
 }
 
+#ifdef DEBUG_GIVE_TAROT
+// The emulator pokes a PackType here to force the Packs of the Shop (-1: roll them normally)
+volatile int g_debug_force_pack = -1;
+#endif
+
 Item* booster_pack_roll_new(enum RngSequence key)
 {
+#ifdef DEBUG_GIVE_TAROT
+    if (g_debug_force_pack >= 0 && g_debug_force_pack < PACK_TYPE_MAX)
+        return (Item*)booster_pack_new(g_debug_force_pack);
+#endif
+
     int total_weight = 0;
     for (enum PackType type = 0; type < PACK_TYPE_MAX; type++)
     {

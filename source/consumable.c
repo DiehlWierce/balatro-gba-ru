@@ -211,6 +211,10 @@ List* get_consumables_list(void)
 #ifdef DEBUG_GIVE_TAROT
 // The emulator pokes a TarotType here to get that Tarot in the owned row
 volatile int g_debug_give_tarot = -1;
+// The same for Spectral cards (SpectralType numbers)
+volatile int g_debug_give_spectral = -1;
+// The same for Planet cards (PlanetType numbers)
+volatile int g_debug_give_planet = -1;
 #endif
 
 void consumables_update_loop(const Item* skipped_item)
@@ -228,6 +232,32 @@ void consumables_update_loop(const Item* skipped_item)
             );
         }
         g_debug_give_tarot = -1;
+    }
+    if (g_debug_give_spectral >= 0)
+    {
+        if (g_debug_give_spectral < SPECTRAL_TYPE_MAX)
+        {
+            consumable_create_owned(
+                CONSUMABLE_TYPE_SPECTRAL,
+                g_debug_give_spectral,
+                int2fx(CONSUMABLES_PANEL_CENTER_X),
+                int2fx(HELD_JOKERS_POS.y)
+            );
+        }
+        g_debug_give_spectral = -1;
+    }
+    if (g_debug_give_planet >= 0)
+    {
+        if (g_debug_give_planet < PLANET_TYPE_MAX)
+        {
+            consumable_create_owned(
+                CONSUMABLE_TYPE_PLANET,
+                g_debug_give_planet,
+                int2fx(CONSUMABLES_PANEL_CENTER_X),
+                int2fx(HELD_JOKERS_POS.y)
+            );
+        }
+        g_debug_give_planet = -1;
     }
 #endif
 
@@ -1029,8 +1059,15 @@ Item* consumable_object_roll_new(enum RngSequence key)
 int consumable_object_get_buy_price(Item* item)
 {
     GBAL_RETURN_IF_NULL(item, UNDEFINED);
-    return ((ConsumableObject*)item)->consumable_type == CONSUMABLE_TYPE_TAROT ? TAROT_BUY_PRICE
-                                                                               : PLANET_BUY_PRICE;
+    switch (((ConsumableObject*)item)->consumable_type)
+    {
+        case CONSUMABLE_TYPE_TAROT:
+            return TAROT_BUY_PRICE;
+        case CONSUMABLE_TYPE_SPECTRAL:
+            return SPECTRAL_BUY_PRICE;
+        default:
+            return PLANET_BUY_PRICE;
+    }
 }
 
 int consumable_object_get_sell_price(Item* item)
