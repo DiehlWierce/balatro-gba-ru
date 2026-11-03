@@ -4,6 +4,7 @@
  * @brief Consumable cards: Planets for now, see consumable.h.
  */
 #include "consumable.h"
+#include "card_modifiers.h"
 #include "blind_effects.h"
 #include "shop_economy.h"
 #include "deck_rules.h"
@@ -441,7 +442,7 @@ u32 consumables_apply_observatory(enum HandType hand_type, u32 mult)
     while ((consumable_object = list_itr_next(&itr)))
     {
         if (is_planet(consumable_object) && planet_get_hand_type(consumable_object->id) == hand_type)
-            mult = (mult > UINT32_MAX - mult / 2) ? UINT32_MAX : mult + mult / 2; // X1.5
+            mult = (u32)card_modifiers_apply_xmult(mult, 3, 2); // X1.5, rounded like the other X multipliers
     }
     return mult;
 }

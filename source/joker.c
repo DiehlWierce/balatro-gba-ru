@@ -136,10 +136,6 @@ static void s_joker_load_tiles(const Joker* joker, int tile_index, int pb);
 static enum JokerRarity joker_get_random_rarity(enum RngSequence key);
 static int joker_count_deck_cards(void);
 
-// Raises the sell value of the owned consumables by dollars. consumable.c (G-3) provides it; weak so
-// the build works before it exists
-void consumables_add_sell_value(int dollars) __attribute__((weak));
-
 void joker_init()
 {
     // This should init once only so no need to free
@@ -252,7 +248,10 @@ int joker_get_sell_value(const Joker* joker)
     GBAL_RETURN_IF_NULL(joker, UNDEFINED);
 
     // Rental Jokers are bought for RENTAL_JOKER_BUY_PRICE: they sell for the minimum, $1
-    return shop_economy_joker_sell_value(joker->value, joker->stickers & JOKER_STICKER_RENTAL);
+    if (joker->stickers & JOKER_STICKER_RENTAL)
+        return shop_economy_joker_sell_value(joker->value, true);
+    // Half of the discounted price (Clearance Sale / Liquidation), never below $1
+    return shop_economy_sell_price(joker->value, voucher_get_shop_discount_percent(), 0);
 }
 
 bool joker_can_be_sold(const Joker* joker)
@@ -935,8 +934,7 @@ void joker_economy_on_round_end(bool boss_defeated)
                 other->joker->value = joker_economy_add_value(other->joker->value, others_gain);
 
             // Gift Card also raises the sell value of the consumables (+$1 each)
-            if (consumables_add_sell_value != NULL)
-                consumables_add_sell_value(others_gain / 2);
+            consumables_add_sell_bonus_all(others_gain / 2);
         }
 
         if (joker->id == INVISIBLE_JOKER_ID)
@@ -1360,7 +1358,10 @@ void joker_on_joker_sold(Joker* joker)
             game_get_state() == GAME_STATE_ROUND,
             g_game_vars.current_blind >= BLIND_TYPE_BOSS
         ))
+    {
         s_luchador_disabled = true;
+        blind_effects_on_boss_disabled(); // Takes back what the Boss already did (The Needle's hands)
+    }
 }
 
 bool joker_mr_bones_saves(u32 score, u32 requirement)
