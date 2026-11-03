@@ -755,6 +755,8 @@ static void spectral_add_card_to_hand(Card* card, FIXED x, FIXED y)
 {
     if (!hand_add_card(card, x, y))
         card_destroy(&card);
+    else
+        joker_on_card_added(); // Hologram
 }
 
 static void spectral_create_joker(enum JokerRarity rarity, enum RngSequence key, FIXED x, FIXED y)

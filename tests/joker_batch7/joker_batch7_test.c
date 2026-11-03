@@ -13,6 +13,11 @@ static void test_xmult_counters(void)
     assert(joker_batch7_madness_percent(3) == 250);
     assert(joker_batch7_madness_percent(-5) == 100);
 
+    assert(joker_batch7_hologram_percent(0) == 100);
+    assert(joker_batch7_hologram_percent(5) == 225);
+    assert(joker_batch7_hologram_percent(-3) == 100);
+    assert(joker_batch7_hologram_percent(10000000) == 100 + 99975);
+
     assert(joker_batch7_campfire_percent(0) == 100);
     assert(joker_batch7_campfire_percent(6) == 250);
     assert(joker_batch7_campfire_percent(10000000) == 100 + 99975);

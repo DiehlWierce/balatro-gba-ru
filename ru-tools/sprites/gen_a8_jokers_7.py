@@ -84,7 +84,20 @@ def satellite():
     return im
 
 
-JOKERS = [throwback, madness, campfire, riff_raff, satellite]
+def hologram():
+    im, d = card((0x1C, 0x3A, 0x5A))
+    d.rectangle((9, 7, 23, 25), fill=(0x6A, 0xD8, 0xE8), outline=INK)
+    d.rectangle((11, 9, 21, 23), outline=WHITE)
+    d.ellipse((13, 11, 19, 17), fill=WHITE, outline=INK)
+    d.polygon([(11, 23), (16, 17), (21, 23)], fill=WHITE, outline=INK)
+    d.line((5, 12, 8, 12), fill=GREEN)
+    d.line((24, 18, 27, 18), fill=GREEN)
+    d.line((5, 20, 8, 20), fill=GREEN)
+    d.line((24, 10, 27, 10), fill=GREEN)
+    return im
+
+
+JOKERS = [throwback, madness, campfire, riff_raff, satellite, hologram]
 FIRST_SHEET = 100
 
 

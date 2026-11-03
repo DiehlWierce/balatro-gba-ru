@@ -23,11 +23,14 @@
 #define RIFF_RAFF_JOKER_ID 138
 #define SATELLITE_JOKER_ID 139
 
-#define LAST_BATCH7_JOKER_ID  SATELLITE_JOKER_ID
+#define HOLOGRAM_JOKER_ID  140
+
+#define LAST_BATCH7_JOKER_ID  HOLOGRAM_JOKER_ID
 
 #define THROWBACK_PERCENT_PER_SKIP 25
 #define MADNESS_PERCENT_PER_BLIND  50
 #define CAMPFIRE_PERCENT_PER_SALE  25
+#define HOLOGRAM_PERCENT_PER_CARD  25
 #define BATCH7_STATE_MAX           99999
 
 static inline int joker_batch7_clamp(int count, int percent_per_step)
@@ -85,6 +88,14 @@ static inline int joker_batch7_campfire_percent(int sold)
 static inline int joker_batch7_campfire_after_round(int sold, bool boss_defeated)
 {
     return boss_defeated ? 0 : sold;
+}
+
+/**
+ * @brief Hologram: X1 plus X0.25 for every playing card added to the deck, as a percent.
+ */
+static inline int joker_batch7_hologram_percent(int added)
+{
+    return 100 + HOLOGRAM_PERCENT_PER_CARD * joker_batch7_clamp(added, HOLOGRAM_PERCENT_PER_CARD);
 }
 
 /**

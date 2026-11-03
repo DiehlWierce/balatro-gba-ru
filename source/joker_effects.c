@@ -184,6 +184,7 @@ DECLARE_JOKER_DESC_FUNC(madness_joker_desc)
 DECLARE_JOKER_DESC_FUNC(campfire_joker_desc)
 DECLARE_JOKER_DESC_FUNC(riff_raff_joker_desc)
 DECLARE_JOKER_DESC_FUNC(satellite_joker_desc)
+DECLARE_JOKER_DESC_FUNC(hologram_joker_desc)
 
 // Joker Effect functions
 
@@ -316,6 +317,7 @@ DECLARE_JOKER_EFFECT_FUNC(madness_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(campfire_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(riff_raff_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(satellite_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(hologram_joker_effect)
 
 /* The index of a joker in the registry matches its ID.
  *
@@ -494,6 +496,7 @@ const JokerInfo joker_registry[] =
     { "Костёр", RARE_JOKER, 9, false, campfire_joker_desc, campfire_joker_effect }, // 137
     { "Riff-Raff", COMMON_JOKER, 6, false, riff_raff_joker_desc, riff_raff_joker_effect }, // 138
     { "Спутник", UNCOMMON_JOKER, 6, false, satellite_joker_desc, satellite_joker_effect }, // 139
+    { "Голограмма", UNCOMMON_JOKER, 7, false, hologram_joker_desc, hologram_joker_effect }, // 140
 
     // The following jokers don't have sprites yet,
     // uncomment them when their sprites are added.
@@ -4093,6 +4096,7 @@ static u32 dna_joker_effect(
     Card* copy = card_new(0, 0);
     *copy = spectral_make_copy(first);
     deck_push(copy);
+    joker_on_card_added(); // Hologram
     return batch4_message("Копия!", joker_effect);
 }
 
@@ -4710,4 +4714,26 @@ static u32 satellite_joker_effect(
 )
 {
     return JOKER_EFFECT_FLAG_NONE;
+}
+
+static int hologram_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc_format[] =
+        TTE_RED_TAG "X0.25" TTE_BLACK_TAG " множ. за каждую " TTE_YELLOW_TAG "карту" TTE_BLACK_TAG ", добавленную в колоду\n\n(Сейчас " TTE_RED_TAG XMULT_FMT TTE_BLACK_TAG " множ.)";
+    char desc[200];
+    snprintf(desc, sizeof(desc), desc_format, XMULT_ARGS(joker_batch7_hologram_percent(joker->persistent_state)));
+    return print_desc(desc, dest_rect);
+}
+
+// Hologram: persistent_state counts the cards added to the deck (joker_on_card_added() in joker.c)
+static u32 hologram_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    SCORE_ON_EVENT_ONLY(JOKER_EVENT_INDEPENDENT, joker_event)
+
+    return joker_percent_xmult_effect(joker_batch7_hologram_percent(joker->persistent_state), joker_effect);
 }

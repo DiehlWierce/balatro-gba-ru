@@ -90,7 +90,7 @@ static const int JOKER_ID_TO_SPRITE_MAP[] = {
     59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73,
     74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88,
     89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99,
-    100, 101, 102, 103, 104,
+    100, 101, 102, 103, 104, 105,
 };
 
 // Map of Spritesheet idx -> first Joker ID in sheet
@@ -105,7 +105,7 @@ static const int SPRITESHEET_IDX_TO_STARTING_JOKER_ID[] = {
     94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108,
     109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123,
     124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134,
-    135, 136, 137, 138, 139
+    135, 136, 137, 138, 139, 140
 };
 
 // Lookup table of Joker Rarity strings. Used to display at the bottom of the description screen.
@@ -1006,6 +1006,7 @@ static void joker_hook_blind_selected(Joker* joker)
                 Card* stone = card_new(SPADES, ACE);
                 stone->enhancement = CARD_ENHANCEMENT_STONE;
                 deck_push(stone);
+                joker_on_card_added();
             }
             break;
         default:
@@ -1023,6 +1024,7 @@ static void joker_hook_deck_shuffled(Joker* joker)
         rng_get_u32(RNG_SEQ_JOKER_CERTIFICATE) % NUM_RANKS
     );
     card->seal = CARD_SEAL_NONE + 1 + rng_get_u32(RNG_SEQ_JOKER_CERTIFICATE) % (CARD_SEAL_MAX - 1);
+    joker_on_card_added();
     deck_push(card); // The top of the deck is drawn first: the card lands in the hand
 }
 
@@ -1147,6 +1149,11 @@ void joker_on_shop_reroll(void)
 void joker_on_pack_skipped(void)
 {
     joker_add_to_all(RED_CARD_JOKER_ID);
+}
+
+void joker_on_card_added(void)
+{
+    joker_add_to_all(HOLOGRAM_JOKER_ID);
 }
 
 void joker_on_planet_used(int planet)
