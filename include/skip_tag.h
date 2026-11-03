@@ -5,6 +5,7 @@
 #ifndef SKIP_TAGS_H
 #define SKIP_TAGS_H
 
+#include "booster_pack.h"
 #include "game/common_ui.h"
 #include "graphic_utils.h"
 #include "joker.h"
@@ -43,8 +44,8 @@ enum SkipTagLayers
  */
 enum SkipTagTypes
 {
-    SKIP_TAG_TYPE_UNCOMMON,    // TODO
-    SKIP_TAG_TYPE_RARE,        // TODO
+    SKIP_TAG_TYPE_UNCOMMON,
+    SKIP_TAG_TYPE_RARE,
     SKIP_TAG_TYPE_INVESTMENT,
     SKIP_TAG_TYPE_VOUCHER,     // NEEDS VOUCHERS
     SKIP_TAG_TYPE_BOSS,
@@ -55,13 +56,13 @@ enum SkipTagTypes
     SKIP_TAG_TYPE_HANDY,
     SKIP_TAG_TYPE_GARBAGE,
     SKIP_TAG_TYPE_ETHEREAL,    // NEEDS PACKS
-    SKIP_TAG_TYPE_COUPON,      // TODO
+    SKIP_TAG_TYPE_COUPON,
     SKIP_TAG_TYPE_DOUBLE,
     SKIP_TAG_TYPE_JUGGLE,
     SKIP_TAG_TYPE_D6,
     SKIP_TAG_TYPE_TOP_UP,
     SKIP_TAG_TYPE_SPEED,
-    SKIP_TAG_TYPE_ORBITAL,     // NEEDS HANDS MENU
+    SKIP_TAG_TYPE_ORBITAL,
     SKIP_TAG_TYPE_ECONOMY,
     MAX_SKIP_TAG_TYPES
 };
@@ -111,6 +112,30 @@ typedef struct
     SkipTagCondition tag_condition_func;
     SkipTagCallback tag_effect_func;
 } SkipTagInfo;
+
+/**
+ * @brief Coupon Tag: the items on the Shop's top row (Jokers, cards, Packs) are free. Defined in
+ *        shop.c, called when the Tag triggers in the Shop.
+ */
+void shop_tag_make_items_free(void);
+
+/**
+ * @brief Uncommon / Rare Tag: the first top row slot of the Shop becomes a free Joker of the
+ *        given rarity. Defined in shop.c, called when the Tag triggers in the Shop.
+ */
+void shop_tag_free_joker(enum JokerRarity rarity);
+
+/**
+ * @brief Charm / Meteor / Ethereal / Standard Tags: a free Booster Pack opens in the Shop. Defined
+ *        in shop.c; the packs are opened one after the other.
+ */
+void shop_tag_open_pack(enum PackType pack_type);
+
+// The Pack each Tag opens. The originals are the Mega packs: change these when they exist.
+#define SKIP_TAG_PACK_CHARM  PACK_TYPE_ARCANA
+#define SKIP_TAG_PACK_METEOR PACK_TYPE_CELESTIAL
+#define SKIP_TAG_PACK_ETHEREAL PACK_TYPE_SPECTRAL
+#define SKIP_TAG_PACK_STANDARD PACK_TYPE_STANDARD
 
 /**
  * @brief Get the registry entry info for the given Skip Tag type
