@@ -15,10 +15,12 @@ press A
 wait 120
 shot 01_blind_select_ante8
 
-# Round: pretend it is the Boss (Hook, 2) and win it with a forced score
+# Round: the Boss (2) is forced BEFORE the round starts (poking it mid-round would leave the
+# Small Blind skip tag of the real Small Blind round, a false positive for B-025), then win it
+# with a forced score
+poke32 {gv:current_blind} 2
 press A
 wait 180
-poke32 {gv:current_blind} 2
 poke32 {gv:score} 100000
 press A
 press L
@@ -42,16 +44,36 @@ press A
 wait 200
 shot 05_blind_select_ante9
 
-# Ante 11 and 12 requirements (Big Blind and Boss) are shown shortened
+# Ante 12 Small Blind (300M target shown shortened)
 poke32 {gv:ante} 12
 press A
 wait 100
 shot 06_round_ante12
 
-# Beating the ante 12 Boss: the win screen has no "Дальше" (Заново / В меню)
-poke32 {gv:current_blind} 2
+# Win it, cash out, leave the Shop: back at Blind Select with the Big Blind next
 poke32 {gv:score} 4000000000
 press A
 press L
 wait 1100
-shot 07_win_final
+press A
+wait 200
+press DOWN
+wait 20
+press LEFT
+wait 20
+press UP
+wait 20
+press A
+wait 200
+shot 07_blind_select_ante12
+
+# Beating the ante 12 Boss: the win screen has no "Дальше" (Заново / В меню). The Boss is
+# forced before the round starts.
+poke32 {gv:current_blind} 2
+press A
+wait 180
+poke32 {gv:score} 4000000000
+press A
+press L
+wait 1100
+shot 08_win_final

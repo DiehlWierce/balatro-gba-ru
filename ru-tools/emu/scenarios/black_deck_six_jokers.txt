@@ -1,5 +1,7 @@
-# Black Deck (6 Joker slots), seed GBARU1: win the Small Blind (score forced), get $500, then
+# Black Deck (6 Joker slots), seed GBARU1: win the Small Blind (score forced, money forced to $500), then
 # buy Jokers and reroll until 6 are owned. A 7th purchase is refused, then one Joker is sold.
+# Needs a build where the top Shop slots always roll Jokers (otherwise Planets and Tarot cards
+# take the slots): touch source/joker.c && make DEBUG_JOKER0=64 DEBUG_JOKER1=67
 
 wait 460
 press START
@@ -20,12 +22,13 @@ wait 120
 press A
 wait 180
 poke32 {gv:score} 100000
+# Money is forced before the cash-out: the HUD only redraws on a money change
+poke32 {gv:money} 500
 press A
 press L
 wait 1100
 press A
 wait 200
-poke32 {gv:money} 500
 shot s00_shop
 press RIGHT
 wait 20
