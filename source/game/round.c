@@ -929,6 +929,7 @@ static inline void card_in_hand_loop_handle_discard_and_shuffling(
                 {
                     // Trading Card: the card leaves the deck for good
                     Card* destroyed_card = hand[card_idx]->card;
+                    joker_on_card_destroyed(destroyed_card);
                     card_destroy(&destroyed_card);
                 }
                 else
@@ -2419,6 +2420,7 @@ static bool play_ended_played_cards_update(int played_idx)
                 card_object_is_selected(s_played_hand[played_idx]))
             {
                 // Sixth Sense: the played 6 leaves the deck for good
+                joker_on_card_destroyed(played_card);
                 card_destroy(&played_card);
             }
             else if (!s_hand_scores_nothing && card_object_is_selected(s_played_hand[played_idx]) &&
@@ -2426,6 +2428,7 @@ static bool play_ended_played_cards_update(int played_idx)
             {
                 // Glass card broke: it leaves the deck for good
                 joker_on_glass_broken();
+                joker_on_card_destroyed(played_card);
                 card_destroy(&played_card);
             }
             else

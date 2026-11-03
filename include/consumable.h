@@ -188,6 +188,13 @@ bool consumable_create_random_tarot(enum RngSequence key, FIXED x, FIXED y);
 bool consumable_create_random_spectral(enum RngSequence key, FIXED x, FIXED y);
 
 /**
+ * @brief Copies a random owned consumable into a free slot (Perkeo, not Negative).
+ *
+ * @return true if a copy was made
+ */
+bool consumable_copy_random_owned(enum RngSequence key);
+
+/**
  * @brief Forgets the last used consumable (The Fool), when a run starts.
  */
 void consumables_forget_last_used(void);

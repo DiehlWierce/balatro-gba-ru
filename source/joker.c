@@ -89,6 +89,7 @@ static const int JOKER_ID_TO_SPRITE_MAP[] = {
     44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58,
     59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73,
     74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88,
+    89, 90, 91, 92, 93,
 };
 
 // Map of Spritesheet idx -> first Joker ID in sheet
@@ -101,7 +102,8 @@ static const int SPRITESHEET_IDX_TO_STARTING_JOKER_ID[] = {
     64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78,
     79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93,
     94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108,
-    109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123
+    109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123,
+    124, 125, 126, 127, 128
 };
 
 // Lookup table of Joker Rarity strings. Used to display at the bottom of the description screen.
@@ -1053,6 +1055,51 @@ static void joker_dagger_on_blind_selected(void)
     }
 }
 
+void joker_on_card_destroyed(Card* card)
+{
+    if (card == NULL || !card_is_face(card))
+        return;
+
+    ListItr itr = list_itr_create(get_jokers_list());
+    JokerObject* joker_object;
+    while ((joker_object = list_itr_next(&itr)))
+    {
+        Joker* joker = joker_object->joker;
+        if (joker->id != CANIO_JOKER_ID || joker_is_perished(joker) ||
+            blind_effects_is_joker_disabled(joker_object))
+            continue;
+        joker->persistent_state++;
+        joker_object_shake(joker_object, UNDEFINED);
+    }
+}
+
+void joker_on_shop_exit(void)
+{
+    ListItr itr = list_itr_create(get_jokers_list());
+    JokerObject* joker_object;
+    while ((joker_object = list_itr_next(&itr)))
+    {
+        Joker* joker = joker_object->joker;
+        if (joker->id != PERKEO_JOKER_ID || joker_is_perished(joker) ||
+            blind_effects_is_joker_disabled(joker_object))
+            continue;
+        consumable_copy_random_owned(RNG_SEQ_JOKER_PERKEO);
+        joker_object_shake(joker_object, UNDEFINED);
+    }
+}
+
+bool joker_boss_is_disabled(void)
+{
+    ListItr itr = list_itr_create(get_jokers_list());
+    JokerObject* joker_object;
+    while ((joker_object = list_itr_next(&itr)))
+    {
+        if (joker_object->joker->id == CHICOT_JOKER_ID && !joker_is_perished(joker_object->joker))
+            return true;
+    }
+    return false;
+}
+
 void joker_on_blind_selected(void)
 {
     joker_for_each_active(joker_hook_blind_selected);
@@ -1109,6 +1156,14 @@ bool joker_on_cards_discarded(const DiscardCounts* discarded)
             case HIT_THE_ROAD_JOKER_ID:
                 joker->persistent_state += discarded->nb_jacks;
                 break;
+            case YORICK_JOKER_ID:
+            {
+                int before = joker_batch6_yorick_percent(joker->persistent_state);
+                joker->persistent_state += discarded->nb_cards;
+                if (joker_batch6_yorick_percent(joker->persistent_state) != before)
+                    joker_object_shake(joker_object, UNDEFINED);
+                break;
+            }
             case RAMEN_JOKER_ID:
                 joker->persistent_state =
                     joker_batch5_ramen_discard(joker->persistent_state, discarded->nb_cards);

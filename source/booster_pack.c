@@ -154,6 +154,8 @@ static Item* spectral_pack_roll_choice(int idx)
     enum SpectralType spectral;
     if (spectral_pack_rolls_black_hole(rng_get_u32(RNG_SEQ_PACK_SPECTRAL)))
         spectral = SPECTRAL_BLACK_HOLE;
+    else if (spectral_pack_rolls_soul(rng_get_u32(RNG_SEQ_PACK_SOUL)))
+        spectral = SPECTRAL_SOUL;
     else
         spectral = spectral_common_pool_get(
             rng_get_u32(RNG_SEQ_PACK_SPECTRAL) % spectral_common_pool_size()

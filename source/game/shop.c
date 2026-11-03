@@ -866,6 +866,8 @@ static void shop_reroll_row_on_key_transit(SelectionGrid* selection_grid, Select
 
 static void next_round_on_pressed(void)
 {
+    joker_on_shop_exit(); // Perkeo
+
     // Go to next blind selection game state
     state_machine_change_state(&shop_sm, GAME_SHOP_EXIT);
     s_timer = TM_ZERO;

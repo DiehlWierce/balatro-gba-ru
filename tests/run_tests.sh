@@ -27,6 +27,7 @@ run_test joker_economy
 run_test joker_cards
 run_test joker_batch4
 run_test joker_batch5
+run_test joker_batch6
 run_test card_modifiers
 run_test voucher
 run_test ante_table

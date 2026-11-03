@@ -484,7 +484,8 @@ u32 blind_effects_trigger(enum BlindEvent event, const BlindEventData* data)
 {
     enum BlindType blind = g_game_vars.current_blind;
 
-    if (!blind_effects_is_implemented(blind) || (int)event < 0 || event >= BLIND_EVENT_MAX)
+    if (!blind_effects_is_implemented(blind) || (int)event < 0 || event >= BLIND_EVENT_MAX ||
+        joker_boss_is_disabled())
         return BLIND_EFFECT_FLAG_NONE;
 
     static const BlindEventData NO_DATA = {.card = NULL, .hand_type = NONE, .nb_cards = 0};
@@ -494,12 +495,16 @@ u32 blind_effects_trigger(enum BlindEvent event, const BlindEventData* data)
 
 int blind_effects_get_forced_discards(void)
 {
-    return (g_game_vars.current_blind == BLIND_TYPE_HOOK) ? HOOK_NB_DISCARDS : 0;
+    return (g_game_vars.current_blind == BLIND_TYPE_HOOK && !joker_boss_is_disabled())
+               ? HOOK_NB_DISCARDS
+               : 0;
 }
 
 int blind_effects_get_forced_draws(void)
 {
-    return (g_game_vars.current_blind == BLIND_TYPE_SERPENT) ? SERPENT_NB_DRAWS : 0;
+    return (g_game_vars.current_blind == BLIND_TYPE_SERPENT && !joker_boss_is_disabled())
+               ? SERPENT_NB_DRAWS
+               : 0;
 }
 
 const char* blind_effects_get_name(enum BlindType blind)
@@ -575,6 +580,9 @@ void blind_effects_on_draw_complete(void)
 {
     enum BlindType blind = g_game_vars.current_blind;
 
+    if (joker_boss_is_disabled()) // Chicot
+        return;
+
     if (blind == BLIND_TYPE_HEART && s_heart_choose)
     {
         s_heart_choose = false;
@@ -593,13 +601,15 @@ void blind_effects_on_draw_complete(void)
 
 bool blind_effects_is_card_forced(const CardObject* card_object)
 {
-    return g_game_vars.current_blind == BLIND_TYPE_BELL && card_object != NULL &&
+    return g_game_vars.current_blind == BLIND_TYPE_BELL && !joker_boss_is_disabled() &&
+           card_object != NULL &&
            s_bell_card != NULL && card_object->card == s_bell_card;
 }
 
 bool blind_effects_is_joker_disabled(const JokerObject* joker_object)
 {
-    return g_game_vars.current_blind == BLIND_TYPE_HEART && joker_object != NULL &&
+    return g_game_vars.current_blind == BLIND_TYPE_HEART && !joker_boss_is_disabled() &&
+           joker_object != NULL &&
            joker_object == s_heart_joker;
 }
 
