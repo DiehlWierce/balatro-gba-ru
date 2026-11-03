@@ -783,6 +783,53 @@ static void spectral_create_joker(enum JokerRarity rarity, enum RngSequence key,
     item_acquire(item);
 }
 
+bool consumable_copy_random_joker(const void* sold_joker, enum RngSequence key, FIXED x, FIXED y)
+{
+    const Joker* sold = sold_joker;
+    List* jokers = get_jokers_list();
+    if (list_get_len(jokers) - 1 >= g_game_vars.joker_slots)
+        return false;
+
+    int nb_candidates = 0;
+    for (int i = 0; i < list_get_len(jokers); i++)
+    {
+        const Joker* other = ((JokerObject*)list_get_at_idx(jokers, i))->joker;
+        if (other != sold && !joker_is_perished(other))
+            nb_candidates++;
+    }
+    if (nb_candidates == 0)
+        return false;
+
+    int pick = rng_get_u32(key) % nb_candidates;
+    for (int i = 0; i < list_get_len(jokers); i++)
+    {
+        const Joker* other = ((JokerObject*)list_get_at_idx(jokers, i))->joker;
+        if (other == sold || joker_is_perished(other))
+            continue;
+        if (pick-- > 0)
+            continue;
+
+        Joker* joker = joker_new(other->id);
+        joker->value = other->value;
+        joker->scoring_state = other->scoring_state;
+        joker->persistent_state = other->persistent_state;
+        JokerObject* joker_object = joker_object_new(joker);
+        if (joker_object == NULL)
+        {
+            joker_destroy(&joker);
+            return false;
+        }
+        Item* item = (Item*)joker_object;
+        item->x = x;
+        item->y = y;
+        item->tx = x;
+        item->ty = y;
+        item_acquire(item);
+        return true;
+    }
+    return false;
+}
+
 bool consumable_create_joker(int rarity, enum RngSequence key, FIXED x, FIXED y)
 {
     int before = list_get_len(get_jokers_list());

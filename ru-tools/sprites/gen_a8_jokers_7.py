@@ -97,7 +97,45 @@ def hologram():
     return im
 
 
-JOKERS = [throwback, madness, campfire, riff_raff, satellite, hologram]
+def burnt():
+    im, d = card((0x2A, 0x1A, 0x1A))
+    d.rectangle((9, 8, 23, 25), fill=(0xE8, 0xE0, 0xC8), outline=INK)
+    d.polygon([(16, 5), (22, 14), (20, 22), (12, 22), (10, 14)], fill=ORANGE, outline=INK)
+    d.polygon([(16, 11), (19, 17), (18, 21), (14, 21), (13, 17)], fill=GOLD)
+    d.polygon([(9, 25), (12, 22), (15, 25)], fill=INK)
+    d.polygon([(17, 25), (21, 21), (23, 25)], fill=INK)
+    return im
+
+
+def invisible():
+    im, d = card((0x3A, 0x44, 0x5A))
+    d.ellipse((9, 6, 23, 20), outline=GREY_L)
+    d.rectangle((10, 13, 22, 26), outline=GREY_L)
+    d.line((12, 9, 20, 17), fill=GREY_L)
+    d.line((12, 17, 20, 9), fill=GREY_L)
+    d.ellipse((13, 11, 14, 12), fill=WHITE)
+    d.ellipse((18, 11, 19, 12), fill=WHITE)
+    for x, y in ((5, 6), (27, 26), (5, 26)):
+        d.line((x - 1, y, x + 1, y), fill=GREY_L)
+        d.line((x, y - 1, x, y + 1), fill=GREY_L)
+    return im
+
+
+def showman():
+    im, d = card((0x8A, 0x1E, 0x3A))
+    d.rectangle((10, 4, 22, 9), fill=INK)
+    d.rectangle((8, 9, 24, 11), fill=INK)
+    d.ellipse((10, 11, 22, 23), fill=(0xF0, 0xC8, 0xA0), outline=INK)
+    d.rectangle((13, 15, 14, 16), fill=INK)
+    d.rectangle((18, 15, 19, 16), fill=INK)
+    d.arc((13, 16, 19, 21), 0, 180, fill=INK)
+    d.polygon([(16, 23), (11, 28), (21, 28)], fill=RED, outline=INK)
+    d.line((22, 24, 28, 19), fill=GOLD, width=2)
+    d.ellipse((26, 16, 29, 19), fill=GOLD_D)
+    return im
+
+
+JOKERS = [throwback, madness, campfire, riff_raff, satellite, hologram, burnt, invisible, showman]
 FIRST_SHEET = 100
 
 

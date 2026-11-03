@@ -554,6 +554,7 @@ static inline void round_execute_discard(void)
         if (card_modifiers_on_discarded(hand[i]->card, hand[i]->x, hand[i]->y))
             card_object_shake(hand[i], SFX_CARD_SELECT);
     }
+    joker_on_first_discard(get_hand_type(), s_discards_used_round == 0); // Burnt Joker
     s_discards_used_round++;
     // Green, Faceless, Hit the Road and the Jokers of batch 5, Trading Card destroys the card
     s_destroy_discarded_cards = joker_on_cards_discarded(&discarded);

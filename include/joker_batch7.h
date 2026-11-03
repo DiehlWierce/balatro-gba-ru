@@ -9,6 +9,8 @@
 #ifndef JOKER_BATCH7_H
 #define JOKER_BATCH7_H
 
+#include "hand_type.h"
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -25,7 +27,12 @@
 
 #define HOLOGRAM_JOKER_ID  140
 
-#define LAST_BATCH7_JOKER_ID  HOLOGRAM_JOKER_ID
+#define BURNT_JOKER_ID     141
+#define INVISIBLE_JOKER_ID 142
+#define SHOWMAN_JOKER_ID   143
+#define INVISIBLE_ROUNDS   2
+
+#define LAST_BATCH7_JOKER_ID  SHOWMAN_JOKER_ID
 
 #define THROWBACK_PERCENT_PER_SKIP 25
 #define MADNESS_PERCENT_PER_BLIND  50
@@ -127,6 +134,43 @@ static inline int joker_batch7_satellite_money(uint32_t mask)
     for (int i = 0; i < NB_PLANET_TYPES; i++)
         n += (mask >> i) & 1u;
     return n * SATELLITE_MONEY;
+}
+
+/**
+ * @brief Burnt Joker: the poker hand leveled up by the first discard of the round, NONE if the
+ *        discard is not the first or has no poker hand. A Royal Flush levels as a Straight Flush.
+ */
+static inline enum HandType joker_batch7_burnt_target(enum HandType hand_type, bool first_discard)
+{
+    if (!first_discard || hand_type == NONE)
+        return NONE;
+    return hand_type == ROYAL_FLUSH ? STRAIGHT_FLUSH : hand_type;
+}
+
+/**
+ * @brief Invisible Joker: rounds counted after a round ends (stops at the needed number).
+ */
+static inline int joker_batch7_invisible_next(int rounds)
+{
+    if (rounds < 0)
+        rounds = 0;
+    return rounds >= INVISIBLE_ROUNDS ? INVISIBLE_ROUNDS : rounds + 1;
+}
+
+/**
+ * @brief Invisible Joker: selling it duplicates a random Joker once enough rounds have passed.
+ */
+static inline bool joker_batch7_invisible_ready(int rounds)
+{
+    return rounds >= INVISIBLE_ROUNDS;
+}
+
+/**
+ * @brief Showman: Jokers can be rolled in the Shop again while it is owned.
+ */
+static inline bool joker_batch7_showman_locks_roll(bool showman_owned)
+{
+    return !showman_owned;
 }
 
 #endif // JOKER_BATCH7_H

@@ -90,7 +90,7 @@ static const int JOKER_ID_TO_SPRITE_MAP[] = {
     59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73,
     74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88,
     89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99,
-    100, 101, 102, 103, 104, 105,
+    100, 101, 102, 103, 104, 105, 106, 107, 108,
 };
 
 // Map of Spritesheet idx -> first Joker ID in sheet
@@ -105,7 +105,7 @@ static const int SPRITESHEET_IDX_TO_STARTING_JOKER_ID[] = {
     94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108,
     109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123,
     124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134,
-    135, 136, 137, 138, 139, 140
+    135, 136, 137, 138, 139, 140, 141, 142, 143
 };
 
 // Lookup table of Joker Rarity strings. Used to display at the bottom of the description screen.
@@ -591,7 +591,8 @@ Item* joker_object_roll_new(enum RngSequence key)
     if (joker_id == UNDEFINED)
         return NULL;
 
-    joker_set_rollable(joker_id, false);
+    if (joker_batch7_showman_locks_roll(is_joker_owned(SHOWMAN_JOKER_ID)))
+        joker_set_rollable(joker_id, false); // Showman: Jokers can repeat
 
     Joker* joker = joker_new(joker_id);
     stake_roll_joker_stickers(joker);
@@ -896,6 +897,9 @@ void joker_economy_on_round_end(bool boss_defeated)
             }
         }
 
+        if (joker->id == INVISIBLE_JOKER_ID)
+            joker->persistent_state = joker_batch7_invisible_next(joker->persistent_state);
+
         if (joker->id == CAMPFIRE_JOKER_ID)
             joker->persistent_state = joker_batch7_campfire_after_round(joker->persistent_state, boss_defeated);
 
@@ -1151,6 +1155,25 @@ void joker_on_pack_skipped(void)
     joker_add_to_all(RED_CARD_JOKER_ID);
 }
 
+void joker_on_first_discard(enum HandType hand_type, bool first_discard)
+{
+    enum HandType target = joker_batch7_burnt_target(hand_type, first_discard);
+    if (target == NONE)
+        return;
+
+    ListItr itr = list_itr_create(get_jokers_list());
+    JokerObject* joker_object;
+    while ((joker_object = list_itr_next(&itr)))
+    {
+        Joker* joker = joker_object->joker;
+        if (joker->id != BURNT_JOKER_ID || joker_is_perished(joker) ||
+            blind_effects_is_joker_disabled(joker_object))
+            continue;
+        hand_level_up(target, 1);
+        joker_object_shake(joker_object, UNDEFINED);
+    }
+}
+
 void joker_on_card_added(void)
 {
     joker_add_to_all(HOLOGRAM_JOKER_ID);
@@ -1211,6 +1234,11 @@ static void joker_madness_on_blind_selected(void)
 
 void joker_on_joker_sold(Joker* joker)
 {
+    // Invisible Joker: after enough rounds a random other Joker is duplicated
+    if (joker->id == INVISIBLE_JOKER_ID && !joker_is_perished(joker) &&
+        joker_batch7_invisible_ready(joker->persistent_state))
+        consumable_copy_random_joker(joker, RNG_SEQ_JOKER_INVISIBLE, JOKER_TAROT_SPAWN_X, JOKER_TAROT_SPAWN_Y);
+
     if (joker->id == LUCHADOR_JOKER_ID && !joker_is_perished(joker) &&
         joker_batch6_luchador_disables(
             game_get_state() == GAME_STATE_ROUND,

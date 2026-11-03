@@ -185,6 +185,9 @@ DECLARE_JOKER_DESC_FUNC(campfire_joker_desc)
 DECLARE_JOKER_DESC_FUNC(riff_raff_joker_desc)
 DECLARE_JOKER_DESC_FUNC(satellite_joker_desc)
 DECLARE_JOKER_DESC_FUNC(hologram_joker_desc)
+DECLARE_JOKER_DESC_FUNC(burnt_joker_desc)
+DECLARE_JOKER_DESC_FUNC(invisible_joker_desc)
+DECLARE_JOKER_DESC_FUNC(showman_joker_desc)
 
 // Joker Effect functions
 
@@ -318,6 +321,9 @@ DECLARE_JOKER_EFFECT_FUNC(campfire_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(riff_raff_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(satellite_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(hologram_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(burnt_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(invisible_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(showman_joker_effect)
 
 /* The index of a joker in the registry matches its ID.
  *
@@ -497,6 +503,9 @@ const JokerInfo joker_registry[] =
     { "Riff-Raff", COMMON_JOKER, 6, false, riff_raff_joker_desc, riff_raff_joker_effect }, // 138
     { "Спутник", UNCOMMON_JOKER, 6, false, satellite_joker_desc, satellite_joker_effect }, // 139
     { "Голограмма", UNCOMMON_JOKER, 7, false, hologram_joker_desc, hologram_joker_effect }, // 140
+    { "Огненный", RARE_JOKER, 8, false, burnt_joker_desc, burnt_joker_effect }, // 141
+    { "Невидимый", RARE_JOKER, 8, false, invisible_joker_desc, invisible_joker_effect }, // 142
+    { "Шоумен", UNCOMMON_JOKER, 5, false, showman_joker_desc, showman_joker_effect }, // 143
 
     // The following jokers don't have sprites yet,
     // uncomment them when their sprites are added.
@@ -4736,4 +4745,60 @@ static u32 hologram_joker_effect(
     SCORE_ON_EVENT_ONLY(JOKER_EVENT_INDEPENDENT, joker_event)
 
     return joker_percent_xmult_effect(joker_batch7_hologram_percent(joker->persistent_state), joker_effect);
+}
+
+static int burnt_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_BLACK_TAG "Повышает уровень первой " TTE_YELLOW_TAG "сброшенной комбинации" TTE_BLACK_TAG " каждого раунда";
+    return print_desc(desc, dest_rect);
+}
+
+static int invisible_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc_format[] =
+        TTE_BLACK_TAG "Через " TTE_YELLOW_TAG "2" TTE_BLACK_TAG " раунда продайте, чтобы удвоить случайного " TTE_YELLOW_TAG "джокера" TTE_BLACK_TAG "\n(Раундов: " TTE_YELLOW_TAG "%d/2" TTE_BLACK_TAG ")";
+    char desc[200];
+    snprintf(desc, sizeof(desc), desc_format, (int)(joker->persistent_state < INVISIBLE_ROUNDS ? joker->persistent_state : INVISIBLE_ROUNDS));
+    return print_desc(desc, dest_rect);
+}
+
+static int showman_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_YELLOW_TAG "Джокеры" TTE_BLACK_TAG " могут повторяться в лавке";
+    return print_desc(desc, dest_rect);
+}
+
+// Burnt Joker: levels up in joker_on_first_discard() (joker.c)
+static u32 burnt_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    return JOKER_EFFECT_FLAG_NONE;
+}
+
+// Invisible Joker: persistent_state counts the rounds, duplicates a Joker when sold (joker.c)
+static u32 invisible_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    return JOKER_EFFECT_FLAG_NONE;
+}
+
+// Showman: works in joker_object_roll_new() (joker.c)
+static u32 showman_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    return JOKER_EFFECT_FLAG_NONE;
 }

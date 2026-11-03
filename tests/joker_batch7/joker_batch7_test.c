@@ -54,11 +54,30 @@ static void test_riff_raff_satellite(void)
     assert(joker_batch7_satellite_money(mask) == 12);
 }
 
+static void test_burnt_invisible_showman(void)
+{
+    assert(joker_batch7_burnt_target(PAIR, true) == PAIR);
+    assert(joker_batch7_burnt_target(PAIR, false) == NONE);
+    assert(joker_batch7_burnt_target(NONE, true) == NONE);
+    assert(joker_batch7_burnt_target(ROYAL_FLUSH, true) == STRAIGHT_FLUSH);
+
+    assert(joker_batch7_invisible_next(0) == 1);
+    assert(joker_batch7_invisible_next(1) == 2);
+    assert(joker_batch7_invisible_next(2) == 2);
+    assert(joker_batch7_invisible_next(-4) == 1);
+    assert(!joker_batch7_invisible_ready(1));
+    assert(joker_batch7_invisible_ready(2));
+
+    assert(joker_batch7_showman_locks_roll(false));
+    assert(!joker_batch7_showman_locks_roll(true));
+}
+
 int main(void)
 {
     test_xmult_counters();
     test_madness_campfire();
     test_riff_raff_satellite();
+    test_burnt_invisible_showman();
     printf("joker_batch7: all tests passed\n");
     return 0;
 }
