@@ -132,15 +132,15 @@ static void test_shop_discount_clearance_and_liquidation(void)
 
     voucher_redeem(VOUCHER_CLEARANCE_SALE);
     assert(voucher_get_shop_discount_percent() == 25);
-    assert(voucher_apply_shop_discount(5) == 4);  // 3.75 rounds to 4
-    assert(voucher_apply_shop_discount(6) == 5);  // 4.5 rounds half up
+    assert(voucher_apply_shop_discount(5) == 4);  // floor(5.5 * 0.75) = 4
+    assert(voucher_apply_shop_discount(6) == 4);  // floor(6.5 * 0.75) = 4
     assert(voucher_apply_shop_discount(1) == 1);  // Never free
 
     voucher_redeem(VOUCHER_LIQUIDATION);
     assert(voucher_get_shop_discount_percent() == 50); // Liquidation replaces Clearance Sale
     assert(voucher_apply_shop_discount(10) == 5);
-    assert(voucher_apply_shop_discount(7) == 4);  // 3.5 rounds half up
-    assert(voucher_apply_shop_discount(3) == 2);  // 1.5 rounds half up
+    assert(voucher_apply_shop_discount(7) == 3);  // floor(7.5 * 0.5) = 3
+    assert(voucher_apply_shop_discount(3) == 1);  // floor(3.5 * 0.5) = 1
     assert(voucher_apply_shop_discount(1) == 1);  // Never free
 }
 

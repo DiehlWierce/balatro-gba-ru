@@ -315,8 +315,8 @@ int voucher_apply_shop_discount(int price)
     if (discount == 0 || price <= 0)
         return price;
 
-    // Rounded to the nearest dollar like in Balatro, never free
-    int discounted = (price * (100 - discount) + 50) / 100;
+    // Like in Balatro: floor((price + 0.5) * (100 - discount) / 100), never free
+    int discounted = ((2 * price + 1) * (100 - discount)) / 200;
     return (discounted < 1) ? 1 : discounted;
 }
 

@@ -1257,7 +1257,8 @@ int consumable_object_get_buy_price(Item* item)
 int consumable_object_get_sell_price(Item* item)
 {
     GBAL_RETURN_IF_NULL(item, UNDEFINED);
-    return consumable_object_get_buy_price(item) / 2;
+    int sell_price = consumable_object_get_buy_price(item) / 2;
+    return sell_price < 1 ? 1 : sell_price; // Never worth nothing, even an Astronomer Planet
 }
 
 const char* consumable_object_get_name(Item* item)
