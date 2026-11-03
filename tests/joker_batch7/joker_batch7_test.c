@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <card_rules.h>
 #include <joker_batch7.h>
 #include <stdio.h>
 
@@ -72,12 +73,25 @@ static void test_burnt_invisible_showman(void)
     assert(!joker_batch7_showman_locks_roll(true));
 }
 
+static void test_smeared(void)
+{
+    Card club = {.suit = CLUBS}, heart = {.suit = HEARTS}, diamond = {.suit = DIAMONDS}, spade = {.suit = SPADES};
+    g_card_rules_smeared = false;
+    assert(!card_has_suit(&club, SPADES) && !card_has_suit(&heart, DIAMONDS));
+    g_card_rules_smeared = true;
+    assert(card_has_suit(&club, SPADES) && card_has_suit(&spade, CLUBS));
+    assert(card_has_suit(&heart, DIAMONDS) && card_has_suit(&diamond, HEARTS));
+    assert(!card_has_suit(&club, HEARTS) && !card_has_suit(&diamond, SPADES));
+    g_card_rules_smeared = false;
+}
+
 int main(void)
 {
     test_xmult_counters();
     test_madness_campfire();
     test_riff_raff_satellite();
     test_burnt_invisible_showman();
+    test_smeared();
     printf("joker_batch7: all tests passed\n");
     return 0;
 }

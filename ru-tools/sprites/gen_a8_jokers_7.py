@@ -148,7 +148,16 @@ def diet_cola():
     return im
 
 
-JOKERS = [throwback, madness, campfire, riff_raff, satellite, hologram, burnt, invisible, showman, diet_cola]
+def smeared():
+    im, d = card((0xD8, 0xD0, 0xB8))
+    d.polygon([(11, 8), (5, 14), (11, 24), (16, 14)], fill=RED, outline=INK)
+    d.polygon([(21, 8), (16, 14), (21, 24), (27, 14)], fill=(0xE8, 0x7C, 0x8C), outline=INK)
+    d.line((8, 12, 24, 12), fill=WHITE)
+    d.polygon([(16, 17), (11, 27), (21, 27)], fill=INK)
+    return im
+
+
+JOKERS = [throwback, madness, campfire, riff_raff, satellite, hologram, burnt, invisible, showman, diet_cola, smeared]
 FIRST_SHEET = 100
 
 

@@ -189,6 +189,7 @@ DECLARE_JOKER_DESC_FUNC(burnt_joker_desc)
 DECLARE_JOKER_DESC_FUNC(invisible_joker_desc)
 DECLARE_JOKER_DESC_FUNC(showman_joker_desc)
 DECLARE_JOKER_DESC_FUNC(diet_cola_joker_desc)
+DECLARE_JOKER_DESC_FUNC(smeared_joker_desc)
 
 // Joker Effect functions
 
@@ -326,6 +327,7 @@ DECLARE_JOKER_EFFECT_FUNC(burnt_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(invisible_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(showman_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(diet_cola_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(smeared_joker_effect)
 
 /* The index of a joker in the registry matches its ID.
  *
@@ -509,6 +511,7 @@ const JokerInfo joker_registry[] =
     { "Невидимый", RARE_JOKER, 8, false, invisible_joker_desc, invisible_joker_effect }, // 142
     { "Шоумен", UNCOMMON_JOKER, 5, false, showman_joker_desc, showman_joker_effect }, // 143
     { "Диет. кола", UNCOMMON_JOKER, 6, false, diet_cola_joker_desc, diet_cola_joker_effect }, // 144
+    { "Размытый", UNCOMMON_JOKER, 7, false, smeared_joker_desc, smeared_joker_effect }, // 145
 
     // The following jokers don't have sprites yet,
     // uncomment them when their sprites are added.
@@ -4815,6 +4818,24 @@ static int diet_cola_joker_desc(Joker* joker, Rect dest_rect)
 
 // Diet Cola: gives a Double Tag when sold (joker_on_joker_sold() in joker.c)
 static u32 diet_cola_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    return JOKER_EFFECT_FLAG_NONE;
+}
+
+static int smeared_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_YELLOW_TAG "Червы" TTE_BLACK_TAG " и " TTE_YELLOW_TAG "Бубны" TTE_BLACK_TAG " считаются одной мастью, " TTE_YELLOW_TAG "Пики" TTE_BLACK_TAG " и " TTE_YELLOW_TAG "Трефы" TTE_BLACK_TAG " тоже";
+    return print_desc(desc, dest_rect);
+}
+
+// Smeared Joker: works through g_card_rules_smeared (card_rules.h, set in game.c)
+static u32 smeared_joker_effect(
     Joker* joker,
     Card* scored_card,
     enum JokerEvent joker_event,

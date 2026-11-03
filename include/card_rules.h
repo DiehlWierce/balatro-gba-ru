@@ -20,6 +20,10 @@
 #define SPADES    3
 #define NUM_SUITS 4
 
+// Smeared Joker: Hearts and Diamonds count as the same suit, Spades and Clubs too (set by game.c).
+// A weak definition so the header works in every translation unit and in the host tests.
+__attribute__((weak)) bool g_card_rules_smeared = false;
+
 // Card ranks
 #define TWO         0
 #define THREE       1
@@ -102,7 +106,10 @@ static inline bool card_has_suit(const Card* card, uint8_t suit)
 {
     if (card->enhancement == CARD_ENHANCEMENT_STONE)
         return false;
-    return card->enhancement == CARD_ENHANCEMENT_WILD || card->suit == suit;
+    if (card->enhancement == CARD_ENHANCEMENT_WILD || card->suit == suit)
+        return true;
+    // Red suits are Diamonds and Hearts, black suits are Clubs and Spades: the same parity
+    return g_card_rules_smeared && ((card->suit ^ suit) & 1) == 0;
 }
 
 /**

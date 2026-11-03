@@ -554,6 +554,8 @@ void add_joker(JokerObject* joker_object)
         s_shortcut_joker_count++;
     }
 
+    g_card_rules_smeared = is_joker_owned(SMEARED_JOKER_ID); // Smeared Joker
+
     apply_joker_bonus_change(&bonus_before);
 }
 
@@ -578,6 +580,7 @@ void remove_owned_joker(int owned_joker_idx)
     // TODO: Move to site of joker_destroy()?
     joker_set_rollable(joker_object->joker->id, true);
     list_remove_at_idx(&s_owned_jokers_list, owned_joker_idx);
+    g_card_rules_smeared = is_joker_owned(SMEARED_JOKER_ID); // Smeared Joker
 
     apply_joker_bonus_change(&bonus_before);
 }
