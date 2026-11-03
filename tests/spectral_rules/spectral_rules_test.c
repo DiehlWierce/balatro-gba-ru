@@ -128,12 +128,12 @@ static void test_sigil_ouija(void)
     for (int i = 0; i < 3; i++)
         card_set_suit(&cards[i], DIAMONDS);
     assert(cards[0].suit == DIAMONDS && cards[1].suit == DIAMONDS);
-    assert(cards[2].suit == SPADES); // Stone: no suit
+    assert(cards[2].suit == DIAMONDS); // Stone keeps its suit under the enhancement (B-067)
 
     for (int i = 0; i < 3; i++)
         card_set_rank(&cards[i], SEVEN);
     assert(cards[0].rank == SEVEN && cards[1].rank == SEVEN);
-    assert(cards[2].rank == ACE);
+    assert(cards[2].rank == SEVEN);
     card_set_rank(&cards[0], NUM_RANKS); // Invalid
     assert(cards[0].rank == SEVEN);
     assert(cards[1].enhancement == CARD_ENHANCEMENT_BONUS);
@@ -233,14 +233,14 @@ static void test_editions(void)
     assert(spectral_is_implemented(SPECTRAL_ECTOPLASM));
     assert(spectral_is_implemented(SPECTRAL_HEX));
 
-    // Aura never gives Negative or nothing, and every other edition is reachable
+    // Aura: Foil 50%, Holographic 35%, Polychrome 15%, never Negative or nothing (B-029)
     int counts[EDITION_MAX] = {0};
-    for (uint32_t roll = 0; roll < 37 * 4; roll++)
+    for (uint32_t roll = 0; roll < 100 * 4; roll++)
         counts[spectral_aura_edition(roll)]++;
     assert(counts[EDITION_NONE] == 0 && counts[EDITION_NEGATIVE] == 0);
-    assert(counts[EDITION_FOIL] == 20 * 4);
-    assert(counts[EDITION_HOLOGRAPHIC] == 14 * 4);
-    assert(counts[EDITION_POLYCHROME] == 3 * 4);
+    assert(counts[EDITION_FOIL] == 50 * 4);
+    assert(counts[EDITION_HOLOGRAPHIC] == 35 * 4);
+    assert(counts[EDITION_POLYCHROME] == 15 * 4);
 
     // Ectoplasm and Hex pick a Joker without edition (the Wheel rule), none if all have one
     uint8_t editions[3] = {EDITION_FOIL, EDITION_NONE, EDITION_NONE};
@@ -252,6 +252,17 @@ static void test_editions(void)
     // Ectoplasm: -1 hand size, never below 1
     assert(spectral_hand_size_minus_one(8) == 7);
     assert(spectral_hand_size_minus_one(1) == 1);
+
+    // Ectoplasm: -1, -2, -3 for each one used in the run (B-030)
+    assert(spectral_ectoplasm_penalty(0) == 1);
+    assert(spectral_ectoplasm_penalty(1) == 2);
+    assert(spectral_ectoplasm_penalty(2) == 3);
+    assert(spectral_ectoplasm_penalty(-5) == 1);
+    int hand = 8;
+    for (int used = 0; used < 3; used++)
+        hand = spectral_hand_size_minus(hand, spectral_ectoplasm_penalty(used));
+    assert(hand == 2); // 8 - 1 - 2 - 3
+    assert(spectral_hand_size_minus(2, 4) == 1); // Never below 1
 }
 
 int main(void)

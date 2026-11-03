@@ -153,22 +153,22 @@ static inline bool tarot_creates_consumables(enum TarotType tarot)
 }
 
 /**
- * @brief Changes the suit of a card. Stone cards have no suit and are left as they are.
+ * @brief Changes the suit of a card. A Stone card keeps its suit under the enhancement, it changes
+ *        too (it shows again when the enhancement goes).
  */
 static inline void card_set_suit(Card* card, uint8_t suit)
 {
-    if (suit < NUM_SUITS && card->enhancement != CARD_ENHANCEMENT_STONE)
+    if (suit < NUM_SUITS)
         card->suit = suit;
 }
 
 /**
- * @brief Raises the rank of a card by one, Ace goes back to Two (Strength).
- *        Stone cards have no rank and are left as they are.
+ * @brief Raises the rank of a card by one, Ace goes back to Two (Strength). A Stone card keeps its
+ *        rank under the enhancement and it changes too.
  */
 static inline void card_rank_up(Card* card)
 {
-    if (card->enhancement != CARD_ENHANCEMENT_STONE)
-        card->rank = (card->rank + 1) % NUM_RANKS;
+    card->rank = (card->rank + 1) % NUM_RANKS;
 }
 
 /**

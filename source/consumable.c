@@ -9,10 +9,12 @@
 #include "game.h"
 #include "game/common_ui.h"
 #include "game/round.h"
+#include "edition_gfx.h"
 #include "game_variables.h"
 #include "graphic_utils.h"
 #include "hand.h"
 #include "joker.h"
+#include "joker_batch7.h"
 #include "layout.h"
 #include "pool.h"
 #include "spectral_rules.h"
@@ -28,6 +30,7 @@
 #include "tarot_gfx.h"
 
 #include <stdio.h>
+#include <string.h>
 #include <tonc.h>
 
 // Owned consumables panel (pixels): one card centered, two cards side by side overlapping
@@ -145,6 +148,107 @@ static List s_owned_consumables;
 static u8 s_last_used_type = CONSUMABLE_TYPE_MAX;
 static u8 s_last_used_id = 0;
 static bool s_used_layers[MAX_ACTIVE_CONSUMABLES] = {false};
+// Ectoplasms used in this run: each one costs one more hand size than the one before (-1, -2, -3)
+static EWRAM_BSS u8 s_ectoplasm_used;
+
+// Cards for sale in the Shop or shown in an opened Pack ("locked"): without Showman the same card
+// can't be rolled twice at the same time. Counted per card, owned consumables don't count.
+#define CONSUMABLE_LOCK_IDS 24
+_Static_assert(PLANET_TYPE_MAX <= CONSUMABLE_LOCK_IDS, "Planet ids don't fit the lock table");
+_Static_assert(TAROT_TYPE_MAX <= CONSUMABLE_LOCK_IDS, "Tarot ids don't fit the lock table");
+_Static_assert(SPECTRAL_TYPE_MAX <= CONSUMABLE_LOCK_IDS, "Spectral ids don't fit the lock table");
+static EWRAM_BSS u8 s_lock_count[CONSUMABLE_TYPE_MAX][CONSUMABLE_LOCK_IDS];
+
+static inline bool consumable_id_is_locked(int type, int id)
+{
+    return s_lock_count[type][id] > 0 && joker_batch7_showman_locks_roll(is_joker_owned(SHOWMAN_JOKER_ID));
+}
+
+void consumable_lock_unique(ConsumableObject* consumable_object)
+{
+    GBAL_RETURN_IF_NULL(consumable_object, RET_NONE);
+    if ((consumable_object->flags & CONSUMABLE_FLAG_LOCKED) ||
+        consumable_object->consumable_type >= CONSUMABLE_TYPE_MAX ||
+        consumable_object->id >= CONSUMABLE_LOCK_IDS)
+        return;
+
+    consumable_object->flags |= CONSUMABLE_FLAG_LOCKED;
+    if (s_lock_count[consumable_object->consumable_type][consumable_object->id] < UINT8_MAX)
+        s_lock_count[consumable_object->consumable_type][consumable_object->id]++;
+}
+
+static void consumable_unlock_unique(ConsumableObject* consumable_object)
+{
+    if (!(consumable_object->flags & CONSUMABLE_FLAG_LOCKED))
+        return;
+
+    consumable_object->flags &= ~CONSUMABLE_FLAG_LOCKED;
+    if (s_lock_count[consumable_object->consumable_type][consumable_object->id] > 0)
+        s_lock_count[consumable_object->consumable_type][consumable_object->id]--;
+}
+
+typedef bool (*ConsumableRollablePred)(int id);
+
+/**
+ * @brief Picks a random card id of @p type that @p is_rollable accepts and that is not for sale
+ *        or in a Pack already (without Showman). If every candidate is locked the locks are
+ *        ignored, like the original game falls back to a default card.
+ *
+ * @return the id, -1 if no id is rollable at all
+ */
+static int consumable_roll_unique(
+    enum ConsumableType type,
+    int nb_ids,
+    enum RngSequence key,
+    ConsumableRollablePred is_rollable
+)
+{
+    for (int respect_locks = 1; respect_locks >= 0; respect_locks--)
+    {
+        int nb_candidates = 0;
+        for (int id = 0; id < nb_ids; id++)
+            nb_candidates += is_rollable(id) && !(respect_locks && consumable_id_is_locked(type, id));
+        if (nb_candidates == 0)
+            continue;
+
+        int pick = (int)(rng_get_u32(key) % (u32)nb_candidates);
+        for (int id = 0; id < nb_ids; id++)
+        {
+            if (is_rollable(id) && !(respect_locks && consumable_id_is_locked(type, id)) &&
+                pick-- == 0)
+                return id;
+        }
+    }
+    return -1;
+}
+
+static bool planet_rollable_pred(int id)
+{
+    return planet_is_rollable(id);
+}
+
+static bool tarot_rollable_pred(int id)
+{
+    return tarot_is_rollable(id);
+}
+
+static bool spectral_rollable_pred(int id)
+{
+    return spectral_is_in_common_pool(id);
+}
+
+/**
+ * @brief Owned consumables that take a slot: Negative ones come with a slot of their own.
+ */
+static int consumables_used_slots(void)
+{
+    int used = 0;
+    ListItr itr = list_itr_create(&s_owned_consumables);
+    ConsumableObject* consumable_object;
+    while ((consumable_object = list_itr_next(&itr)))
+        used += !(consumable_object->flags & CONSUMABLE_FLAG_NEGATIVE);
+    return used;
+}
 
 static inline bool planet_is_valid(int planet)
 {
@@ -189,6 +293,8 @@ void consumables_init(void)
 {
     s_owned_consumables = list_init();
     consumables_forget_last_used();
+    s_ectoplasm_used = 0;
+    memset(s_lock_count, 0, sizeof(s_lock_count));
 }
 
 void consumables_reset(void)
@@ -202,6 +308,8 @@ void consumables_reset(void)
     list_clear(&s_owned_consumables);
     s_owned_consumables = list_init();
     consumables_forget_last_used();
+    s_ectoplasm_used = 0;
+    memset(s_lock_count, 0, sizeof(s_lock_count));
 }
 
 List* get_consumables_list(void)
@@ -299,24 +407,13 @@ bool planet_is_rollable(enum PlanetType planet)
 
 enum PlanetType planet_roll(enum RngSequence key)
 {
-    int nb_rollable = 0;
-    for (int planet = 0; planet < PLANET_TYPE_MAX; planet++)
-    {
-        if (planet_is_rollable(planet))
-            nb_rollable++;
-    }
-
-    if (nb_rollable == 0)
-        return PLANET_TYPE_MAX;
-
-    int pick = rng_get_u32(key) % nb_rollable;
-    for (int planet = 0; planet < PLANET_TYPE_MAX; planet++)
-    {
-        if (planet_is_rollable(planet) && pick-- == 0)
-            return planet;
-    }
-
-    return PLANET_TYPE_MAX;
+    int planet = consumable_roll_unique(
+        CONSUMABLE_TYPE_PLANET,
+        PLANET_TYPE_MAX,
+        key,
+        planet_rollable_pred
+    );
+    return planet < 0 ? PLANET_TYPE_MAX : (enum PlanetType)planet;
 }
 
 enum PlanetType planet_for_hand(enum HandType hand_type)
@@ -361,18 +458,24 @@ static void planet_use(enum PlanetType planet)
 
 enum TarotType tarot_roll(enum RngSequence key)
 {
-    int nb_rollable = 0;
-    for (int tarot = 0; tarot < TAROT_TYPE_MAX; tarot++)
-        nb_rollable += tarot_is_rollable(tarot);
+    int tarot = consumable_roll_unique(
+        CONSUMABLE_TYPE_TAROT,
+        TAROT_TYPE_MAX,
+        key,
+        tarot_rollable_pred
+    );
+    return tarot < 0 ? TAROT_TYPE_MAX : (enum TarotType)tarot;
+}
 
-    int pick = rng_get_u32(key) % nb_rollable;
-    for (int tarot = 0; tarot < TAROT_TYPE_MAX; tarot++)
-    {
-        if (tarot_is_rollable(tarot) && pick-- == 0)
-            return tarot;
-    }
-
-    return TAROT_TYPE_MAX;
+enum SpectralType spectral_roll(enum RngSequence key)
+{
+    int spectral = consumable_roll_unique(
+        CONSUMABLE_TYPE_SPECTRAL,
+        SPECTRAL_TYPE_MAX,
+        key,
+        spectral_rollable_pred
+    );
+    return spectral < 0 ? SPECTRAL_TYPE_MAX : (enum SpectralType)spectral;
 }
 
 /**
@@ -460,7 +563,7 @@ bool tarot_can_use_now(enum TarotType tarot)
 
 bool consumable_has_free_slot(void)
 {
-    return list_get_len(&s_owned_consumables) < g_game_vars.consumable_slots;
+    return consumables_used_slots() < g_game_vars.consumable_slots;
 }
 
 bool consumable_create_owned(enum ConsumableType type, int id, FIXED x, FIXED y)
@@ -497,41 +600,40 @@ bool consumable_give_at_start(enum ConsumableType type, int id)
 
 bool consumable_create_random_spectral(enum RngSequence key, FIXED x, FIXED y)
 {
-    if (list_get_len(&s_owned_consumables) >= g_game_vars.consumable_slots)
+    if (!consumable_has_free_slot())
         return false;
 
-    int pool_size = spectral_common_pool_size();
-    if (pool_size <= 0)
-        return false;
-
-    enum SpectralType spectral = spectral_common_pool_get((int)(rng_get_u32(key) % pool_size));
+    enum SpectralType spectral = spectral_roll(key);
     return spectral != SPECTRAL_TYPE_MAX &&
            consumable_create_owned(CONSUMABLE_TYPE_SPECTRAL, spectral, x, y);
 }
 
 bool consumable_copy_random_owned(enum RngSequence key)
 {
+    // Negative copy: it needs no free slot (1 stands for "a slot is free" in the pick rule)
     int nb = list_get_len(&s_owned_consumables);
-    int pick = joker_batch6_perkeo_pick(
-        rng_get_u32(key),
-        nb,
-        g_game_vars.consumable_slots - nb
-    );
+    int pick = joker_batch6_perkeo_pick(rng_get_u32(key), nb, 1);
     if (pick < 0)
         return false;
 
-    ConsumableObject* src = list_get_at_idx(&s_owned_consumables, pick);
-    return consumable_create_owned(
-        src->consumable_type,
-        src->id,
-        int2fx(CONSUMABLES_PANEL_CENTER_X),
-        int2fx(HELD_JOKERS_POS.y)
-    );
+    const ConsumableObject* src = list_get_at_idx(&s_owned_consumables, pick);
+    ConsumableObject* copy = consumable_object_new(src->consumable_type, src->id);
+    if (copy == NULL) // No free sprite layer
+        return false;
+
+    consumable_object_set_negative(copy);
+    Item* item = (Item*)copy;
+    item->x = int2fx(CONSUMABLES_PANEL_CENTER_X);
+    item->y = int2fx(HELD_JOKERS_POS.y);
+    item->tx = item->x;
+    item->ty = item->y;
+    item_acquire(item);
+    return true;
 }
 
 bool consumable_create_random_tarot(enum RngSequence key, FIXED x, FIXED y)
 {
-    if (list_get_len(&s_owned_consumables) >= g_game_vars.consumable_slots)
+    if (!consumable_has_free_slot())
         return false;
 
     enum TarotType tarot = tarot_roll(key);
@@ -560,7 +662,7 @@ static void tarot_use(enum TarotType tarot, FIXED x, FIXED y)
     {
         for (int i = 0; i < TAROT_CREATE_MAX; i++)
         {
-            if (list_get_len(&s_owned_consumables) >= g_game_vars.consumable_slots)
+            if (!consumable_has_free_slot())
                 break;
 
             if (tarot == TAROT_EMPEROR)
@@ -681,8 +783,10 @@ static bool spectral_can_use_now(enum SpectralType spectral)
     switch (spectral_get_scope(spectral))
     {
         case SPECTRAL_SCOPE_ANYWHERE:
+            // Negative Jokers take no slot, but the row never holds more than MAX_JOKERS_HELD_SIZE
             if (spectral == SPECTRAL_WRAITH || spectral == SPECTRAL_SOUL)
-                return jokers_get_used_slots() < g_game_vars.joker_slots;
+                return jokers_get_used_slots() < g_game_vars.joker_slots &&
+                       list_get_len(get_jokers_list()) < MAX_JOKERS_HELD_SIZE;
             if (spectral == SPECTRAL_ECTOPLASM || spectral == SPECTRAL_HEX)
                 return wheel_pick_joker(0) != NULL; // Needs a Joker without edition
             if (spectral == SPECTRAL_ANKH)
@@ -761,6 +865,10 @@ static void spectral_add_card_to_hand(Card* card, FIXED x, FIXED y)
 
 static bool spectral_create_joker(enum JokerRarity rarity, enum RngSequence key, FIXED x, FIXED y)
 {
+    // The Jokers arrays and layouts hold MAX_JOKERS_HELD_SIZE, Negative ones included
+    if (list_get_len(get_jokers_list()) >= MAX_JOKERS_HELD_SIZE)
+        return false;
+
     int joker_id = joker_roll_id(rarity, key);
     if (joker_id == UNDEFINED)
         return false;
@@ -782,6 +890,22 @@ static bool spectral_create_joker(enum JokerRarity rarity, enum RngSequence key,
     item->ty = y;
     item_acquire(item);
     return true;
+}
+
+/**
+ * @brief Fills a new Joker as a copy of @p src for Ankh and Invisible Joker: value, counters,
+ *        stickers and edition are kept, except Negative (the copy takes a slot).
+ */
+static void spectral_copy_joker_state(Joker* dst, const Joker* src)
+{
+    dst->value = src->value;
+    dst->scoring_state = src->scoring_state;
+    dst->persistent_state = src->persistent_state;
+    dst->stickers = src->stickers;
+    dst->perish_rounds = src->perish_rounds;
+    dst->edition = src->edition; // Raw copy: value already includes the edition price
+    if (dst->edition == EDITION_NEGATIVE)
+        joker_set_edition(dst, EDITION_NONE); // Takes the Negative price off the sell value
 }
 
 bool consumable_copy_random_joker(const void* sold_joker, enum RngSequence key, FIXED x, FIXED y)
@@ -814,9 +938,7 @@ bool consumable_copy_random_joker(const void* sold_joker, enum RngSequence key, 
             continue;
 
         Joker* joker = joker_new(other->id);
-        joker->value = other->value;
-        joker->scoring_state = other->scoring_state;
-        joker->persistent_state = other->persistent_state;
+        spectral_copy_joker_state(joker, other);
         JokerObject* joker_object = joker_object_new(joker);
         if (joker_object == NULL)
         {
@@ -863,13 +985,12 @@ static void spectral_ankh(FIXED x, FIXED y)
         item_start_discard_animation((Item*)joker_object);
     }
 
-    if (jokers_get_used_slots() >= g_game_vars.joker_slots)
+    if (jokers_get_used_slots() >= g_game_vars.joker_slots ||
+        list_get_len(jokers) >= MAX_JOKERS_HELD_SIZE)
         return;
 
     Joker* joker = joker_new(copy_src.id);
-    joker->value = copy_src.value;
-    joker->scoring_state = copy_src.scoring_state;
-    joker->persistent_state = copy_src.persistent_state;
+    spectral_copy_joker_state(joker, &copy_src);
     JokerObject* joker_object = joker_object_new(joker);
     if (joker_object == NULL)
     {
@@ -944,8 +1065,13 @@ static void spectral_use(enum SpectralType spectral, FIXED x, FIXED y)
                 {
                     joker_object_set_edition(joker, EDITION_NEGATIVE);
                     joker_object_shake(joker, SFX_CARD_SELECT);
-                    g_game_vars.base_hand_size =
-                        spectral_hand_size_minus_one(g_game_vars.base_hand_size);
+                    // -1 for the first Ectoplasm of the run, then -2, -3...
+                    g_game_vars.base_hand_size = spectral_hand_size_minus(
+                        g_game_vars.base_hand_size,
+                        spectral_ectoplasm_penalty(s_ectoplasm_used)
+                    );
+                    if (s_ectoplasm_used < UINT8_MAX)
+                        s_ectoplasm_used++;
                     g_game_vars.hand_size = game_get_hand_size();
                 }
             }
@@ -1050,6 +1176,50 @@ static void spectral_use(enum SpectralType spectral, FIXED x, FIXED y)
 
 // ConsumableObject
 
+/**
+ * @brief Copies the tiles of the card to its sprite layer, with the Negative effect if it has one.
+ */
+static void consumable_load_tiles(const ConsumableObject* consumable_object)
+{
+    const unsigned int* gfx_tiles = planet_gfxTiles;
+    if (consumable_object->consumable_type == CONSUMABLE_TYPE_TAROT)
+        gfx_tiles = tarot_gfxTiles;
+    else if (consumable_object->consumable_type == CONSUMABLE_TYPE_SPECTRAL)
+        gfx_tiles = spectral_gfxTiles;
+
+    int tile_index = sprite_get_tid(CONSUMABLE_SPRITE, consumable_object->layer);
+    u32* dest = (u32*)&tile_mem[TILE_MEM_OBJ_CHARBLOCK0_IDX][tile_index];
+    memcpy32(
+        dest,
+        &gfx_tiles[consumable_object->id * TILE_SIZE * CONSUMABLE_SPRITE_TILES],
+        TILE_SIZE * CONSUMABLE_SPRITE_TILES
+    );
+    if (consumable_object->flags & CONSUMABLE_FLAG_NEGATIVE)
+        edition_draw_tiles(dest, CONSUMABLE_PB, EDITION_NEGATIVE);
+}
+
+void consumable_object_set_negative(ConsumableObject* consumable_object)
+{
+    GBAL_RETURN_IF_NULL(consumable_object, RET_NONE);
+    consumable_object->flags |= CONSUMABLE_FLAG_NEGATIVE;
+    consumable_load_tiles(consumable_object);
+}
+
+void consumable_object_add_sell_bonus(ConsumableObject* consumable_object, int amount)
+{
+    GBAL_RETURN_IF_NULL(consumable_object, RET_NONE);
+    int bonus = consumable_object->sell_bonus + amount;
+    consumable_object->sell_bonus = (u8)(bonus < 0 ? 0 : (bonus > UINT8_MAX ? UINT8_MAX : bonus));
+}
+
+void consumables_add_sell_bonus_all(int amount)
+{
+    ListItr itr = list_itr_create(&s_owned_consumables);
+    ConsumableObject* consumable_object;
+    while ((consumable_object = list_itr_next(&itr)))
+        consumable_object_add_sell_bonus(consumable_object, amount);
+}
+
 ConsumableObject* consumable_object_new(enum ConsumableType type, int id)
 {
     bool valid = (type == CONSUMABLE_TYPE_PLANET && planet_is_valid(id)) ||
@@ -1085,22 +1255,15 @@ ConsumableObject* consumable_object_new(enum ConsumableType type, int id)
     consumable_object->consumable_type = type;
     consumable_object->id = id;
     consumable_object->layer = layer;
+    consumable_object->flags = 0;
+    consumable_object->sell_bonus = 0;
     s_used_layers[layer] = true;
 
     // Planets and Tarots share one palette bank, see docs/ru/PALETTES.md
     memcpy16(&pal_obj_mem[PAL_ROW_LEN * CONSUMABLE_PB], planet_gfxPal, PAL_ROW_LEN);
 
-    const unsigned int* gfx_tiles = planet_gfxTiles;
-    if (type == CONSUMABLE_TYPE_TAROT)
-        gfx_tiles = tarot_gfxTiles;
-    else if (type == CONSUMABLE_TYPE_SPECTRAL)
-        gfx_tiles = spectral_gfxTiles;
+    consumable_load_tiles(consumable_object);
     int tile_index = sprite_get_tid(CONSUMABLE_SPRITE, layer);
-    memcpy32(
-        &tile_mem[TILE_MEM_OBJ_CHARBLOCK0_IDX][tile_index],
-        &gfx_tiles[id * TILE_SIZE * CONSUMABLE_SPRITE_TILES],
-        TILE_SIZE * CONSUMABLE_SPRITE_TILES
-    );
 
     Sprite* sprite = sprite_new(
         ATTR0_SQUARE | ATTR0_4BPP | ATTR0_AFF,
@@ -1129,6 +1292,7 @@ void consumable_object_destroy(ConsumableObject** consumable_object)
     if (consumable_object == NULL || *consumable_object == NULL)
         return;
 
+    consumable_unlock_unique(*consumable_object);
     s16 layer = (*consumable_object)->layer;
     if (layer >= 0 && layer < MAX_ACTIVE_CONSUMABLES)
         s_used_layers[layer] = false;
@@ -1199,6 +1363,12 @@ void consumable_object_sell(ConsumableObject* consumable_object)
 
 // Item API
 
+static Item* consumable_lock_new(ConsumableObject* consumable_object)
+{
+    consumable_lock_unique(consumable_object); // NULL is ignored
+    return (Item*)consumable_object;
+}
+
 Item* consumable_object_roll_new(enum RngSequence key)
 {
     // The Shop sells as many Tarots as Planets, unless a Voucher (Tarot Merchant, Planet Merchant,
@@ -1214,10 +1384,13 @@ Item* consumable_object_roll_new(enum RngSequence key)
                 r
             ))
         {
-            u32 pick = rng_get_u32(RNG_SEQ_SHOP_SPECTRAL) % spectral_common_pool_size();
-            enum SpectralType spectral = spectral_common_pool_get(pick);
+            enum SpectralType spectral = spectral_roll(RNG_SEQ_SHOP_SPECTRAL);
             if (spectral != SPECTRAL_TYPE_MAX)
-                return (Item*)consumable_object_new(CONSUMABLE_TYPE_SPECTRAL, spectral);
+            {
+                return consumable_lock_new(
+                    consumable_object_new(CONSUMABLE_TYPE_SPECTRAL, spectral)
+                );
+            }
         }
     }
 
@@ -1230,14 +1403,14 @@ Item* consumable_object_roll_new(enum RngSequence key)
     {
         enum TarotType tarot = tarot_roll(RNG_SEQ_SHOP_TAROT);
         if (tarot != TAROT_TYPE_MAX)
-            return (Item*)consumable_object_new(CONSUMABLE_TYPE_TAROT, tarot);
+            return consumable_lock_new(consumable_object_new(CONSUMABLE_TYPE_TAROT, tarot));
     }
 
     enum PlanetType planet = planet_roll(key);
     if (planet == PLANET_TYPE_MAX)
         return NULL;
 
-    return (Item*)consumable_object_new(CONSUMABLE_TYPE_PLANET, planet);
+    return consumable_lock_new(consumable_object_new(CONSUMABLE_TYPE_PLANET, planet));
 }
 
 int consumable_object_get_buy_price(Item* item)
@@ -1258,7 +1431,9 @@ int consumable_object_get_sell_price(Item* item)
 {
     GBAL_RETURN_IF_NULL(item, UNDEFINED);
     int sell_price = consumable_object_get_buy_price(item) / 2;
-    return sell_price < 1 ? 1 : sell_price; // Never worth nothing, even an Astronomer Planet
+    if (sell_price < 1)
+        sell_price = 1; // Never worth nothing, even an Astronomer Planet
+    return sell_price + ((ConsumableObject*)item)->sell_bonus; // Gift Card
 }
 
 const char* consumable_object_get_name(Item* item)
@@ -1303,12 +1478,16 @@ ItemDescSubtypeInfo consumable_object_get_subtype_info(Item* item)
 bool consumable_object_can_acquire(Item* item)
 {
     GBAL_RETURN_IF_NULL(item, false);
-    return list_get_len(&s_owned_consumables) < g_game_vars.consumable_slots;
+    // A Negative consumable brings its own slot
+    if (((ConsumableObject*)item)->flags & CONSUMABLE_FLAG_NEGATIVE)
+        return true;
+    return consumables_used_slots() < g_game_vars.consumable_slots;
 }
 
 void consumable_object_acquire(Item* item)
 {
     GBAL_RETURN_IF_NULL(item, RET_NONE);
+    consumable_unlock_unique((ConsumableObject*)item); // Bought or taken: no longer for sale
     list_push_back(&s_owned_consumables, item);
     item->ty = int2fx(HELD_JOKERS_POS.y);
 }

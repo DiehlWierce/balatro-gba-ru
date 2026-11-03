@@ -33,13 +33,16 @@ enum Edition
 #define EDITION_POLYCHROME_XMULT_NUM 3 // X1.5 = 3/2
 #define EDITION_POLYCHROME_XMULT_DEN 2
 
-// Chance of each edition, in tenths of a percent (per mille), for a rate of 1 (no Voucher).
-// The ranges are stacked: Negative first, then Polychrome, Holographic and Foil.
+// Chance of each edition of a Joker, in tenths of a percent (per mille), for a rate of 1 (no
+// Voucher). The ranges are stacked: Negative first, then Polychrome, Holographic and Foil.
+// Playing cards use twice these numbers (Foil 4%, Holographic 2.8%, Polychrome 1.2%, no Negative),
+// see EDITION_CARD_RATE_FACTOR.
 #define EDITION_CHANCE_NEGATIVE    3
 #define EDITION_CHANCE_POLYCHROME  3
 #define EDITION_CHANCE_HOLOGRAPHIC 14
 #define EDITION_CHANCE_FOIL        20
 #define EDITION_ROLL_RANGE         1000
+#define EDITION_CARD_RATE_FACTOR   2 // Playing cards roll their edition with a base rate of 2
 
 // Wheel of Fortune: 1 in 4 chance, then Foil 50%, Holographic 35%, Polychrome 15%
 #define EDITION_WHEEL_ODDS 4
@@ -116,12 +119,15 @@ static inline uint32_t edition_polychrome_apply(uint32_t mult)
  *
  * @param roll random number, only roll % EDITION_ROLL_RANGE is used
  * @param rate multiplier of the chances: 1, 2 with Hone, 4 with Glow Up
- * @param allow_negative false to never get Negative (playing cards)
+ * @param allow_negative true for a Joker. false for a playing card: it never gets Negative and its
+ *        chances are doubled (Foil 4%, Holographic 2.8%, Polychrome 1.2% without Vouchers)
  */
 static inline enum Edition edition_from_roll(uint32_t roll, int rate, bool allow_negative)
 {
     if (rate < 1)
         rate = 1;
+    if (!allow_negative)
+        rate *= EDITION_CARD_RATE_FACTOR;
 
     uint32_t value = roll % EDITION_ROLL_RANGE;
 

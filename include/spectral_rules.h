@@ -267,11 +267,11 @@ static inline void card_set_seal(Card* card, enum CardSeal seal)
 }
 
 /**
- * @brief Sets the rank of a card. Stone cards have no rank and are left as they are (Ouija).
+ * @brief Sets the rank of a card (Ouija). A Stone card keeps its rank under the enhancement.
  */
 static inline void card_set_rank(Card* card, uint8_t rank)
 {
-    if (rank < NUM_RANKS && card->enhancement != CARD_ENHANCEMENT_STONE)
+    if (rank < NUM_RANKS)
         card->rank = rank;
 }
 
@@ -284,17 +284,30 @@ static inline int spectral_hand_size_minus_one(int hand_size)
 }
 
 /**
- * @brief Edition given by Aura, weighted like the Shop without Negative: Foil 20, Holographic 14,
- *        Polychrome 3 (out of 37).
+ * @brief Edition given by Aura: Foil 50%, Holographic 35%, Polychrome 15%, like the Wheel of
+ *        Fortune (never Negative or none).
  */
 static inline enum Edition spectral_aura_edition(uint32_t roll)
 {
-    uint32_t value = roll % (EDITION_CHANCE_FOIL + EDITION_CHANCE_HOLOGRAPHIC + EDITION_CHANCE_POLYCHROME);
-    if (value < EDITION_CHANCE_FOIL)
-        return EDITION_FOIL;
-    if (value < EDITION_CHANCE_FOIL + EDITION_CHANCE_HOLOGRAPHIC)
-        return EDITION_HOLOGRAPHIC;
-    return EDITION_POLYCHROME;
+    return edition_wheel_edition(roll);
+}
+
+/**
+ * @brief Hand size penalty of the @p used_before th Ectoplasm of the run (0 for the first):
+ *        -1, -2, -3 and so on.
+ */
+static inline int spectral_ectoplasm_penalty(int used_before)
+{
+    return 1 + (used_before > 0 ? used_before : 0);
+}
+
+/**
+ * @brief Hand size after losing @p penalty, never below SPECTRAL_OUIJA_HAND_SIZE_MIN.
+ */
+static inline int spectral_hand_size_minus(int hand_size, int penalty)
+{
+    int result = hand_size - penalty;
+    return result > SPECTRAL_OUIJA_HAND_SIZE_MIN ? result : SPECTRAL_OUIJA_HAND_SIZE_MIN;
 }
 
 /**

@@ -21,10 +21,10 @@ static void test_suit_tarots(void)
     assert(card.suit == HEARTS && card.rank == FIVE);
     assert(card.enhancement == CARD_ENHANCEMENT_BONUS && card.seal == CARD_SEAL_RED);
 
-    // Stone cards have no suit
+    // A Stone card keeps its suit under the enhancement and changes it too (B-067)
     Card stone = make(ACE, CLUBS, CARD_ENHANCEMENT_STONE, CARD_SEAL_NONE);
     card_set_suit(&stone, SPADES);
-    assert(stone.suit == CLUBS);
+    assert(stone.suit == SPADES && stone.enhancement == CARD_ENHANCEMENT_STONE);
 
     card_set_suit(&card, NUM_SUITS); // Invalid suit is ignored
     assert(card.suit == HEARTS);
@@ -44,7 +44,7 @@ static void test_strength(void)
 
     Card stone = make(TEN, SPADES, CARD_ENHANCEMENT_STONE, CARD_SEAL_NONE);
     card_rank_up(&stone);
-    assert(stone.rank == TEN);
+    assert(stone.rank == JACK && stone.enhancement == CARD_ENHANCEMENT_STONE);
 }
 
 static void test_death(void)

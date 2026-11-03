@@ -5,9 +5,8 @@
  *        some of the items they contain.
  *
  * Each pack type is described by a PackInfo: how many choices it shows, how many can be picked,
- * how a choice is rolled and what picking it does. Only the Standard Pack (playing cards) is
- * implemented: Standard (playing cards), Arcana (Tarots, and Spectral cards with Omen Globe),
- * Celestial (Planets) and Spectral.
+ * how a choice is rolled and what picking it does. Five kinds (Standard, Arcana, Celestial, Spectral
+ * and Buffoon) in three sizes (Normal $4, Jumbo $6, Mega $8), 15 pack types in all.
  */
 #ifndef BOOSTER_PACK_H
 #define BOOSTER_PACK_H
@@ -19,13 +18,53 @@
 #define MAX_SHOP_PACKS   2 // Packs for sale in the Shop at the same time
 #define MAX_PACK_CHOICES 5 // Items shown when opening the biggest packs
 
+/**
+ * @brief Pack types: Normal (the first five), then Jumbo and Mega of each kind. A Tag that gives a
+ *        pack (Charm, Meteor, Ethereal, Standard, Buffoon) opens a Mega one.
+ */
 enum PackType
 {
-    PACK_TYPE_STANDARD,  // Playing cards, added to the deck
-    PACK_TYPE_ARCANA,    // Tarot cards, taken to the consumables row
-    PACK_TYPE_CELESTIAL, // Planet cards, taken to the consumables row
-    PACK_TYPE_SPECTRAL,  // Spectral cards, taken to the consumables row
+    PACK_TYPE_STANDARD,  // 3 playing cards, pick 1, added to the deck
+    PACK_TYPE_ARCANA,    // 3 Tarot cards, pick 1, taken to the consumables row
+    PACK_TYPE_CELESTIAL, // 3 Planet cards, pick 1, taken to the consumables row
+    PACK_TYPE_SPECTRAL,  // 2 Spectral cards, pick 1, taken to the consumables row
+    PACK_TYPE_BUFFOON,   // 2 Jokers, pick 1, taken to the Jokers row
+    PACK_TYPE_JUMBO_STANDARD,  // 5, pick 1
+    PACK_TYPE_JUMBO_ARCANA,    // 5, pick 1
+    PACK_TYPE_JUMBO_CELESTIAL, // 5, pick 1
+    PACK_TYPE_JUMBO_SPECTRAL,  // 4, pick 1
+    PACK_TYPE_JUMBO_BUFFOON,   // 4, pick 1
+    PACK_TYPE_MEGA_STANDARD,   // 5, pick 2
+    PACK_TYPE_MEGA_ARCANA,     // 5, pick 2
+    PACK_TYPE_MEGA_CELESTIAL,  // 5, pick 2
+    PACK_TYPE_MEGA_SPECTRAL,   // 4, pick 2
+    PACK_TYPE_MEGA_BUFFOON,    // 4, pick 2
     PACK_TYPE_MAX
+};
+
+/**
+ * @brief Buffoon Packs are rolled in the Shop. The opened pack screen of the Shop must be able to
+ *        show the name and description of a Joker choice; set to 0 to keep them out meanwhile.
+ */
+#ifndef BOOSTER_BUFFOON_ROLLABLE
+#define BOOSTER_BUFFOON_ROLLABLE 1
+#endif
+
+enum PackKind
+{
+    PACK_KIND_STANDARD,
+    PACK_KIND_ARCANA,
+    PACK_KIND_CELESTIAL,
+    PACK_KIND_SPECTRAL,
+    PACK_KIND_BUFFOON,
+    PACK_KIND_MAX
+};
+
+enum PackSize
+{
+    PACK_SIZE_NORMAL,
+    PACK_SIZE_JUMBO,
+    PACK_SIZE_MEGA
 };
 
 typedef struct BoosterPackObject
@@ -44,7 +83,9 @@ typedef struct PackInfo
     int price;
     int nb_choices; // Items shown when opening the pack
     int nb_picks;   // Items the player can take
-    int weight;     // Chance to be in the Shop, relative to the other packs
+    int weight;     // Chance to be in the Shop, relative to the other packs (hundredths)
+    u8 kind;        // enum PackKind
+    u8 size;        // enum PackSize
     const char* desc_what; // "Выберите N из M <desc_what>"
 
     /**

@@ -94,6 +94,16 @@ static void standard_pack_discard(Item** choice)
 
 static Item* spectral_pack_roll_choice(int idx);
 
+/**
+ * @brief The card of a choice can't be rolled again while the pack is open (without Showman).
+ */
+static Item* pack_lock(Item* choice)
+{
+    if (choice != NULL)
+        consumable_lock_unique((ConsumableObject*)choice);
+    return choice;
+}
+
 static Item* arcana_pack_roll_choice(int idx)
 {
     // Omen Globe: a choice may be a Spectral card
@@ -101,10 +111,14 @@ static Item* arcana_pack_roll_choice(int idx)
         pack_choice_is_spectral(true, rng_get_u32(RNG_SEQ_PACK_OMEN_GLOBE)))
         return spectral_pack_roll_choice(idx);
 
+    // The Soul may replace a choice, 0.3%
+    if (spectral_pack_rolls_soul(rng_get_u32(RNG_SEQ_PACK_SOUL)))
+        return pack_lock((Item*)consumable_object_new(CONSUMABLE_TYPE_SPECTRAL, SPECTRAL_SOUL));
+
     enum TarotType tarot = tarot_roll(RNG_SEQ_PACK_TAROT);
     if (tarot == TAROT_TYPE_MAX)
         return NULL;
-    return (Item*)consumable_object_new(CONSUMABLE_TYPE_TAROT, tarot);
+    return pack_lock((Item*)consumable_object_new(CONSUMABLE_TYPE_TAROT, tarot));
 }
 
 static bool consumable_pack_can_pick(Item* choice)
@@ -144,12 +158,19 @@ static Item* celestial_pack_roll_choice(int idx)
     // Telescope: the first choice is the Planet of the most played poker hand
     if (idx == 0 && voucher_is_owned(VOUCHER_TELESCOPE))
         planet = planet_for_hand(most_played_hand(g_game_vars.nb_played_hands));
+
+    // Black Hole may replace a choice, 0.3%
+    if (planet == PLANET_TYPE_MAX && spectral_pack_rolls_black_hole(rng_get_u32(RNG_SEQ_PACK_SPECTRAL)))
+        return pack_lock(
+            (Item*)consumable_object_new(CONSUMABLE_TYPE_SPECTRAL, SPECTRAL_BLACK_HOLE)
+        );
+
     if (planet == PLANET_TYPE_MAX)
         planet = planet_roll(RNG_SEQ_PACK_PLANET);
     if (planet == PLANET_TYPE_MAX)
         return NULL;
 
-    return (Item*)consumable_object_new(CONSUMABLE_TYPE_PLANET, planet);
+    return pack_lock((Item*)consumable_object_new(CONSUMABLE_TYPE_PLANET, planet));
 }
 
 static Item* spectral_pack_roll_choice(int idx)
@@ -161,71 +182,123 @@ static Item* spectral_pack_roll_choice(int idx)
     else if (spectral_pack_rolls_soul(rng_get_u32(RNG_SEQ_PACK_SOUL)))
         spectral = SPECTRAL_SOUL;
     else
-        spectral = spectral_common_pool_get(
-            rng_get_u32(RNG_SEQ_PACK_SPECTRAL) % spectral_common_pool_size()
-        );
+        spectral = spectral_roll(RNG_SEQ_PACK_SPECTRAL);
     if (spectral == SPECTRAL_TYPE_MAX)
         return NULL;
 
-    return (Item*)consumable_object_new(CONSUMABLE_TYPE_SPECTRAL, spectral);
+    return pack_lock((Item*)consumable_object_new(CONSUMABLE_TYPE_SPECTRAL, spectral));
 }
 
 #pragma endregion
 
+#pragma region Buffoon Pack
+
+static Item* buffoon_pack_roll_choice(int idx)
+{
+    (void)idx;
+    // Same roll as the Shop: rarity, edition and stickers; the Joker id is locked until it is
+    // taken or disposed of (without Showman)
+    return item_roll_new(ITEM_TYPE_JOKER, RNG_SEQ_PACK_CONTENTS);
+}
+
+static void buffoon_pack_pick(Item** choice)
+{
+    // The Shop doesn't let a choice be taken without a free Joker slot
+    if (item_can_acquire(*choice))
+        item_acquire(*choice);
+    else
+        item_dispose(choice);
+
+    *choice = NULL;
+}
+
+static bool buffoon_pack_can_pick(Item* choice)
+{
+    return item_can_acquire(choice);
+}
+
+static void buffoon_pack_discard(Item** choice)
+{
+    item_dispose(choice); // Sets *choice to NULL, the Joker can be rolled again
+}
+
+#pragma endregion
+
+// Weights are in hundredths: Standard, Arcana and Celestial 4 / 2 / 0.5, Buffoon 1.2 / 0.6 / 0.15,
+// Spectral 0.6 / 0.3 / 0.07 for Normal / Jumbo / Mega
+#define PACK_STD(_name, _size, _price, _choices, _picks, _weight)         \
+    {                                                                       \
+        .name = _name, .price = _price, .nb_choices = _choices,             \
+        .nb_picks = _picks, .weight = _weight, .kind = PACK_KIND_STANDARD,  \
+        .size = _size,                                                      \
+        .desc_what = "игральных карт и добавьте в колоду",                  \
+        .roll_choice = standard_pack_roll_choice,                           \
+        .pick = standard_pack_pick, .can_pick = NULL,                       \
+        .discard = standard_pack_discard,                                   \
+        .body_r = 41, .body_g = 173, .body_b = 255,                         \
+    }
+#define PACK_ARC(_name, _size, _price, _choices, _picks, _weight)           \
+    {                                                                       \
+        .name = _name, .price = _price, .nb_choices = _choices,             \
+        .nb_picks = _picks, .weight = _weight, .kind = PACK_KIND_ARCANA,    \
+        .size = _size,                                                      \
+        .desc_what = "карт Таро и возьмите в слот",                         \
+        .roll_choice = arcana_pack_roll_choice,                             \
+        .pick = arcana_pack_pick, .can_pick = consumable_pack_can_pick,     \
+        .discard = arcana_pack_discard,                                     \
+        .body_r = 137, .body_g = 105, .body_b = 230,                        \
+    }
+#define PACK_CEL(_name, _size, _price, _choices, _picks, _weight)           \
+    {                                                                       \
+        .name = _name, .price = _price, .nb_choices = _choices,             \
+        .nb_picks = _picks, .weight = _weight, .kind = PACK_KIND_CELESTIAL, \
+        .size = _size,                                                      \
+        .desc_what = "карт планет и возьмите в слот",                       \
+        .roll_choice = celestial_pack_roll_choice,                          \
+        .pick = arcana_pack_pick, .can_pick = consumable_pack_can_pick,     \
+        .discard = arcana_pack_discard,                                     \
+        .body_r = 35, .body_g = 89, .body_b = 85,                           \
+    }
+#define PACK_SPE(_name, _size, _price, _choices, _picks, _weight)           \
+    {                                                                       \
+        .name = _name, .price = _price, .nb_choices = _choices,             \
+        .nb_picks = _picks, .weight = _weight, .kind = PACK_KIND_SPECTRAL,  \
+        .size = _size,                                                      \
+        .desc_what = "спектральных карт и возьмите в слот",                 \
+        .roll_choice = spectral_pack_roll_choice,                           \
+        .pick = arcana_pack_pick, .can_pick = consumable_pack_can_pick,     \
+        .discard = arcana_pack_discard,                                     \
+        .body_r = 60, .body_g = 70, .body_b = 170,                          \
+    }
+#define PACK_BUF(_name, _size, _price, _choices, _picks, _weight)           \
+    {                                                                       \
+        .name = _name, .price = _price, .nb_choices = _choices,             \
+        .nb_picks = _picks, .weight = _weight, .kind = PACK_KIND_BUFFOON,   \
+        .size = _size,                                                      \
+        .desc_what = "джокеров и возьмите в ряд",                           \
+        .roll_choice = buffoon_pack_roll_choice,                            \
+        .pick = buffoon_pack_pick, .can_pick = buffoon_pack_can_pick,       \
+        .discard = buffoon_pack_discard,                                    \
+        .body_r = 240, .body_g = 52, .body_b = 100,                         \
+    }
+
 // clang-format off
 static const PackInfo PACK_INFOS[PACK_TYPE_MAX] = {
-    [PACK_TYPE_STANDARD] = {
-        .name = "Стандартный бустер",
-        .price = 4,
-        .nb_choices = 3,
-        .nb_picks = 1,
-        .weight = 10,
-        .desc_what = "игральных карт и добавьте в колоду",
-        .roll_choice = standard_pack_roll_choice,
-        .pick = standard_pack_pick,
-        .can_pick = NULL,
-        .discard = standard_pack_discard,
-        .body_r = 41, .body_g = 173, .body_b = 255,
-    },
-    [PACK_TYPE_ARCANA] = {
-        .name = "Бустер Аркана",
-        .price = 4,
-        .nb_choices = 3,
-        .nb_picks = 1,
-        .weight = 10,
-        .desc_what = "карт Таро и возьмите в слот",
-        .roll_choice = arcana_pack_roll_choice,
-        .pick = arcana_pack_pick,
-        .can_pick = consumable_pack_can_pick,
-        .discard = arcana_pack_discard,
-        .body_r = 137, .body_g = 105, .body_b = 230,
-    },
-    [PACK_TYPE_CELESTIAL] = {
-        .name = "Небесный бустер",
-        .price = 4,
-        .nb_choices = 3,
-        .nb_picks = 1,
-        .weight = 10,
-        .desc_what = "карт планет и возьмите в слот",
-        .roll_choice = celestial_pack_roll_choice,
-        .pick = arcana_pack_pick,
-        .can_pick = consumable_pack_can_pick,
-        .discard = arcana_pack_discard,
-        .body_r = 35, .body_g = 89, .body_b = 85,
-    },
-    [PACK_TYPE_SPECTRAL] = {
-        .name = "Спектр. бустер",
-        .price = 4,
-        .nb_choices = 2,
-        .nb_picks = 1,
-        .weight = 3,
-        .desc_what = "спектральных карт и возьмите в слот",
-        .roll_choice = spectral_pack_roll_choice,
-        .pick = arcana_pack_pick,
-        .can_pick = consumable_pack_can_pick,
-        .discard = arcana_pack_discard,
-        .body_r = 60, .body_g = 70, .body_b = 170,
-    },
+    [PACK_TYPE_STANDARD]       = PACK_STD("Стандартный бустер", PACK_SIZE_NORMAL, 4, 3, 1, 400),
+    [PACK_TYPE_ARCANA]         = PACK_ARC("Бустер Аркана",      PACK_SIZE_NORMAL, 4, 3, 1, 400),
+    [PACK_TYPE_CELESTIAL]      = PACK_CEL("Небесный бустер",    PACK_SIZE_NORMAL, 4, 3, 1, 400),
+    [PACK_TYPE_SPECTRAL]       = PACK_SPE("Спектр. бустер",     PACK_SIZE_NORMAL, 4, 2, 1, 60),
+    [PACK_TYPE_BUFFOON]        = PACK_BUF("Бустер Шутов",       PACK_SIZE_NORMAL, 4, 2, 1, 120),
+    [PACK_TYPE_JUMBO_STANDARD] = PACK_STD("Джамбо Стандарт",    PACK_SIZE_JUMBO,  6, 5, 1, 200),
+    [PACK_TYPE_JUMBO_ARCANA]   = PACK_ARC("Джамбо Аркана",      PACK_SIZE_JUMBO,  6, 5, 1, 200),
+    [PACK_TYPE_JUMBO_CELESTIAL]= PACK_CEL("Джамбо Небесный",    PACK_SIZE_JUMBO,  6, 5, 1, 200),
+    [PACK_TYPE_JUMBO_SPECTRAL] = PACK_SPE("Джамбо Спектр.",     PACK_SIZE_JUMBO,  6, 4, 1, 30),
+    [PACK_TYPE_JUMBO_BUFFOON]  = PACK_BUF("Джамбо Шутов",       PACK_SIZE_JUMBO,  6, 4, 1, 60),
+    [PACK_TYPE_MEGA_STANDARD]  = PACK_STD("Мега Стандарт",      PACK_SIZE_MEGA,   8, 5, 2, 50),
+    [PACK_TYPE_MEGA_ARCANA]    = PACK_ARC("Мега Аркана",        PACK_SIZE_MEGA,   8, 5, 2, 50),
+    [PACK_TYPE_MEGA_CELESTIAL] = PACK_CEL("Мега Небесный",      PACK_SIZE_MEGA,   8, 5, 2, 50),
+    [PACK_TYPE_MEGA_SPECTRAL]  = PACK_SPE("Мега Спектр.",       PACK_SIZE_MEGA,   8, 4, 2, 7),
+    [PACK_TYPE_MEGA_BUFFOON]   = PACK_BUF("Мега Шутов",         PACK_SIZE_MEGA,   8, 4, 2, 15),
 };
 // clang-format on
 
@@ -239,7 +312,9 @@ const PackInfo* booster_pack_get_info(enum PackType pack_type)
 bool booster_pack_is_rollable(enum PackType pack_type)
 {
     const PackInfo* info = booster_pack_get_info(pack_type);
-    return info != NULL && info->roll_choice != NULL && info->pick != NULL && info->discard != NULL;
+    if (info == NULL || info->roll_choice == NULL || info->pick == NULL || info->discard == NULL)
+        return false;
+    return BOOSTER_BUFFOON_ROLLABLE || info->kind != PACK_KIND_BUFFOON;
 }
 
 #pragma region Sprite
@@ -310,6 +385,13 @@ static void pack_draw(u32* tiles, const PackInfo* info)
         PACK_ART_BOTTOM - 3,
         band
     );
+
+    // Size marks between the top band and the card: none for Normal, 1 for Jumbo, 2 for Mega
+    for (int i = 0; i < (int)info->size; i++)
+    {
+        int left = 16 - (int)info->size * 2 + i * 5;
+        pack_fill_rect(tiles, left, 7, left + 1, 7, white);
+    }
 
     // A small playing card on the front
     pack_fill_rect(tiles, 11, 9, 20, 22, grey);
@@ -436,7 +518,7 @@ int booster_pack_get_buy_price(Item* item)
     GBAL_RETURN_IF_NULL(item, UNDEFINED);
     const PackInfo* info = booster_pack_get_info(((BoosterPackObject*)item)->pack_type);
     GBAL_RETURN_IF_NULL(info, UNDEFINED);
-    if (((BoosterPackObject*)item)->pack_type == PACK_TYPE_CELESTIAL)
+    if (info->kind == PACK_KIND_CELESTIAL)
         return joker_batch6_astronomer_price(info->price, is_joker_owned(ASTRONOMER_JOKER_ID));
     return info->price;
 }
