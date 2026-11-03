@@ -9,8 +9,6 @@
 #include "util.h"
 #include "voucher.h"
 
-static bool item_always_can_acquire(Item* item);
-
 // clang-format off
 ItemFuncs item_func_table[] = {
     [ITEM_TYPE_JOKER] = {
@@ -25,22 +23,17 @@ ItemFuncs item_func_table[] = {
         .print_description = joker_object_print_description
     },
     
-    /* Currently playing cards have partial implementations since Magic Trick is not implemented
-     * and playing cards can't appear in the shop.
-     * If the Magic Trick voucher is implemented, these need to be completed.
-     * Playing cards must stay the only exception, the rest of the item types must implement
-     * all the basic functions to appear in the shop.
-     */
+    // Playing cards appear in the Shop with Magic Trick. They can't be sold.
     [ITEM_TYPE_PLAYING_CARD] = {
-        .roll_new = NULL,
+        .roll_new = card_object_roll_new,
         .get_buy_price = card_object_get_buy_price,
         .get_sell_price = NULL,
-        .get_name = NULL,
-        .get_subtype_info = NULL,
-        .acquire = NULL,
-        .can_acquire = item_always_can_acquire,
+        .get_name = card_object_get_name,
+        .get_subtype_info = card_object_get_subtype_info,
+        .acquire = card_object_acquire,
+        .can_acquire = card_object_can_acquire,
         .dispose = card_object_dispose,
-        .print_description = NULL
+        .print_description = card_object_print_description
     },
 
     [ITEM_TYPE_CONSUMABLE] = {
@@ -89,9 +82,4 @@ ItemFuncs* get_item_type_funcs(enum ItemType type)
     }
 
     return &item_func_table[type];
-}
-
-static bool item_always_can_acquire(Item* item)
-{
-    return true;
 }

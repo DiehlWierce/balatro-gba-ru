@@ -242,6 +242,16 @@ void sort_cards(void);
  */
 int hand_destroy_selected_cards(void);
 
+/**
+ * @brief Adds a card to the end of the hand (Spectral cards): the caller sorts the hand afterwards
+ *        with sort_cards(), which also creates the sprite. The hand can grow past the hand size.
+ *
+ * @param x, y where the card appears on the screen
+ *
+ * @return false if the hand is full (MAX_HAND_SIZE), the card is then not taken
+ */
+bool hand_add_card(Card* card, FIXED x, FIXED y);
+
 // Hand Contents Analysis
 
 /**

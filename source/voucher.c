@@ -10,6 +10,7 @@
 #include "game_variables.h"
 #include "graphic_utils.h"
 #include "pool.h"
+#include "spectral_rules.h"
 #include "sprite.h"
 #include "util.h"
 
@@ -28,6 +29,7 @@
 #define MONEY_TREE_INTEREST_CAP         20
 
 // Weights of Planets in the Shop top row, in tenths (Jokers weigh 200)
+#define PLAYING_CARD_SHOP_WEIGHT_X10    40 // Magic Trick, like the Planets
 #define PLANET_SHOP_WEIGHT_X10          40
 #define PLANET_MERCHANT_SHOP_WEIGHT_X10 96
 #define PLANET_TYCOON_SHOP_WEIGHT_X10   320
@@ -60,12 +62,12 @@ static const VoucherInfo VOUCHER_INFO[VOUCHER_TYPE_MAX] = {
     [VOUCHER_CRYSTAL_BALL]    = {"Хрустальный шар",
         TTE_YELLOW_TAG "+1 " TTE_BLACK_TAG "слот расходников", true},
     [VOUCHER_OMEN_GLOBE]      = {"Шар знамений",
-        TTE_BLACK_TAG "В бустерах Таро бывают спектральные карты", false},
+        TTE_BLACK_TAG "В бустерах Таро бывают спектральные карты", true},
     [VOUCHER_TELESCOPE]       = {"Телескоп",
-        TTE_BLACK_TAG "Бустеры планет дают планету самой частой руки", false},
+        TTE_BLACK_TAG "Бустеры планет дают планету самой частой руки", true},
     [VOUCHER_OBSERVATORY]     = {"Обсерватория",
         TTE_BLACK_TAG "Планеты в слотах дают " TTE_RED_TAG "X1.5 " TTE_BLACK_TAG "множ. своей руке",
-        false},
+        true},
     [VOUCHER_GRABBER]         = {"Загребущий",
         TTE_BLUE_TAG "+1 " TTE_BLACK_TAG "рука каждый раунд", true},
     [VOUCHER_NACHO_TONG]      = {"Щипцы для начос",
@@ -75,9 +77,9 @@ static const VoucherInfo VOUCHER_INFO[VOUCHER_TYPE_MAX] = {
     [VOUCHER_RECYCLOMANCY]    = {"Переработка",
         TTE_RED_TAG "+1 " TTE_BLACK_TAG "сброс каждый раунд", true},
     [VOUCHER_TAROT_MERCHANT]  = {"Торговец Таро",
-        TTE_BLACK_TAG "Таро в лавке в " TTE_YELLOW_TAG "2 раза " TTE_BLACK_TAG "чаще", false},
+        TTE_BLACK_TAG "Таро в лавке в " TTE_YELLOW_TAG "2 раза " TTE_BLACK_TAG "чаще", true},
     [VOUCHER_TAROT_TYCOON]    = {"Магнат Таро",
-        TTE_BLACK_TAG "Таро в лавке в " TTE_YELLOW_TAG "4 раза " TTE_BLACK_TAG "чаще", false},
+        TTE_BLACK_TAG "Таро в лавке в " TTE_YELLOW_TAG "4 раза " TTE_BLACK_TAG "чаще", true},
     [VOUCHER_PLANET_MERCHANT] = {"Торговец планет",
         TTE_BLACK_TAG "Планеты в лавке в " TTE_YELLOW_TAG "2 раза " TTE_BLACK_TAG "чаще", true},
     [VOUCHER_PLANET_TYCOON]   = {"Магнат планет",
@@ -91,9 +93,9 @@ static const VoucherInfo VOUCHER_INFO[VOUCHER_TYPE_MAX] = {
     [VOUCHER_ANTIMATTER]      = {"Антиматерия",
         TTE_YELLOW_TAG "+1 " TTE_BLACK_TAG "слот джокера", true},
     [VOUCHER_MAGIC_TRICK]     = {"Фокус",
-        TTE_BLACK_TAG "Игральные карты продаются в лавке", false},
+        TTE_BLACK_TAG "Игральные карты продаются в лавке", true},
     [VOUCHER_ILLUSION]        = {"Иллюзия",
-        TTE_BLACK_TAG "Карты в лавке бывают с улучшениями и печатями", false},
+        TTE_BLACK_TAG "Карты в лавке бывают с улучшениями и печатями", true},
     [VOUCHER_HIEROGLYPH]      = {"Иероглиф",
         TTE_YELLOW_TAG "-1 " TTE_BLACK_TAG "анте, " TTE_BLUE_TAG "-1 " TTE_BLACK_TAG
         "рука каждый раунд", true},
@@ -331,6 +333,20 @@ int voucher_get_planet_shop_weight_x10(void)
     if (voucher_is_owned(VOUCHER_PLANET_MERCHANT))
         return PLANET_MERCHANT_SHOP_WEIGHT_X10;
     return PLANET_SHOP_WEIGHT_X10;
+}
+
+int voucher_get_tarot_shop_weight_x10(void)
+{
+    if (voucher_is_owned(VOUCHER_TAROT_TYCOON))
+        return TAROT_TYCOON_SHOP_WEIGHT_X10;
+    if (voucher_is_owned(VOUCHER_TAROT_MERCHANT))
+        return TAROT_MERCHANT_SHOP_WEIGHT_X10;
+    return TAROT_SHOP_WEIGHT_X10;
+}
+
+int voucher_get_playing_card_shop_weight_x10(void)
+{
+    return voucher_is_owned(VOUCHER_MAGIC_TRICK) ? PLAYING_CARD_SHOP_WEIGHT_X10 : 0;
 }
 
 bool voucher_can_reroll_boss(void)

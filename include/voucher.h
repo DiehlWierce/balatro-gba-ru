@@ -5,7 +5,7 @@
  *
  * Each Voucher has a base version (even value) and an upgraded version (base + 1) that can only
  * appear once the base version is owned. Owned Vouchers are the bits of
- * g_game_vars.owned_vouchers. Vouchers whose system doesn't exist yet are disabled in the pool.
+ * g_game_vars.owned_vouchers. Vouchers whose system doesn't exist yet (Hone, Glow Up: Editions) are disabled in the pool.
  */
 #ifndef VOUCHER_H
 #define VOUCHER_H
@@ -126,6 +126,17 @@ int voucher_get_reroll_discount(void);
  * @brief Weight of Planets in the Shop's top row, in tenths (Planet Merchant, Planet Tycoon).
  */
 int voucher_get_planet_shop_weight_x10(void);
+
+/**
+ * @brief Weight of Tarots among the Shop consumables, in tenths (Tarot Merchant, Tarot Tycoon).
+ */
+int voucher_get_tarot_shop_weight_x10(void);
+
+/**
+ * @brief Weight of playing cards in the Shop's top row, in tenths: 0 without Magic Trick.
+ *        Illusion (voucher_is_owned) gives them enhancements and seals.
+ */
+int voucher_get_playing_card_shop_weight_x10(void);
 
 /**
  * @brief Whether the Boss Blind can be rerolled now (Director's Cut once per Ante, Retcon always).

@@ -9,6 +9,7 @@
 #include "audio_utils.h"
 #include "blind_effects.h"
 #include "card.h"
+#include "consumable.h"
 #include "game.h"
 #include "game/common_ui.h"
 #include "game/round.h"
@@ -256,7 +257,8 @@ void compute_hand_value_info(void)
     HandLevelValues hand_values = hand_get_values(s_hand.hand_type);
 
     g_game_vars.chips = hand_values.chips;
-    g_game_vars.mult = hand_values.mult;
+    // Observatory: owned Planets of this hand multiply its mult
+    g_game_vars.mult = consumables_apply_observatory(s_hand.hand_type, hand_values.mult);
 
     const char* hand_name = get_hand_type_name(s_hand.hand_type);
 
@@ -421,6 +423,25 @@ int hand_destroy_selected_cards(void)
     reorder_card_sprites_layers();
     compute_hand_value_info();
     return nb_destroyed;
+}
+
+bool hand_add_card(Card* card, FIXED x, FIXED y)
+{
+    if (card == NULL || s_hand.hand_top >= MAX_HAND_SIZE - 1)
+        return false;
+
+    CardObject* card_object = card_object_new(card);
+    card_object->x = x;
+    card_object->y = y;
+    card_object->tx = x;
+    card_object->ty = y;
+    s_hand.cards[++s_hand.hand_top] = card_object;
+
+    // Bosses may disable or flip the new card like the ones that are drawn
+    blind_effects_reset_card(card);
+    BlindEventData blind_event_data = {.card = card};
+    blind_effects_trigger(BLIND_EVENT_ON_CARD_DRAWN, &blind_event_data);
+    return true;
 }
 
 void hand_change_sort(bool to_sort_by_suit)

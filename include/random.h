@@ -66,6 +66,19 @@ enum RngSequence
     RNG_SEQ_JOKER_SPACE,          // 1 in 4 chance to level up the played hand
     RNG_SEQ_JOKER_CERTIFICATE,    // Rank, suit and seal of the card created by Certificate
 
+    // Spectral cards, Spectral and Celestial Packs, Vouchers
+    RNG_SEQ_PACK_SPECTRAL,        // Spectral Pack choices (and the 0.3% Black Hole)
+    RNG_SEQ_PACK_OMEN_GLOBE,      // Omen Globe: whether an Arcana Pack choice is a Spectral card
+    RNG_SEQ_PACK_PLANET,          // Planets of a Celestial Pack
+    RNG_SEQ_SPECTRAL_CARDS,       // Cards created by Familiar, Grim and Incantation
+    RNG_SEQ_SPECTRAL_DESTROY,     // Cards of the hand destroyed by Familiar, Grim, Incantation, Immolate
+    RNG_SEQ_SPECTRAL_SIGIL,       // Suit given by Sigil
+    RNG_SEQ_SPECTRAL_OUIJA,       // Rank given by Ouija
+    RNG_SEQ_SPECTRAL_ANKH,        // Joker copied by Ankh
+    RNG_SEQ_SPECTRAL_WRAITH,      // Rare Joker created by Wraith
+    RNG_SEQ_SHOP_PLAYING_CARDS,   // Magic Trick: rank and suit of the playing cards in the Shop
+    RNG_SEQ_SHOP_CARD_MODS,       // Illusion: enhancement and seal of the playing cards in the Shop
+
     RNG_SEQ_MAX
 };
 

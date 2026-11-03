@@ -104,6 +104,11 @@ void item_start_discard_animation(Item* item);
 int deck_get_size(void);
 
 /**
+ * @brief Cards the player owns in a round: draw pile, hand, played and discarded cards.
+ */
+int game_get_total_cards(void);
+
+/**
  * @brief Number of cards with @p enhancement in the whole deck: draw pile, hand, played cards
  *        and discard pile (Steel Joker, Stone Joker)
  */
