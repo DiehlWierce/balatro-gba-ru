@@ -19,6 +19,7 @@
 #include "graphic_utils.h"
 #include "hand.h"
 #include "joker.h"
+#include "joker_batch5.h"
 #include "layout.h"
 #include "list.h"
 #include "selection_grid.h"
@@ -252,6 +253,12 @@ static int s_cards_discarded = 0;
 
 // Boss Blind effects
 static bool s_hand_scores_nothing = false; // The Boss doesn't allow the played hand
+
+// Counters and flags for the Jokers of A8 batch 5, kept in EWRAM
+static EWRAM_BSS int s_hands_played_round;   // Hands played this round, counting the one in progress
+static EWRAM_BSS int s_discards_used_round;  // Discards made this round, counting the one in progress
+static EWRAM_BSS bool s_destroy_played_cards;    // Sixth Sense: the played cards leave the deck
+static EWRAM_BSS bool s_destroy_discarded_cards; // Trading Card: the discarded card leaves the deck
 static bool s_first_draw_done = false;     // Forced draws (The Serpent) skip the first draw
 
 static const BG_POINT BOSS_NO_SCORE_TEXT_POS = {104, 48};
@@ -290,6 +297,39 @@ int round_count_enhancement(u8 enhancement)
             count++;
     }
     return count;
+}
+
+int round_count_rank(u8 rank)
+{
+    int count = 0;
+    for (int i = 0; i <= s_played_top; i++)
+    {
+        if (s_played_hand[i] != NULL && s_played_hand[i]->card != NULL &&
+            card_has_rank(s_played_hand[i]->card) && s_played_hand[i]->card->rank == rank)
+            count++;
+    }
+    for (int i = 0; i <= s_discard_top; i++)
+    {
+        if (s_discard_pile[i] != NULL && card_has_rank(s_discard_pile[i]) &&
+            s_discard_pile[i]->rank == rank)
+            count++;
+    }
+    return count;
+}
+
+int round_get_hands_played(void)
+{
+    return s_hands_played_round;
+}
+
+int round_get_discards_used(void)
+{
+    return s_discards_used_round;
+}
+
+void round_destroy_played_cards(void)
+{
+    s_destroy_played_cards = true;
 }
 
 /**
@@ -504,21 +544,19 @@ static inline void round_execute_discard(void)
 
     // Seals of the discarded cards (Purple)
     CardObject** hand = get_hand_array();
-    int nb_discarded = 0, nb_faces = 0, nb_jacks = 0;
+    DiscardCounts discarded = {0};
     for (int i = 0; i <= get_hand_top(); i++)
     {
         if (!card_object_is_selected(hand[i]))
             continue;
 
-        nb_discarded++;
-        if (card_is_face(hand[i]->card))
-            nb_faces++;
-        if (card_has_rank(hand[i]->card) && hand[i]->card->rank == JACK)
-            nb_jacks++;
+        joker_batch5_discard_add(&discarded, hand[i]->card, card_is_face(hand[i]->card));
         if (card_modifiers_on_discarded(hand[i]->card, hand[i]->x, hand[i]->y))
             card_object_shake(hand[i], SFX_CARD_SELECT);
     }
-    joker_on_cards_discarded(nb_discarded, nb_faces, nb_jacks); // Green, Faceless, Hit the Road
+    s_discards_used_round++;
+    // Green, Faceless, Hit the Road and the Jokers of batch 5, Trading Card destroys the card
+    s_destroy_discarded_cards = joker_on_cards_discarded(&discarded);
 }
 
 /**
@@ -562,6 +600,7 @@ static inline void round_execute_play_hand(void)
     set_hand_state(HAND_PLAY);
 
     --g_game_vars.hands;
+    s_hands_played_round++;
     display_hands();
 
     if (get_hand_type() > NONE && get_hand_type() <= HAND_TYPE_MAX)
@@ -886,7 +925,16 @@ static inline void card_in_hand_loop_handle_discard_and_shuffling(
 
             if (hand[card_idx]->x >= *hand_x)
             {
-                discard_push(hand[card_idx]->card);
+                if (s_destroy_discarded_cards && get_hand_state() == HAND_DISCARD)
+                {
+                    // Trading Card: the card leaves the deck for good
+                    Card* destroyed_card = hand[card_idx]->card;
+                    card_destroy(&destroyed_card);
+                }
+                else
+                {
+                    discard_push(hand[card_idx]->card);
+                }
 
                 // Remove discarded card from hand and shift the ones after it
                 card_object_destroy(&hand[card_idx]);
@@ -936,6 +984,7 @@ static inline void card_in_hand_loop_handle_discard_and_shuffling(
         // supposed to be.
         s_sound_played = false;
         s_cards_discarded = 0;
+        s_destroy_discarded_cards = false;
         hand_set_nb_selected_cards(0);
         g_game_vars.timer = TM_ZERO;
         *break_loop = true;
@@ -2366,7 +2415,13 @@ static bool play_ended_played_cards_update(int played_idx)
         if (s_played_hand[played_idx]->x >= int2fx(CARD_DISCARD_PNT.x))
         {
             Card* played_card = s_played_hand[played_idx]->card;
-            if (!s_hand_scores_nothing && card_object_is_selected(s_played_hand[played_idx]) &&
+            if (!s_hand_scores_nothing && s_destroy_played_cards &&
+                card_object_is_selected(s_played_hand[played_idx]))
+            {
+                // Sixth Sense: the played 6 leaves the deck for good
+                card_destroy(&played_card);
+            }
+            else if (!s_hand_scores_nothing && card_object_is_selected(s_played_hand[played_idx]) &&
                 card_modifiers_breaks_after_scoring(played_card))
             {
                 // Glass card broke: it leaves the deck for good
@@ -2399,6 +2454,7 @@ static bool play_ended_played_cards_update(int played_idx)
                 s_cards_drawn = 0;
                 hand_set_nb_selected_cards(0);
                 s_played_top = -1; // Reset the played stack
+                s_destroy_played_cards = false;
                 s_scored_card_index = 0;
                 s_joker_scored_itr = list_itr_create(get_jokers_list());
                 g_game_vars.timer = TM_ZERO;
@@ -2533,6 +2589,10 @@ void round_on_init(void)
     hand_set_nb_selected_cards(0);
     s_cards_drawn = 0;
     s_hand_scores_nothing = false;
+    s_hands_played_round = 0;
+    s_discards_used_round = 0;
+    s_destroy_played_cards = false;
+    s_destroy_discarded_cards = false;
     s_first_draw_done = false;
 
     sprite_destroy(&g_game_vars.playing_blind_token);

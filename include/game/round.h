@@ -49,6 +49,26 @@ CardObject** get_played_array(void);
 int round_count_enhancement(u8 enhancement);
 
 /**
+ * @brief Number of played and discarded cards with @p rank (see game_count_deck_rank)
+ */
+int round_count_rank(u8 rank);
+
+/**
+ * @brief Hands played in this round, counting the hand being played (1 during the first hand)
+ */
+int round_get_hands_played(void);
+
+/**
+ * @brief Discards made in this round, counting the discard in progress (1 during the first one)
+ */
+int round_get_discards_used(void);
+
+/**
+ * @brief Sixth Sense: the scoring cards of the hand being played leave the deck when it ends
+ */
+void round_destroy_played_cards(void);
+
+/**
  * @brief Get the index of the card that is currently being scored
  *
  * @return int

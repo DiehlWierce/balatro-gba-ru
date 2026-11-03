@@ -495,6 +495,20 @@ bool consumable_give_at_start(enum ConsumableType type, int id)
     );
 }
 
+bool consumable_create_random_spectral(enum RngSequence key, FIXED x, FIXED y)
+{
+    if (list_get_len(&s_owned_consumables) >= g_game_vars.consumable_slots)
+        return false;
+
+    int pool_size = spectral_common_pool_size();
+    if (pool_size <= 0)
+        return false;
+
+    enum SpectralType spectral = spectral_common_pool_get((int)(rng_get_u32(key) % pool_size));
+    return spectral != SPECTRAL_TYPE_MAX &&
+           consumable_create_owned(CONSUMABLE_TYPE_SPECTRAL, spectral, x, y);
+}
+
 bool consumable_create_random_tarot(enum RngSequence key, FIXED x, FIXED y)
 {
     if (list_get_len(&s_owned_consumables) >= g_game_vars.consumable_slots)

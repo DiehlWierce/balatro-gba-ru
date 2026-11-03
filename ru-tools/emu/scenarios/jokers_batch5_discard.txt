@@ -1,0 +1,94 @@
+# A8 batch 5 (ID 109-123): discard Jokers (116 Castle + 117 Mail-In Rebate, or 118 Trading Card + 115 Ramen), needs: make DEBUG_JOKER0=<id> DEBUG_JOKER1=<id> (touch source/joker.c first).
+# Seed GBARU1: win the Small Blind (score forced), in the Shop hold B on both Jokers, buy both,
+# then play the Big Blind: select 5 cards, play one hand and look at the scoring.
+
+wait 460
+press START
+wait 60
+press A
+wait 60
+pokestr {sym:s_seed_str} GBARU1
+poke8 {sym:use_seed} 1
+press DOWN
+wait 10
+press A
+wait 120
+press A
+wait 180
+poke32 {gv:score} 100000
+press A
+press L
+wait 1100
+press A
+wait 200
+poke32 {gv:money} 500
+shot 00_shop
+
+press RIGHT
+wait 20
+hold B
+wait 90
+shot 01_desc_first
+release B
+wait 20
+press A
+wait 60
+press RIGHT
+wait 20
+hold B
+wait 90
+shot 02_desc_second
+release B
+wait 20
+press A
+wait 60
+shot 03_bought
+
+press DOWN
+wait 20
+press LEFT
+wait 20
+press UP
+wait 20
+press A
+wait 200
+press RIGHT
+wait 20
+press A
+wait 200
+shot 04_round
+peek32 {gv:money}
+# Discard A of Spades, 6 of Spades, 2 of Diamonds and 2 of Spades (Seed GBARU1 hand): Castle (Spades) +9 chips, Mail-In (rank 2) $10
+press A
+press RIGHT
+press RIGHT
+press A
+press RIGHT
+press RIGHT
+press RIGHT
+press RIGHT
+press A
+press RIGHT
+press A
+press R
+wait 200
+shot 05_discarded
+peek32 {gv:money}
+# persistent_state of the first Jokers: Castle = suit << 24 | chips (Spades 3, +9 chips = 0x03000009 = 50331657)
+peek32 {sym:Joker_storage+12}
+peek32 {sym:Joker_storage+28}
+peek32 {sym:Joker_storage+44}
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press L
+wait 600
+shot 06_scoring
+wait 400
+shot 07_scored

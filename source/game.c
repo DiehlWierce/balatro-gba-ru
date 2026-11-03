@@ -799,6 +799,26 @@ int game_count_deck_enhancement(u8 enhancement)
     return count + round_count_enhancement(enhancement);
 }
 
+int game_count_deck_rank(u8 rank)
+{
+    int count = 0;
+    for (int i = 0; i <= s_deck_top; i++)
+    {
+        if (s_deck[i] != NULL && card_has_rank(s_deck[i]) && s_deck[i]->rank == rank)
+            count++;
+    }
+
+    CardObject** hand = get_hand_array();
+    for (int i = 0; i <= get_hand_top(); i++)
+    {
+        if (hand[i] != NULL && hand[i]->card != NULL && card_has_rank(hand[i]->card) &&
+            hand[i]->card->rank == rank)
+            count++;
+    }
+
+    return count + round_count_rank(rank);
+}
+
 static int deck_get_max_size(void)
 {
     // This is the max amount of cards that the player currently has in their possession

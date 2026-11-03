@@ -11,6 +11,7 @@
 #include "game.h"
 #include "graphic_utils.h"
 #include "item.h"
+#include "joker_batch5.h"
 #include "random.h"
 
 #include <maxmod.h>
@@ -192,10 +193,21 @@ void joker_on_blind_selected(void);              // Burglar, Cartomancer, Marble
 void joker_on_deck_shuffled(void);               // Certificate (after the deck is shuffled)
 
 /**
- * @brief A discard of the player: Green Joker (-1), Faceless Joker ($5 for 3 face cards) and Hit
- *        the Road (counts Jacks). Counts are those of the discarded cards.
+ * @brief A discard of the player: Green Joker (-1), Faceless Joker ($5 for 3 face cards), Hit the
+ *        Road (counts Jacks), Ramen, Castle, Mail-In Rebate and Trading Card.
+ *
+ * @return true if the discarded cards must be destroyed instead of going to the discard pile
+ *         (Trading Card)
  */
-void joker_on_cards_discarded(int nb_cards, int nb_face_cards, int nb_jacks);
+bool joker_on_cards_discarded(const DiscardCounts* discarded);
+
+/**
+ * @brief Starts the expire animation of an owned Joker (it leaves the Jokers row when it ends).
+ *        Eternal Jokers and Jokers already expiring are left alone.
+ *
+ * @return true if the Joker starts to expire
+ */
+bool joker_object_expire(JokerObject* joker_object);
 
 /**
  * @brief Sets the edition of a Joker and adjusts its price: the extra price of the old edition is
