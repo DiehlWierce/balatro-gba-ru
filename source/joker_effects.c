@@ -179,6 +179,9 @@ DECLARE_JOKER_DESC_FUNC(luchador_joker_desc)
 DECLARE_JOKER_DESC_FUNC(mr_bones_joker_desc)
 DECLARE_JOKER_DESC_FUNC(chaos_clown_joker_desc)
 DECLARE_JOKER_DESC_FUNC(astronomer_joker_desc)
+DECLARE_JOKER_DESC_FUNC(throwback_joker_desc)
+DECLARE_JOKER_DESC_FUNC(madness_joker_desc)
+DECLARE_JOKER_DESC_FUNC(campfire_joker_desc)
 
 // Joker Effect functions
 
@@ -306,6 +309,9 @@ DECLARE_JOKER_EFFECT_FUNC(luchador_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(mr_bones_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(chaos_clown_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(astronomer_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(throwback_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(madness_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(campfire_joker_effect)
 
 /* The index of a joker in the registry matches its ID.
  *
@@ -479,6 +485,9 @@ const JokerInfo joker_registry[] =
     { "Мистер Кости", UNCOMMON_JOKER, 5, false, mr_bones_joker_desc, mr_bones_joker_effect }, // 132
     { "Хаос Клоун", COMMON_JOKER, 4, false, chaos_clown_joker_desc, chaos_clown_joker_effect }, // 133
     { "Астроном", UNCOMMON_JOKER, 8, false, astronomer_joker_desc, astronomer_joker_effect }, // 134
+    { "Ретро", UNCOMMON_JOKER, 6, false, throwback_joker_desc, throwback_joker_effect }, // 135
+    { "Безумие", UNCOMMON_JOKER, 7, false, madness_joker_desc, madness_joker_effect }, // 136
+    { "Костёр", RARE_JOKER, 9, false, campfire_joker_desc, campfire_joker_effect }, // 137
 
     // The following jokers don't have sprites yet,
     // uncomment them when their sprites are added.
@@ -4580,3 +4589,81 @@ static u32 astronomer_joker_effect(
 }
 
 #pragma endregion
+
+/*******************************************************************************
+ * A8 batch 7 (ID 135+)
+ ******************************************************************************/
+
+static int throwback_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc_format[] =
+        TTE_RED_TAG "X0.25" TTE_BLACK_TAG " множ. за каждый " TTE_YELLOW_TAG "пропущенный блайнд" TTE_BLACK_TAG "\n\n(Сейчас " TTE_RED_TAG XMULT_FMT TTE_BLACK_TAG " множ.)";
+    char desc[200];
+    snprintf(
+        desc,
+        sizeof(desc),
+        desc_format,
+        XMULT_ARGS(joker_batch7_throwback_percent(g_game_vars.nb_skipped_rounds))
+    );
+    return print_desc(desc, dest_rect);
+}
+
+static int madness_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc_format[] =
+        TTE_RED_TAG "X0.5" TTE_BLACK_TAG " множ. за малый и большой " TTE_YELLOW_TAG "блайнд" TTE_BLACK_TAG ", но уничтожает случайного " TTE_YELLOW_TAG "джокера" TTE_BLACK_TAG "\n\n(Сейчас " TTE_RED_TAG XMULT_FMT TTE_BLACK_TAG " множ.)";
+    char desc[220];
+    snprintf(desc, sizeof(desc), desc_format, XMULT_ARGS(joker_batch7_madness_percent(joker->persistent_state)));
+    return print_desc(desc, dest_rect);
+}
+
+static int campfire_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc_format[] =
+        TTE_RED_TAG "X0.25" TTE_BLACK_TAG " множ. за каждую " TTE_YELLOW_TAG "проданную карту" TTE_BLACK_TAG ", сбрасывается после босса\n\n(Сейчас " TTE_RED_TAG XMULT_FMT TTE_BLACK_TAG " множ.)";
+    char desc[220];
+    snprintf(desc, sizeof(desc), desc_format, XMULT_ARGS(joker_batch7_campfire_percent(joker->persistent_state)));
+    return print_desc(desc, dest_rect);
+}
+
+// Throwback: counts g_game_vars.nb_skipped_rounds
+static u32 throwback_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    SCORE_ON_EVENT_ONLY(JOKER_EVENT_INDEPENDENT, joker_event)
+
+    return joker_percent_xmult_effect(
+        joker_batch7_throwback_percent(g_game_vars.nb_skipped_rounds),
+        joker_effect
+    );
+}
+
+// Madness: persistent_state counts the Blinds, Jokers are destroyed in joker_on_blind_selected()
+static u32 madness_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    SCORE_ON_EVENT_ONLY(JOKER_EVENT_INDEPENDENT, joker_event)
+
+    return joker_percent_xmult_effect(joker_batch7_madness_percent(joker->persistent_state), joker_effect);
+}
+
+// Campfire: persistent_state counts the cards sold (joker_on_card_sold() in joker.c)
+static u32 campfire_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    SCORE_ON_EVENT_ONLY(JOKER_EVENT_INDEPENDENT, joker_event)
+
+    return joker_percent_xmult_effect(joker_batch7_campfire_percent(joker->persistent_state), joker_effect);
+}

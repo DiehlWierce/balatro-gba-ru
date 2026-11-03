@@ -34,3 +34,4 @@ run_test ante_table
 run_test edition_rules
 run_test spectral_rules
 run_test deck_rules
+run_test joker_batch7

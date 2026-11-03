@@ -1129,6 +1129,7 @@ void consumable_object_sell(ConsumableObject* consumable_object)
     GBAL_RETURN_IF_NULL(consumable_object, RET_NONE);
 
     consumable_object_remove_from_owned(consumable_object);
+    joker_on_card_sold(); // Campfire
     // item_sell() starts the discard animation, the Item is disposed when it ends
     item_sell((Item*)consumable_object);
 }

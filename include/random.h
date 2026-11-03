@@ -115,6 +115,9 @@ enum RngSequence
     RNG_SEQ_JOKER_PERKEO,         // Which consumable Perkeo copies
     RNG_SEQ_PACK_SOUL,            // Whether a Spectral Pack choice is The Soul (0.3%)
 
+    // A8 batch 7
+    RNG_SEQ_JOKER_MADNESS,        // Which Joker Madness destroys
+
     RNG_SEQ_MAX
 };
 
