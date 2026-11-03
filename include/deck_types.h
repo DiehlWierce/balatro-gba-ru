@@ -41,4 +41,12 @@ void print_deck_description(enum DeckType deck, BG_POINT pos);
  */
 void deck_apply_start_effects(enum DeckType deck);
 
+/**
+ * @brief Applies the effects of a Deck when a Blind is won (Anaglyph: Double Tag after a Boss).
+ *
+ * @param deck DeckType of the run.
+ * @param boss_defeated true when the Blind won was a Boss Blind.
+ */
+void deck_on_round_won(enum DeckType deck, bool boss_defeated);
+
 #endif // DECK_TYPES_H

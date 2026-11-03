@@ -1,0 +1,36 @@
+# B-009: Anaglyph Deck (DeckType 14): a Double Tag after defeating a Boss Blind.
+# Normal build. usage: run.py scenarios/decks_anaglyph.txt OUT -D boss=2 -D deck=14   (2 = BLIND_TYPE_HOOK)
+# The deck screen shows "Анаглиф" (00). The first peek32 (owned Tags, List.len at +8) must be 0 in
+# the round, the second one 1 after the Boss round end (run with -D deck=0 for the control: stays 0).
+# LIMITATION: the Anaglyph Deck reuses the Blue card back (no 15th sprite in the spritesheet).
+
+wait 460
+press START
+wait 60
+press A
+wait 60
+pokestr {sym:s_seed_str} GBARU1
+poke8 {sym:use_seed} 1
+poke32 {gv:deck} {def:deck}
+press LEFT
+press RIGHT
+wait 20
+shot 00_deck_anaglyph
+press DOWN
+wait 10
+press A
+wait 120
+poke32 {gv:current_blind} {def:boss}
+press A
+wait 180
+peek32 {sym:s_owned_skip_tags+8}
+shot 01_boss_round
+poke32 {gv:score} 100000
+press A
+press L
+wait 1100
+shot 02_boss_round_end
+peek32 {sym:s_owned_skip_tags+8}
+press A
+wait 400
+shot 03_shop

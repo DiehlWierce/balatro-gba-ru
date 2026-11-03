@@ -7,6 +7,7 @@
 
 #include "consumable.h"
 #include "game.h"
+#include "skip_tag.h"
 #include "spectral_rules.h"
 #include "tarot_rules.h"
 #include "voucher.h"
@@ -33,7 +34,8 @@ static const char DECK_NAMES[DECK_TYPE_MAX][DECK_NAME_LENGTH] = {
     "  Клетчатая  ",
     "   Зодиак    ",
     " Плазменная  ",
-    "  Хаотичная  "
+    "  Хаотичная  ",
+    "   Анаглиф   "
 };
 
 void print_deck_name(enum DeckType deck, BG_POINT pos)
@@ -140,6 +142,11 @@ static const DeckDescSegment* const DECK_DESCRIPTIONS[DECK_TYPE_MAX][5] = {
      SEGS({TTE_BLACK_PB, "всех карт"}),
      SEGS({TTE_YELLOW_PB, "случайные"}),
      NULL, },
+    // Anaglyph
+    {
+     NULL, SEGS({TTE_BLACK_PB, "После босса:"}),
+     SEGS({TTE_YELLOW_PB, "Двойной тег"}),
+     NULL, NULL, },
 };
 
 void print_deck_description(enum DeckType deck, BG_POINT pos)
@@ -227,5 +234,15 @@ void deck_apply_start_effects(enum DeckType deck)
         // game_start()), Plasma the scoring (round.c) and the Blind sizes (blind.c)
         default:
             break;
+    }
+}
+
+void deck_on_round_won(enum DeckType deck, bool boss_defeated)
+{
+    // Anaglyph: the Double Tag waits in the owned Tags and copies the next Tag that is gained
+    if (deck_rules_gives_double_tag(deck, boss_defeated))
+    {
+        SkipTag* tag = skip_tag_new(SKIP_TAG_TYPE_DOUBLE);
+        add_skip_tag(&tag);
     }
 }
