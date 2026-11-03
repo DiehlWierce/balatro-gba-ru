@@ -390,6 +390,95 @@ static void test_null_card_is_inert(void)
     assert(!card_modifiers_on_discarded(NULL, 0, 0));
 }
 
+// Tests: editions
+
+static void test_foil_adds_chips(void)
+{
+    reset();
+    s_card_chips = 10;
+    g_game_vars.mult = 3;
+    Card card = make(CARD_ENHANCEMENT_NONE, CARD_SEAL_NONE);
+    card.edition = EDITION_FOIL;
+
+    CardScoreResult result = card_modifiers_on_scored(&card);
+    assert(result.chips == 60);
+    assert(g_game_vars.chips == 60);
+    assert(g_game_vars.mult == 3 && result.mult == 0 && !result.xmult_1_5);
+}
+
+static void test_holographic_adds_mult(void)
+{
+    reset();
+    s_card_chips = 10;
+    g_game_vars.mult = 3;
+    Card card = make(CARD_ENHANCEMENT_NONE, CARD_SEAL_NONE);
+    card.edition = EDITION_HOLOGRAPHIC;
+
+    CardScoreResult result = card_modifiers_on_scored(&card);
+    assert(result.chips == 10 && result.mult == 10);
+    assert(g_game_vars.chips == 10 && g_game_vars.mult == 13);
+}
+
+static void test_polychrome_multiplies_mult(void)
+{
+    reset();
+    g_game_vars.mult = 10;
+    Card card = make(CARD_ENHANCEMENT_NONE, CARD_SEAL_NONE);
+    card.edition = EDITION_POLYCHROME;
+
+    CardScoreResult result = card_modifiers_on_scored(&card);
+    assert(result.xmult_1_5 && !result.xmult);
+    assert(g_game_vars.mult == 15);
+
+    g_game_vars.mult = 1;
+    card_modifiers_on_scored(&card);
+    assert(g_game_vars.mult == 2); // Rounded to the nearest
+}
+
+static void test_edition_scores_after_enhancement(void)
+{
+    // Glass X2 comes before Holographic +10: (3 * 2) + 10, not (3 + 10) * 2
+    reset();
+    g_game_vars.mult = 3;
+    Card glass = make(CARD_ENHANCEMENT_GLASS, CARD_SEAL_NONE);
+    glass.edition = EDITION_HOLOGRAPHIC;
+    card_modifiers_on_scored(&glass);
+    assert(g_game_vars.mult == 16);
+
+    // Mult card +4 comes before Polychrome X1.5: (6 + 4) * 1.5
+    reset();
+    g_game_vars.mult = 6;
+    Card mult = make(CARD_ENHANCEMENT_MULT, CARD_SEAL_NONE);
+    mult.edition = EDITION_POLYCHROME;
+    card_modifiers_on_scored(&mult);
+    assert(g_game_vars.mult == 15);
+
+    // Bonus card and Foil add up
+    reset();
+    s_card_chips = 40;
+    Card bonus = make(CARD_ENHANCEMENT_BONUS, CARD_SEAL_NONE);
+    bonus.edition = EDITION_FOIL;
+    assert(card_modifiers_on_scored(&bonus).chips == 90);
+}
+
+static void test_negative_card_and_debuffed_edition_are_inert(void)
+{
+    reset();
+    s_card_chips = 10;
+    g_game_vars.mult = 5;
+    Card negative = make(CARD_ENHANCEMENT_NONE, CARD_SEAL_NONE);
+    negative.edition = EDITION_NEGATIVE;
+    CardScoreResult result = card_modifiers_on_scored(&negative);
+    assert(result.chips == 10 && result.mult == 0 && !result.xmult_1_5);
+    assert(g_game_vars.mult == 5);
+
+    reset();
+    Card foil = make_debuffed(CARD_ENHANCEMENT_NONE, CARD_SEAL_NONE);
+    foil.edition = EDITION_FOIL;
+    card_modifiers_on_scored(&foil);
+    assert(g_game_vars.chips == 0); // A debuffed card gives nothing, its edition included
+}
+
 int main(void)
 {
     test_base_chips_are_added();
@@ -411,6 +500,11 @@ int main(void)
     test_purple_seal_creates_tarot();
     test_debuffed_card_is_inert();
     test_null_card_is_inert();
+    test_foil_adds_chips();
+    test_holographic_adds_mult();
+    test_polychrome_multiplies_mult();
+    test_edition_scores_after_enhancement();
+    test_negative_card_and_debuffed_edition_are_inert();
     printf("Card Modifiers Tests Passed :)\n");
     return 0;
 }

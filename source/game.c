@@ -342,7 +342,33 @@ static inline void held_jokers_update_loop(void)
 bool joker_object_can_acquire(Item* joker_object)
 {
     GBAL_RETURN_IF_NULL(joker_object, false);
-    return (list_get_len(get_jokers_list()) < g_game_vars.joker_slots);
+    u8 editions[MAX_JOKERS_HELD_SIZE];
+    int count = 0;
+    ListItr itr = list_itr_create(get_jokers_list());
+    JokerObject* owned;
+    while ((owned = list_itr_next(&itr)) && count < MAX_JOKERS_HELD_SIZE)
+        editions[count++] = owned->joker->edition;
+
+    return edition_joker_fits(
+        editions,
+        count,
+        g_game_vars.joker_slots,
+        MAX_JOKERS_HELD_SIZE,
+        ((JokerObject*)joker_object)->joker->edition
+    );
+}
+
+int jokers_get_used_slots(void)
+{
+    int used = 0;
+    ListItr itr = list_itr_create(get_jokers_list());
+    JokerObject* joker_object;
+    while ((joker_object = list_itr_next(&itr)))
+    {
+        if (joker_object->joker->edition != EDITION_NEGATIVE)
+            used++;
+    }
+    return used;
 }
 
 static inline void expired_jokers_update_loop(void)
@@ -848,6 +874,9 @@ void game_start(void)
         for (int rank = 0; rank < NUM_RANKS; rank++)
         {
             Card* card = card_new(suit, rank);
+#ifdef DEBUG_EDITIONS
+            card->edition = rank % 4; // None, Foil, Holographic, Polychrome
+#endif
             deck_push(card);
         }
     }

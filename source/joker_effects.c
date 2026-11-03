@@ -499,7 +499,7 @@ static int stencil_joker_desc(Joker* joker, Rect dest_rect)
     const u32 desc_max_size = 220;
 
     List* jokers = get_jokers_list();
-    u32 stencil_bonus = g_game_vars.joker_slots - list_get_len(jokers);
+    u32 stencil_bonus = g_game_vars.joker_slots - jokers_get_used_slots();
 
     ListItr itr = list_itr_create(jokers);
     JokerObject* joker_object;
@@ -1558,7 +1558,7 @@ static u32 stencil_joker_effect(
     List* jokers = get_jokers_list();
 
     // +1 xmult per empty joker slot...
-    int num_jokers = list_get_len(jokers);
+    int num_jokers = jokers_get_used_slots();
 
     (*joker_effect)->xmult = g_game_vars.joker_slots - num_jokers;
 

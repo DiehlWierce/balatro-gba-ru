@@ -83,6 +83,12 @@ ifneq ($(strip $(DEBUG_JOKER1)),)
 CFLAGS += -DTEST_JOKER_ID1=$(DEBUG_JOKER1)
 endif
 
+# Debug: Shop Jokers roll the editions Foil, Holographic, Polychrome, Negative, none, in turn, and the
+# cards of the Deck get an edition by rank. Run `touch source/joker.c source/game.c` when changing it.
+ifneq ($(strip $(DEBUG_EDITIONS)),)
+CFLAGS += -DDEBUG_EDITIONS
+endif
+
 CXXFLAGS	:=	$(CFLAGS) -fno-rtti -fno-exceptions
 
 ASFLAGS	:=	-g $(ARCH)

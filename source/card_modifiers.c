@@ -64,6 +64,24 @@ CardScoreResult card_modifiers_on_scored(Card* card)
         g_game_vars.mult = u32_protected_add(g_game_vars.mult, result.mult);
     if (result.xmult)
         g_game_vars.mult = u32_protected_mult(g_game_vars.mult, GLASS_CARD_XMULT);
+
+    // Editions score after the enhancement (Glass X2 comes before Holographic +10)
+    if (card->edition == EDITION_FOIL)
+    {
+        result.chips += EDITION_FOIL_CHIPS;
+        g_game_vars.chips = u32_protected_add(g_game_vars.chips, EDITION_FOIL_CHIPS);
+    }
+    else if (card->edition == EDITION_HOLOGRAPHIC)
+    {
+        result.mult += EDITION_HOLOGRAPHIC_MULT;
+        g_game_vars.mult = u32_protected_add(g_game_vars.mult, EDITION_HOLOGRAPHIC_MULT);
+    }
+    else if (card->edition == EDITION_POLYCHROME)
+    {
+        result.xmult_1_5 = true;
+        g_game_vars.mult = edition_polychrome_apply(g_game_vars.mult);
+    }
+
     if (result.money > 0)
         g_game_vars.money += result.money;
 

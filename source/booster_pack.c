@@ -17,6 +17,7 @@
 #include "random.h"
 #include "sprite.h"
 #include "util.h"
+#include "voucher.h"
 
 #include <string.h>
 
@@ -49,6 +50,12 @@ static Item* standard_pack_roll_choice(int idx)
     {
         card->seal = CARD_SEAL_GOLD + rng_get_u32(RNG_SEQ_PACK_CONTENTS) % (CARD_SEAL_MAX - 1);
     }
+    // Own sequence so the contents above stay the same for a given seed. No Negative cards.
+    card->edition = edition_from_roll(
+        rng_get_u32(RNG_SEQ_PACK_EDITION),
+        voucher_get_edition_rate_multiplier(),
+        false
+    );
 
     CardObject* card_object = card_object_new(card);
     card_object_set_sprite(card_object, idx);

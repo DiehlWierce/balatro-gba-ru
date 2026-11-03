@@ -1,5 +1,6 @@
 #include "card.h"
 
+#include "edition_gfx.h"
 #include "game_variables.h"
 #include "graphic_utils.h"
 #include "item.h"
@@ -76,6 +77,7 @@ Card* card_new(u8 suit, u8 rank)
     card->seal = CARD_SEAL_NONE;
     card->debuffed = false;
     card->face_down = false;
+    card->edition = EDITION_NONE;
     card->played_ante = 0;
     card->bonus_chips = 0;
 
@@ -152,6 +154,11 @@ const char* card_get_enhancement_name(const Card* card)
 const char* card_get_seal_name(const Card* card)
 {
     return card->seal < CARD_SEAL_MAX ? SEAL_NAMES[card->seal] : NULL;
+}
+
+const char* card_get_edition_name(const Card* card)
+{
+    return edition_get_name(card->edition);
 }
 
 #pragma region Card modifiers drawing
@@ -348,7 +355,8 @@ static void card_draw_seal(u32* tiles, enum CardSeal seal)
  */
 static void card_copy_tiles(const Card* card, u32* dest, const unsigned int* src)
 {
-    if (card->enhancement == CARD_ENHANCEMENT_NONE && card->seal == CARD_SEAL_NONE)
+    if (card->enhancement == CARD_ENHANCEMENT_NONE && card->seal == CARD_SEAL_NONE &&
+        card->edition == EDITION_NONE)
     {
         memcpy32(dest, src, CARD_TILES_WORDS);
         return;
@@ -359,6 +367,8 @@ static void card_copy_tiles(const Card* card, u32* dest, const unsigned int* src
 
     if (card->enhancement < CARD_ENHANCEMENT_MAX && card->enhancement != CARD_ENHANCEMENT_NONE)
         card_draw_enhancement(tiles, card->enhancement);
+    if (card->edition != EDITION_NONE && card->edition < EDITION_MAX)
+        edition_draw_tiles(tiles, CARD_PB, card->edition);
     if (card->seal < CARD_SEAL_MAX && card->seal != CARD_SEAL_NONE)
         card_draw_seal(tiles, card->seal);
 

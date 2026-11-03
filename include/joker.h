@@ -7,6 +7,7 @@
 #define JOKER_H
 
 #include "card.h"
+#include "edition_rules.h"
 #include "game.h"
 #include "graphic_utils.h"
 #include "item.h"
@@ -86,6 +87,7 @@ typedef struct Joker
     u8 value;
     u8 stickers;      // JOKER_STICKER_* flags given by the Stake (see stake.h)
     u8 perish_rounds; // Rounds left before a Perishable Joker stops working
+    u8 edition;       // enum Edition, see edition_rules.h
     enum JokerRarity rarity;
 
     // General purpose values that are interpreted differently for each Joker (scaling, last
@@ -188,6 +190,28 @@ void joker_on_consumable_used(bool is_tarot);    // Constellation, Fortune Telle
 void joker_on_pack_opened(void);                 // Hallucination
 void joker_on_blind_selected(void);              // Burglar, Cartomancer, Marble Joker (before shuffle)
 void joker_on_deck_shuffled(void);               // Certificate (after the deck is shuffled)
+
+/**
+ * @brief Sets the edition of a Joker and adjusts its price: the extra price of the old edition is
+ *        removed and the one of the new edition added. Doesn't redraw the sprite.
+ */
+void joker_set_edition(Joker* joker, enum Edition edition);
+
+/**
+ * @brief Gives a new Joker an edition with a random roll (Shop, Judgement), see
+ *        edition_from_roll(). Hone and Glow Up make editions more frequent.
+ */
+void joker_roll_edition(Joker* joker);
+
+/**
+ * @brief Gives the Joker an edition and redraws its sprite with the edition effect.
+ */
+void joker_object_set_edition(JokerObject* joker_object, enum Edition edition);
+
+/**
+ * @brief Number of Jokers that use a Joker slot: Negative Jokers have a slot of their own.
+ */
+int jokers_get_used_slots(void);
 
 /**
  * @brief Whether the Joker can be sold: Eternal Jokers (Black Stake) can't

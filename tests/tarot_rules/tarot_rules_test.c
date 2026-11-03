@@ -53,10 +53,12 @@ static void test_death(void)
     dst.debuffed = true;
     dst.played_ante = 3;
     Card src = make(QUEEN, HEARTS, CARD_ENHANCEMENT_GLASS, CARD_SEAL_GOLD);
+    src.edition = EDITION_POLYCHROME;
 
     card_copy_from(&dst, &src);
     assert(dst.suit == HEARTS && dst.rank == QUEEN);
     assert(dst.enhancement == CARD_ENHANCEMENT_GLASS && dst.seal == CARD_SEAL_GOLD);
+    assert(dst.edition == EDITION_POLYCHROME); // Death copies the edition too
     assert(dst.debuffed && dst.played_ante == 3); // Runtime flags are kept
     assert(src.suit == HEARTS && src.rank == QUEEN);
 }
@@ -124,9 +126,9 @@ static void test_rollable(void)
     int count = 0;
     for (int tarot = 0; tarot < TAROT_TYPE_MAX; tarot++)
         count += tarot_is_rollable(tarot);
-    assert(count == TAROT_TYPE_MAX - 1);
+    assert(count == TAROT_TYPE_MAX); // The Wheel of Fortune is rollable since the Editions
     assert(tarot_is_rollable(TAROT_JUDGEMENT));
-    assert(!tarot_is_rollable(TAROT_WHEEL));
+    assert(tarot_is_rollable(TAROT_WHEEL));
     assert(!tarot_is_rollable(TAROT_TYPE_MAX));
 }
 
