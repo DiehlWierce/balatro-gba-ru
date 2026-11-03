@@ -116,6 +116,7 @@ Sprite* sprite_new(u16 a0, u16 a1, u32 tid, u32 pb, s16 sprite_index)
 
         if (aff_index == MAX_AFFINES)
         {
+            free_sprites[sprite_index] = NULL;
             POOL_FREE(Sprite, sprite);
             return NULL;
         }

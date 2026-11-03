@@ -103,12 +103,12 @@ static void main_bg_se_copy_or_move_rect_1_tile_vert(
 
 void bg_se_copy_rect_1_tile_vert(u16 bg_sbb, Rect se_rect, enum ScreenVertDir direction)
 {
-    bg_se_copy_or_move_rect_1_tile_vert(MAIN_BG_SBB, se_rect, direction, false);
+    bg_se_copy_or_move_rect_1_tile_vert(bg_sbb, se_rect, direction, false);
 }
 
 void bg_se_move_rect_1_tile_vert(u16 bg_sbb, Rect se_rect, enum ScreenVertDir direction)
 {
-    bg_se_copy_or_move_rect_1_tile_vert(MAIN_BG_SBB, se_rect, direction, true);
+    bg_se_copy_or_move_rect_1_tile_vert(bg_sbb, se_rect, direction, true);
 }
 
 void main_bg_se_copy_rect_1_tile_vert(Rect se_rect, enum ScreenVertDir direction)
@@ -585,6 +585,13 @@ int tte_printf_justified_in_rect(
             token_text_len++;
             line_text_len++;
         };
+
+        // A single token wider than the rect never reached a space: break it mid-word,
+        // otherwise `line_start` would never advance.
+        if (token_start == line_start && token_start < raw_text_len)
+        {
+            token_start += token_len > 0 ? token_len : 1;
+        }
 
         // Do not print anything if we only need to compute the paragraph's total height
         if (do_print)
