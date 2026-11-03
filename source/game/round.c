@@ -6,6 +6,7 @@
 #include "game/round.h"
 
 #include "ante_table.h"
+#include "deck_rules.h"
 #include "audio_utils.h"
 #include "background_gfx.h"
 #include "blind_effects.h"
@@ -2278,6 +2279,14 @@ static inline bool play_scoring_hand_scored_end_update(int played_idx)
         if (scored)
         {
             return true;
+        }
+
+        // Plasma Deck: chips and mult are balanced once every Joker has scored
+        if (deck_rules_balances_score(g_game_vars.deck))
+        {
+            deck_rules_plasma_balance(&g_game_vars.chips, &g_game_vars.mult);
+            display_chips();
+            display_mult();
         }
 
         g_game_vars.timer = TM_ZERO;

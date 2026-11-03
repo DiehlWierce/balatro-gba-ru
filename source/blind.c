@@ -4,6 +4,7 @@
  */
 
 #include "ante_table.h"
+#include "deck_rules.h"
 #include "blind.h"
 
 #include "blind_gfx.h"
@@ -116,7 +117,7 @@ u32 blind_get_requirement(enum BlindType type, int ante)
     // 64 bits and saturated: ante 12 Boss Blinds are in the billions
     return ante_table_requirement(
         ante_base_requirement(ante),
-        (u32)s_blind_type_map[type].score_req_multiplier
+        (u32)s_blind_type_map[type].score_req_multiplier * deck_rules_blind_scale(g_game_vars.deck)
     );
 }
 

@@ -4,6 +4,7 @@
  * @brief Consumable cards: Planets for now, see consumable.h.
  */
 #include "consumable.h"
+#include "deck_rules.h"
 
 #include "game.h"
 #include "game/common_ui.h"
@@ -482,6 +483,16 @@ bool consumable_create_owned(enum ConsumableType type, int id, FIXED x, FIXED y)
     item->ty = y;
     item_acquire(item);
     return true;
+}
+
+bool consumable_give_at_start(enum ConsumableType type, int id)
+{
+    return consumable_create_owned(
+        type,
+        id,
+        int2fx(CONSUMABLES_PANEL_CENTER_X),
+        int2fx(HELD_JOKERS_POS.y)
+    );
 }
 
 bool consumable_create_random_tarot(enum RngSequence key, FIXED x, FIXED y)
@@ -1090,6 +1101,24 @@ Item* consumable_object_roll_new(enum RngSequence key)
 {
     // The Shop sells as many Tarots as Planets, unless a Voucher (Tarot Merchant, Planet Merchant,
     // Tycoons) changes the odds
+    // Ghost Deck: Spectral cards are sold too (own sequence, other Decks never roll it)
+    if (key == RNG_SEQ_SHOP_PLANETS && g_game_vars.deck == DECK_TYPE_GHOST)
+    {
+        u32 r = rng_get_u32(RNG_SEQ_SHOP_SPECTRAL);
+        if (deck_rules_shop_is_spectral(
+                g_game_vars.deck,
+                voucher_get_tarot_shop_weight_x10(),
+                voucher_get_planet_shop_weight_x10(),
+                r
+            ))
+        {
+            u32 pick = rng_get_u32(RNG_SEQ_SHOP_SPECTRAL) % spectral_common_pool_size();
+            enum SpectralType spectral = spectral_common_pool_get(pick);
+            if (spectral != SPECTRAL_TYPE_MAX)
+                return (Item*)consumable_object_new(CONSUMABLE_TYPE_SPECTRAL, spectral);
+        }
+    }
+
     if (key == RNG_SEQ_SHOP_PLANETS &&
         shop_consumable_is_tarot(
             voucher_get_tarot_shop_weight_x10(),

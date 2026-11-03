@@ -9,6 +9,7 @@
 #include "button.h"
 #include "card.h"
 #include "consumable.h"
+#include "deck_rules.h"
 #include "game/blind_select.h"
 #include "game/common_ui.h"
 #include "game/game_over.h"
@@ -857,6 +858,12 @@ void game_deck_sprite_set_hidden(bool hidden)
         sprite_unhide(s_deck_sprite);
 }
 
+static uint32_t game_deck_erratic_rand(void* ctx)
+{
+    (void)ctx;
+    return rng_get_u32(RNG_SEQ_DECK_ERRATIC);
+}
+
 void game_start(void)
 {
     affine_background_change_background(AFFINE_BG_GAME);
@@ -872,18 +879,24 @@ void game_start(void)
 
     game_deck_sprite_create();
 
-    // Fill the deck with all the cards. Later on this can be replaced with a more dynamic system
-    // that allows for different decks and card types.
-    for (int suit = 0; suit < NUM_SUITS; suit++)
+    // Fill the deck with the starting cards of the chosen Deck
+    uint8_t start_suits[DECK_STANDARD_SIZE];
+    uint8_t start_ranks[DECK_STANDARD_SIZE];
+    int start_count = deck_rules_build(
+        g_game_vars.deck,
+        start_suits,
+        start_ranks,
+        DECK_STANDARD_SIZE,
+        game_deck_erratic_rand,
+        NULL
+    );
+    for (int i = 0; i < start_count; i++)
     {
-        for (int rank = 0; rank < NUM_RANKS; rank++)
-        {
-            Card* card = card_new(suit, rank);
+        Card* card = card_new(start_suits[i], start_ranks[i]);
 #ifdef DEBUG_EDITIONS
-            card->edition = rank % 4; // None, Foil, Holographic, Polychrome
+        card->edition = start_ranks[i] % 4; // None, Foil, Holographic, Polychrome
 #endif
-            deck_push(card);
-        }
+        deck_push(card);
     }
 
     // Deck size/max size

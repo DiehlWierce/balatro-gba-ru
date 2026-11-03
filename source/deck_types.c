@@ -5,7 +5,11 @@
  */
 #include "deck_types.h"
 
+#include "consumable.h"
 #include "game.h"
+#include "spectral_rules.h"
+#include "tarot_rules.h"
+#include "voucher.h"
 
 #include <string.h>
 #include <tonc.h>
@@ -21,7 +25,15 @@ static const char DECK_NAMES[DECK_TYPE_MAX][DECK_NAME_LENGTH] = {
     "   Жёлтая    ",
     "   Зелёная   ",
     "   Чёрная    ",
-    "  Расписная  "
+    "  Расписная  ",
+    "  Волшебная  ",
+    " Туманность  ",
+    " Призрачная  ",
+    " Заброшенная ",
+    "  Клетчатая  ",
+    "   Зодиак    ",
+    " Плазменная  ",
+    "  Хаотичная  "
 };
 
 void print_deck_name(enum DeckType deck, BG_POINT pos)
@@ -78,6 +90,55 @@ static const DeckDescSegment* const DECK_DESCRIPTIONS[DECK_TYPE_MAX][5] = {
      NULL, SEGS({TTE_YELLOW_PB, "+2 "}, {TTE_BLACK_PB, "к размеру"}),
      SEGS({TTE_BLACK_PB, "руки"}),
      SEGS({TTE_RED_PB, "-1 "}, {TTE_BLACK_PB, "слот Джок."}),
+     NULL, },
+    // Magic
+    {
+     NULL, SEGS({TTE_BLACK_PB, "Старт с"}),
+     SEGS({TTE_YELLOW_PB, "Хруст. шаром"}),
+     SEGS({TTE_BLACK_PB, "и 2 "}, {TTE_YELLOW_PB, "Дураками"}),
+     NULL, },
+    // Nebula
+    {
+     NULL, SEGS({TTE_BLACK_PB, "Старт с"}),
+     SEGS({TTE_YELLOW_PB, "Телескопом"}),
+     SEGS({TTE_RED_PB, "-1 "}, {TTE_BLACK_PB, "слот"}),
+     SEGS({TTE_BLACK_PB, "расходников"}), },
+    // Ghost
+    {
+     SEGS({TTE_BLACK_PB, "Спектр. карты"}),
+     SEGS({TTE_BLACK_PB, "в лавке"}),
+     NULL, SEGS({TTE_BLACK_PB, "Старт с"}),
+     SEGS({TTE_YELLOW_PB, "Порчей"}), },
+    // Abandoned
+    {
+     NULL, SEGS({TTE_BLACK_PB, "В колоде нет"}),
+     SEGS({TTE_RED_PB, "картинок"}),
+     SEGS({TTE_BLACK_PB, "(40 карт)"}),
+     NULL, },
+    // Checkered
+    {
+     NULL, SEGS({TTE_BLACK_PB, "26 пик и"}),
+     SEGS({TTE_RED_PB, "26 червей"}),
+     SEGS({TTE_BLACK_PB, "в колоде"}),
+     NULL, },
+    // Zodiac
+    {
+     SEGS({TTE_BLACK_PB, "Старт с"}),
+     SEGS({TTE_YELLOW_PB, "Торг. Таро,"}),
+     SEGS({TTE_YELLOW_PB, "Торг. планет"}),
+     SEGS({TTE_BLACK_PB, "и "}, {TTE_YELLOW_PB, "Затоваркой"}),
+     NULL, },
+    // Plasma
+    {
+     SEGS({TTE_BLACK_PB, "Фишки и "}, {TTE_RED_PB, "множ."}),
+     SEGS({TTE_BLACK_PB, "уравниваются"}),
+     NULL, SEGS({TTE_BLACK_PB, "Цель блайнда"}),
+     SEGS({TTE_YELLOW_PB, "X2"}), },
+    // Erratic
+    {
+     NULL, SEGS({TTE_BLACK_PB, "Ранги и масти"}),
+     SEGS({TTE_BLACK_PB, "всех карт"}),
+     SEGS({TTE_YELLOW_PB, "случайные"}),
      NULL, },
 };
 
@@ -141,6 +202,29 @@ void deck_apply_start_effects(enum DeckType deck)
             g_game_vars.joker_slots -= 1;
             break;
 
+        case DECK_TYPE_MAGIC:
+            voucher_redeem(VOUCHER_CRYSTAL_BALL);
+            consumable_give_at_start(CONSUMABLE_TYPE_TAROT, TAROT_FOOL);
+            consumable_give_at_start(CONSUMABLE_TYPE_TAROT, TAROT_FOOL);
+            break;
+
+        case DECK_TYPE_NEBULA:
+            voucher_redeem(VOUCHER_TELESCOPE);
+            g_game_vars.consumable_slots -= 1;
+            break;
+
+        case DECK_TYPE_GHOST:
+            consumable_give_at_start(CONSUMABLE_TYPE_SPECTRAL, SPECTRAL_HEX);
+            break;
+
+        case DECK_TYPE_ZODIAC:
+            voucher_redeem(VOUCHER_TAROT_MERCHANT);
+            voucher_redeem(VOUCHER_PLANET_MERCHANT);
+            voucher_redeem(VOUCHER_OVERSTOCK);
+            break;
+
+        // Abandoned, Checkered and Erratic change the starting cards (deck_rules_build() in
+        // game_start()), Plasma the scoring (round.c) and the Blind sizes (blind.c)
         default:
             break;
     }

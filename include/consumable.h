@@ -171,6 +171,12 @@ bool tarot_can_use_now(enum TarotType tarot);
 bool consumable_create_owned(enum ConsumableType type, int id, FIXED x, FIXED y);
 
 /**
+ * @brief Gives the player a consumable at the start of a run (Magic and Ghost Decks), placed in
+ *        the consumables panel. Does nothing without a free slot.
+ */
+bool consumable_give_at_start(enum ConsumableType type, int id);
+
+/**
  * @brief Creates a random Tarot in the owned row, if a slot is free (Purple seal).
  */
 bool consumable_create_random_tarot(enum RngSequence key, FIXED x, FIXED y);
