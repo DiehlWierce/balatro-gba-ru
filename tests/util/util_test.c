@@ -284,8 +284,20 @@ void test_base36_conversions(void)
     assert(strcmp(base36_str, "ZZZZZZ") == 0);
 }
 
+void test_sfx_rate_clamp()
+{
+    assert(util_clamp_sfx_rate(1024) == 1024);
+    assert(util_clamp_sfx_rate(1024 - 64 * 33) == SFX_RATE_MIN); // 33 cards discarded in a row
+    assert(util_clamp_sfx_rate(-1) == SFX_RATE_MIN);
+    assert(util_clamp_sfx_rate(2 * 1024) == 2048);
+    assert(util_clamp_sfx_rate(100000) == SFX_RATE_MAX);
+}
+
 int main()
 {
+    printf("Testing SFX rate clamp.\n");
+    test_sfx_rate_clamp();
+
     printf("Testing Truncating UINT32.\n");
     test_truncate_uint_to_suffixed_str();
 

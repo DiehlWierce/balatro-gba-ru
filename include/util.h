@@ -32,6 +32,19 @@
 
 #define UNDEFINED -1
 
+/// Allowed range of the Maxmod sound effect rate (1024 is the original pitch). A rate outside it
+/// (for example a negative one wrapped into `mm_word`) makes the mixer write far past its buffer.
+#define SFX_RATE_MIN 256
+#define SFX_RATE_MAX 4096
+
+/**
+ * @brief Clamps a sound effect rate to [SFX_RATE_MIN, SFX_RATE_MAX].
+ */
+static inline int util_clamp_sfx_rate(int rate)
+{
+    return rate < SFX_RATE_MIN ? SFX_RATE_MIN : (rate > SFX_RATE_MAX ? SFX_RATE_MAX : rate);
+}
+
 /**
  * @def MAX_BASE36
  * @brief Hex value of "ZZZZZZ" in base 36

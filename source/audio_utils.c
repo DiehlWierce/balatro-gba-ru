@@ -102,6 +102,9 @@ static void speed_change_update(void)
 
 void play_sfx(mm_word id, mm_word rate, mm_byte volume)
 {
+    // The callers build the rate from counters; a negative value wrapped into mm_word would
+    // overrun the Maxmod mixing buffer
+    rate = (mm_word)util_clamp_sfx_rate((int)rate);
     int adj_volume = volume * g_game_vars.sound_volume / VOLUME_OPTION_MAX;
     mm_sound_effect sfx = {
         {id},

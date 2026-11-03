@@ -2508,6 +2508,9 @@ static bool play_ended_played_cards_update(int played_idx)
                     round_apply_mr_bones(); // A saved round pays the held cards like a won one
                     round_apply_held_cards_round_won();
                     set_hand_state(HAND_SHUFFLING);
+                    // Counts the held cards sent to the deck: it is only reset by a discard, and
+                    // its pitch step turned the rate negative after a dozen rounds
+                    s_cards_discarded = 0;
                 }
                 else
                 {
