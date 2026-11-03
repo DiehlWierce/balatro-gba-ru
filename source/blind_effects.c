@@ -12,6 +12,7 @@
 #include "hand.h"
 #include "joker.h"
 #include "list.h"
+#include "probability.h"
 #include "random.h"
 #include "util.h"
 
@@ -281,7 +282,7 @@ static u32 blind_effect_face_down(enum BlindEvent event, const BlindEventData* d
             face_down = s_house_first_hand;
             break;
         case BLIND_TYPE_WHEEL:
-            face_down = rng_get_u32(RNG_SEQ_BOSS_WHEEL) % WHEEL_FACE_DOWN_ODDS == 0;
+            face_down = probability_one_in(rng_get_u32(RNG_SEQ_BOSS_WHEEL), WHEEL_FACE_DOWN_ODDS);
             break;
         case BLIND_TYPE_MARK:
             face_down = card_is_face(data->card);

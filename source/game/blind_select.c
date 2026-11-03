@@ -434,6 +434,11 @@ volatile int g_debug_forced_boss = DEBUG_FORCE_BOSS;
 
 static inline void reroll_boss_blind(void)
 {
+    // A Boss that was shown and rerolled away counts as used, so it can't come back right away.
+    // No-op for the Boss we just beat, it is already out of the list.
+    if (g_game_vars.next_boss_blind >= BLIND_TYPE_BOSS)
+        set_blind_beaten(g_game_vars.next_boss_blind);
+
     // Showdown blinds only show up on ante 8, 16, etc...
     g_game_vars.next_boss_blind =
         roll_blind_type((g_game_vars.ante % MAX_ANTE == 0) && (g_game_vars.ante > 0));
