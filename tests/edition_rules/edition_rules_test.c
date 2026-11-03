@@ -64,13 +64,21 @@ static void test_roll_chances(void)
     assert(counts[EDITION_HOLOGRAPHIC] == 56 && counts[EDITION_FOIL] == 80);
     assert(counts[EDITION_NONE] == 840);
 
-    // Playing cards never get Negative, its band becomes Polychrome
-    count_editions(4, false, counts);
-    assert(counts[EDITION_NEGATIVE] == 0);
-    assert(counts[EDITION_POLYCHROME] == 24);
-    assert(counts[EDITION_NONE] == 840);
+    // Playing cards never get Negative and roll with twice the chances of a Joker: Foil 4%,
+    // Holographic 2.8%, Polychrome 1.2% (B-007)
     count_editions(1, false, counts);
-    assert(counts[EDITION_POLYCHROME] == 6);
+    assert(counts[EDITION_NEGATIVE] == 0);
+    assert(counts[EDITION_POLYCHROME] == 12);
+    assert(counts[EDITION_HOLOGRAPHIC] == 28);
+    assert(counts[EDITION_FOIL] == 40);
+    assert(counts[EDITION_NONE] == 920);
+    count_editions(2, false, counts); // Hone
+    assert(counts[EDITION_POLYCHROME] == 24 && counts[EDITION_HOLOGRAPHIC] == 56);
+    assert(counts[EDITION_FOIL] == 80 && counts[EDITION_NONE] == 840);
+    count_editions(4, false, counts); // Glow Up
+    assert(counts[EDITION_NEGATIVE] == 0);
+    assert(counts[EDITION_POLYCHROME] == 48 && counts[EDITION_HOLOGRAPHIC] == 112);
+    assert(counts[EDITION_FOIL] == 160 && counts[EDITION_NONE] == 680);
 
     // A rate below 1 counts as 1, the roll wraps around the range
     assert(edition_from_roll(0, 0, true) == EDITION_NEGATIVE);

@@ -1,0 +1,152 @@
+# B-004: Wraith with 4 normal and 3 Negative Jokers (7 in the row) creates no 8th Joker.
+# Needs a debug build: touch source/consumable.c && make DEBUG_TAROT=1
+# Seed GBARU1, Small Blind round. SpectralType: Wraith 5, Ectoplasm 8.
+# Wraith x5, then Ectoplasm, Wraith, Ectoplasm, Wraith, Ectoplasm turn jokers Negative until the
+# row holds 7 Jokers (4 normal, 3 Negative, 4 of 5 slots used); the last Wraith must stay unused
+# (the row stays at 7, the card is still in the consumables panel).
+
+wait 460
+press START
+wait 60
+press A
+wait 60
+pokestr {sym:s_seed_str} GBARU1
+poke8 {sym:use_seed} 1
+press DOWN
+wait 10
+press A
+wait 120
+press A
+wait 240
+shot 00_round
+
+# step 0: spectral 5
+poke32 {sym:g_debug_give_spectral} 5
+wait 90
+press UP
+wait 20
+press RIGHT 3
+wait 5
+shot step00_sel
+press A
+wait 150
+shot step00_used
+
+# step 1: spectral 5
+poke32 {sym:g_debug_give_spectral} 5
+wait 90
+press UP
+wait 20
+press RIGHT 3
+wait 5
+shot step01_sel
+press A
+wait 150
+shot step01_used
+
+# step 2: spectral 5
+poke32 {sym:g_debug_give_spectral} 5
+wait 90
+press UP
+wait 20
+press RIGHT 3
+wait 5
+shot step02_sel
+press A
+wait 150
+shot step02_used
+
+# step 3: spectral 5
+poke32 {sym:g_debug_give_spectral} 5
+wait 90
+press UP
+wait 20
+press RIGHT 3
+wait 5
+shot step03_sel
+press A
+wait 150
+shot step03_used
+
+# step 4: spectral 5
+poke32 {sym:g_debug_give_spectral} 5
+wait 90
+press UP
+wait 20
+press RIGHT 3
+wait 5
+shot step04_sel
+press A
+wait 150
+shot step04_used
+
+# step 5: spectral 8
+poke32 {sym:g_debug_give_spectral} 8
+wait 90
+press UP
+wait 20
+press RIGHT 3
+wait 5
+shot step05_sel
+press A
+wait 150
+shot step05_used
+
+# step 6: spectral 5
+poke32 {sym:g_debug_give_spectral} 5
+wait 90
+press UP
+wait 20
+press RIGHT 3
+wait 5
+shot step06_sel
+press A
+wait 150
+shot step06_used
+
+# step 7: spectral 8
+poke32 {sym:g_debug_give_spectral} 8
+wait 90
+press UP
+wait 20
+press RIGHT 3
+wait 5
+shot step07_sel
+press A
+wait 150
+shot step07_used
+
+# step 8: spectral 5
+poke32 {sym:g_debug_give_spectral} 5
+wait 90
+press UP
+wait 20
+press RIGHT 3
+wait 5
+shot step08_sel
+press A
+wait 150
+shot step08_used
+
+# step 9: spectral 8
+poke32 {sym:g_debug_give_spectral} 8
+wait 90
+press UP
+wait 20
+press RIGHT 3
+wait 5
+shot step09_sel
+press A
+wait 150
+shot step09_used
+
+# step 10: spectral 5
+poke32 {sym:g_debug_give_spectral} 5
+wait 90
+press UP
+wait 20
+press RIGHT 3
+wait 5
+press A
+wait 150
+shot step10_wraith_refused

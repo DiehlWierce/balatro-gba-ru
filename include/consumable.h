@@ -19,10 +19,10 @@
 #include <tonc.h>
 
 /**
- * @brief Maximum ConsumableObjects alive at once: owned ones, the ones in the Shop, the 3 choices
- *        of an Arcana Pack and the ones flying away after being used or sold.
+ * @brief Maximum ConsumableObjects alive at once: owned ones, the ones in the Shop, the 5 choices
+ *        of a Jumbo or Mega Pack and the ones flying away after being used or sold.
  */
-#define MAX_ACTIVE_CONSUMABLES 9
+#define MAX_ACTIVE_CONSUMABLES 12
 
 #define PLANET_BUY_PRICE 3
 #define TAROT_BUY_PRICE  3
@@ -65,7 +65,12 @@ typedef struct ConsumableObject
     u8 consumable_type; // enum ConsumableType
     u8 id;              // enum PlanetType for Planets, enum TarotType for Tarots
     s16 layer;          // Sprite layer within CONSUMABLE_SPRITE
+    u8 flags;           // CONSUMABLE_FLAG_*
+    u8 sell_bonus;      // Money added to the sell price (Gift Card)
 } ConsumableObject;
+
+#define CONSUMABLE_FLAG_NEGATIVE (1 << 0) // Negative edition: comes with a consumable slot of its own
+#define CONSUMABLE_FLAG_LOCKED   (1 << 1) // For sale or in a Pack: can't be rolled again (no Showman)
 
 /**
  * @brief Resets the owned consumables list, to be called when a run starts (game_init()).
@@ -150,7 +155,36 @@ bool consumable_has_free_slot(void);
 enum PlanetType planet_roll(enum RngSequence key);
 
 /**
- * @brief Rolls a random rollable Tarot.
+ * @brief Rolls a random Spectral card of the common pool (not Black Hole nor The Soul), not for
+ *        sale nor in a Pack already unless Showman is owned.
+ *
+ * @return the Spectral card, SPECTRAL_TYPE_MAX if none
+ */
+enum SpectralType spectral_roll(enum RngSequence key);
+
+/**
+ * @brief Marks a card rolled for the Shop or a Pack: until it is bought, taken or disposed of, the
+ *        same card can't be rolled again (Planets, Tarots and Spectrals, unless Showman is owned).
+ */
+void consumable_lock_unique(ConsumableObject* consumable_object);
+
+/**
+ * @brief Makes a consumable Negative: it brings a slot of its own and is redrawn with the edition.
+ */
+void consumable_object_set_negative(ConsumableObject* consumable_object);
+
+/**
+ * @brief Adds money to the sell price of a consumable (Gift Card), saturating.
+ */
+void consumable_object_add_sell_bonus(ConsumableObject* consumable_object, int amount);
+
+/**
+ * @brief Adds money to the sell price of every owned consumable (Gift Card, end of round).
+ */
+void consumables_add_sell_bonus_all(int amount);
+
+/**
+ * @brief Rolls a random rollable Tarot, not for sale nor in a Pack already (unless Showman).
  *
  * @return the Tarot, TAROT_TYPE_MAX if none is rollable
  */
@@ -202,7 +236,7 @@ bool consumable_create_joker(int rarity, enum RngSequence key, FIXED x, FIXED y)
 bool consumable_create_random_spectral(enum RngSequence key, FIXED x, FIXED y);
 
 /**
- * @brief Copies a random owned consumable into a free slot (Perkeo, not Negative).
+ * @brief Copies a random owned consumable as a Negative card, no free slot needed (Perkeo).
  *
  * @return true if a copy was made
  */

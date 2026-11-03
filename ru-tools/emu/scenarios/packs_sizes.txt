@@ -1,0 +1,51 @@
+# B-031/B-033: Mega Celestial pack (5 different Planets, pick 2).
+# Needs a debug build: touch source/consumable.c && make DEBUG_TAROT=1
+# g_debug_force_top_row 1 = Packs; g_debug_force_pack: PackType 12 = Mega Celestial.
+
+wait 460
+press START
+wait 60
+press A
+wait 60
+pokestr {sym:s_seed_str} GBARU1
+poke8 {sym:use_seed} 1
+press DOWN
+wait 10
+press A
+wait 120
+
+poke32 {sym:g_debug_force_top_row} 1
+poke32 {sym:g_debug_force_pack} 12
+press A
+wait 180
+poke32 {gv:score} 100000
+press A
+press L
+wait 1100
+press A
+wait 200
+poke32 {gv:money} 100
+shot 00_shop_mega_packs
+
+press DOWN
+wait 20
+press UP
+wait 20
+press RIGHT
+wait 20
+hold B
+wait 90
+shot 01_mega_celestial_description
+release B
+wait 30
+
+# Buy and open: 5 different Planets, pick 2
+press A
+wait 80
+shot 02_mega_celestial_open
+press A
+wait 80
+shot 03_first_taken
+press A
+wait 120
+shot 04_second_taken_pack_closed
