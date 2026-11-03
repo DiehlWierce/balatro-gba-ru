@@ -68,6 +68,16 @@ void test_bitset_insertions_at_boundry(void)
     bitset_set_idx(&test_bitset, 0, false);
     bitset_set_idx(&test_bitset, 0, 30);
 
+    // The last bit of a word must be findable too
+    bitset_clear(&test_bitset);
+    bitset_set_idx(&test_bitset, 5, true);
+    bitset_set_idx(&test_bitset, 31, true);
+    bitset_set_idx(&test_bitset, 63, true);
+    assert(bitset_find_idx_of_nth_set(&test_bitset, 0) == 5);
+    assert(bitset_find_idx_of_nth_set(&test_bitset, 1) == 31);
+    assert(bitset_find_idx_of_nth_set(&test_bitset, 2) == 63);
+    assert(bitset_find_idx_of_nth_set(&test_bitset, 3) == UNDEFINED);
+
     bitset_clear(&test_bitset);
 
     assert(bitset_is_empty(&test_bitset));
