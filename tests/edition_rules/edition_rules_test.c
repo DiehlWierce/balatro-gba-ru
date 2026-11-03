@@ -53,19 +53,24 @@ static void test_roll_chances(void)
     assert(counts[EDITION_FOIL] == 20);
     assert(counts[EDITION_NONE] == 960);
 
-    // Hone doubles every chance, Glow Up multiplies them by 4
+    // Hone doubles and Glow Up quadruples the chances of the other editions, not Negative's:
+    // the thresholds of Polychrome, Holographic and Foil (0.6%, 2%, 4%) are what scales
     count_editions(2, true, counts);
-    assert(counts[EDITION_NEGATIVE] == 6 && counts[EDITION_FOIL] == 40);
+    assert(counts[EDITION_NEGATIVE] == 3 && counts[EDITION_POLYCHROME] == 9);
+    assert(counts[EDITION_HOLOGRAPHIC] == 28 && counts[EDITION_FOIL] == 40);
     assert(counts[EDITION_NONE] == 920);
     count_editions(4, true, counts);
-    assert(counts[EDITION_NEGATIVE] == 12 && counts[EDITION_POLYCHROME] == 12);
+    assert(counts[EDITION_NEGATIVE] == 3 && counts[EDITION_POLYCHROME] == 21);
     assert(counts[EDITION_HOLOGRAPHIC] == 56 && counts[EDITION_FOIL] == 80);
     assert(counts[EDITION_NONE] == 840);
 
-    // Playing cards never get Negative
+    // Playing cards never get Negative, its band becomes Polychrome
     count_editions(4, false, counts);
     assert(counts[EDITION_NEGATIVE] == 0);
-    assert(counts[EDITION_NONE] == 840 + 12);
+    assert(counts[EDITION_POLYCHROME] == 24);
+    assert(counts[EDITION_NONE] == 840);
+    count_editions(1, false, counts);
+    assert(counts[EDITION_POLYCHROME] == 6);
 
     // A rate below 1 counts as 1, the roll wraps around the range
     assert(edition_from_roll(0, 0, true) == EDITION_NEGATIVE);

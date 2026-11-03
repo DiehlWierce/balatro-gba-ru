@@ -124,12 +124,13 @@ static inline enum Edition edition_from_roll(uint32_t roll, int rate, bool allow
         rate = 1;
 
     uint32_t value = roll % EDITION_ROLL_RANGE;
-    uint32_t limit = 0;
 
-    limit += EDITION_CHANCE_NEGATIVE * rate;
-    if (value < limit)
-        return allow_negative ? EDITION_NEGATIVE : EDITION_NONE;
-    limit += EDITION_CHANCE_POLYCHROME * rate;
+    // Negative keeps its chance whatever the rate. The other editions are thresholds that include
+    // the lower bands, so the rate scales them and they swallow Negative's band without it.
+    if (allow_negative && value < EDITION_CHANCE_NEGATIVE)
+        return EDITION_NEGATIVE;
+
+    uint32_t limit = (EDITION_CHANCE_NEGATIVE + EDITION_CHANCE_POLYCHROME) * rate;
     if (value < limit)
         return EDITION_POLYCHROME;
     limit += EDITION_CHANCE_HOLOGRAPHIC * rate;
