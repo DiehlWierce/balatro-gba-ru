@@ -49,7 +49,7 @@
 #define REROLL_VOUCHER_COST_DISCOUNT 2 // Reroll Surplus / Reroll Glut
 
 // Weights of the top row item types in tenths, as in the original game (Jokers 20, Planets 4,
-// Tarots will add 4). Planet Merchant / Tycoon change the Planets' weight.
+// Tarots 4, playing cards 0 or 4). The Planet and Tarot Vouchers change the consumables' weight.
 #define SHOP_JOKER_WEIGHT_X10 200
 #define NEXT_ROUND_BTN_SEL_X  0
 #define REROLL_BTN_SEL_X      0
@@ -330,20 +330,51 @@ static void shop_redeem_skip_tags(void)
 /**
  * @brief Create a shop top row item: a Joker or a Planet, possibly playing cards later.
  */
+#ifdef DEBUG_GIVE_TAROT
+// The emulator pokes 1 (Pack), 2 (playing card) or 3 (Planet or Tarot) here to force the item type
+// of the top row (0: roll it normally)
+volatile int g_debug_force_top_row = 0;
+#endif
+
 static Item* shop_create_top_row_item(void)
 {
+#ifdef DEBUG_GIVE_TAROT
+    if (g_debug_force_top_row == 1)
+        return item_roll_new(ITEM_TYPE_PACK, RNG_SEQ_SHOP_PACKS);
+    if (g_debug_force_top_row == 2)
+        return item_roll_new(ITEM_TYPE_PLAYING_CARD, RNG_SEQ_SHOP_PLAYING_CARDS);
+    if (g_debug_force_top_row == 3)
+        return item_roll_new(ITEM_TYPE_CONSUMABLE, RNG_SEQ_SHOP_PLANETS);
+#endif
+
     // Smallest integer weights, so that the default 20:4 odds use the same modulus as before
     // and a given seed keeps rolling the same Shops
+    // A slot of consumables (Planet or Tarot) weighs the mean of both: 4 without Vouchers
     int joker_weight = SHOP_JOKER_WEIGHT_X10;
-    int planet_weight = voucher_get_planet_shop_weight_x10();
-    int divisor = (planet_weight % 10 == 0) ? 10 : 2;
+    int planet_weight =
+        (voucher_get_planet_shop_weight_x10() + voucher_get_tarot_shop_weight_x10()) / 2;
+    int pack_weight = SHOP_PACK_WEIGHT * 10;
+    int card_weight = voucher_get_playing_card_shop_weight_x10(); // Magic Trick
+    int divisor = 10;
+    if (planet_weight % 10 != 0 || card_weight % 10 != 0)
+        divisor = 2;
     joker_weight /= divisor;
     planet_weight /= divisor;
+    pack_weight /= divisor;
+    card_weight /= divisor;
 
-    u32 roll =
-        rng_get_u32(RNG_SEQ_SHOP_ITEM_TYPE) % (joker_weight + planet_weight + SHOP_PACK_WEIGHT);
+    u32 roll = rng_get_u32(RNG_SEQ_SHOP_ITEM_TYPE) %
+               (joker_weight + planet_weight + pack_weight + card_weight);
 
-    if (roll >= joker_weight + planet_weight)
+    if (roll >= joker_weight + planet_weight + pack_weight)
+    {
+        // Magic Trick: a playing card. NULL when no sprite layer is free: fall back to a Joker
+        Item* card = item_roll_new(ITEM_TYPE_PLAYING_CARD, RNG_SEQ_SHOP_PLAYING_CARDS);
+        if (card != NULL)
+            return card;
+        roll = 0;
+    }
+    else if (roll >= joker_weight + planet_weight)
     {
         // NULL when no pack sprite is free: fall back to a Joker
         Item* pack = item_roll_new(ITEM_TYPE_PACK, RNG_SEQ_SHOP_PACKS);
@@ -1320,6 +1351,13 @@ static void shop_pack_open_on_update(void)
     }
     else if (key_hit(KEY_CONFIRM) && s_pack_choices[s_pack_selected] != NULL)
     {
+        // E.g. no free consumable slot: the choice stays in the pack
+        if (s_pack_info->can_pick != NULL && !s_pack_info->can_pick(s_pack_choices[s_pack_selected]))
+        {
+            play_sfx(SFX_CARD_DESELECT, MM_BASE_PITCH_RATE, SFX_DEFAULT_VOLUME);
+            return;
+        }
+
         sprite_object_set_focus((SpriteObject*)s_pack_choices[s_pack_selected], false);
         s_pack_info->pick(&s_pack_choices[s_pack_selected]);
         s_pack_nb_choices--;

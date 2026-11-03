@@ -804,6 +804,11 @@ static int deck_get_max_size(void)
     return get_hand_top() + get_played_top() + s_deck_top + get_discard_top() + 4;
 }
 
+int game_get_total_cards(void)
+{
+    return deck_get_max_size();
+}
+
 void deck_shuffle(void)
 {
     for (int i = s_deck_top; i > 0; i--)

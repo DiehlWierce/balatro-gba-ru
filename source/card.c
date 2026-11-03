@@ -1,10 +1,12 @@
 #include "card.h"
 
 #include "edition_gfx.h"
+#include "game.h"
 #include "game_variables.h"
 #include "graphic_utils.h"
 #include "item.h"
 #include "util.h"
+#include "voucher.h"
 
 #include <maxmod.h>
 #include <stdlib.h>
@@ -17,6 +19,7 @@
 #include "deck_big_gfx.h"
 #include "deck_gfx.h"
 #include "decks_face_down_gfx.h"
+#include "card_rarity_pal_gfx.h"
 #include "high_contrast_deck_pal_gfx.h"
 
 // Card sprites lookup table. First index is the suit, second index is the rank. The value is the
@@ -29,6 +32,21 @@ const static u16 CARD_SPRITE_LUT[NUM_SUITS][NUM_RANKS] = {
 };
 // Deck sprites lookup table. Index is the deck Id. The value is the tile index.
 const static u16 DECK_SPRITE_LUT[DECK_TYPE_MAX] = {0, 16, 32, 48, 64, 80};
+
+// Playing cards in the Shop (Magic Trick): their sprites use the layers that the hand uses in a
+// round, from the end so that the cards of an opened Booster Pack (layers 0 to 4) don't clash
+#define SHOP_CARDS_MAX               MAX_SHOP_ITEMS
+#define SHOP_CARDS_FIRST_LAYER       (MAX_HAND_SIZE - SHOP_CARDS_MAX)
+#define SHOP_CARD_ENHANCEMENT_CHANCE 40 // %, Illusion, same as Standard Packs
+#define SHOP_CARD_SEAL_CHANCE        20 // %
+
+static CardObject* s_shop_cards[SHOP_CARDS_MAX] = {NULL};
+
+static const char* const RANK_NAMES[NUM_RANKS] = {
+    "Двойка", "Тройка", "Четвёрка", "Пятёрка", "Шестёрка", "Семёрка", "Восьмёрка", "Девятка",
+    "Десятка", "Валет", "Дама", "Король", "Туз",
+};
+static const char* const SUIT_NAMES[NUM_SUITS] = {"бубен", "треф", "червей", "пик"};
 
 static bool s_high_contrast = DEFAULT_HIGH_CONTRAST;
 static bool s_more_readable = DEFAULT_MORE_READABLE;
@@ -553,6 +571,127 @@ void card_object_dispose(Item** card_object_item)
     GBAL_RETURN_IF_ASSERT_FAILS((*card_object_item)->type == ITEM_TYPE_PLAYING_CARD, RET_NONE);
 
     CardObject* card_object = (CardObject*)(*card_object_item);
+
+    for (int i = 0; i < SHOP_CARDS_MAX; i++)
+    {
+        if (s_shop_cards[i] == card_object)
+            s_shop_cards[i] = NULL;
+    }
+
+    // A card that was not bought is lost, the bought ones were given to the deck (card == NULL)
+    if (card_object->card != NULL)
+        card_destroy(&card_object->card);
     card_object_destroy(&card_object);
     *card_object_item = NULL;
 }
+
+#pragma region Shop playing cards (Magic Trick, Illusion)
+
+Item* card_object_roll_new(enum RngSequence key)
+{
+    int slot = UNDEFINED;
+    for (int i = 0; i < SHOP_CARDS_MAX; i++)
+    {
+        if (s_shop_cards[i] == NULL)
+        {
+            slot = i;
+            break;
+        }
+    }
+    if (slot == UNDEFINED)
+        return NULL;
+
+    u8 suit = rng_get_u32(key) % NUM_SUITS;
+    u8 rank = rng_get_u32(key) % NUM_RANKS;
+    Card* card = card_new(suit, rank);
+
+    // Illusion: the cards may have an enhancement and a seal
+    if (voucher_is_owned(VOUCHER_ILLUSION))
+    {
+        if (rng_get_u32(RNG_SEQ_SHOP_CARD_MODS) % 100 < SHOP_CARD_ENHANCEMENT_CHANCE)
+        {
+            card->enhancement = CARD_ENHANCEMENT_BONUS +
+                                rng_get_u32(RNG_SEQ_SHOP_CARD_MODS) % (CARD_ENHANCEMENT_MAX - 1);
+        }
+        if (rng_get_u32(RNG_SEQ_SHOP_CARD_MODS) % 100 < SHOP_CARD_SEAL_CHANCE)
+        {
+            card->seal = CARD_SEAL_GOLD +
+                         rng_get_u32(RNG_SEQ_SHOP_CARD_MODS) % (CARD_SEAL_MAX - 1);
+        }
+    }
+
+    CardObject* card_object = card_object_new(card);
+    card_object_set_sprite(card_object, SHOP_CARDS_FIRST_LAYER + slot);
+    s_shop_cards[slot] = card_object;
+    return (Item*)card_object;
+}
+
+const char* card_object_get_name(Item* item)
+{
+    GBAL_RETURN_IF_NULL(item, ITEM_NAME_UNDEFINED);
+    const Card* card = ((CardObject*)item)->card;
+    GBAL_RETURN_IF_NULL(card, ITEM_NAME_UNDEFINED);
+
+    // Names must stay in one line of the description header (up to 16 characters)
+    if (card->enhancement == CARD_ENHANCEMENT_STONE)
+        return "Каменная карта";
+
+    static char name[24];
+    snprintf(name, sizeof(name), "%s %s", RANK_NAMES[card->rank], SUIT_NAMES[card->suit]);
+    return name;
+}
+
+ItemDescSubtypeInfo card_object_get_subtype_info(Item* item)
+{
+    ItemDescSubtypeInfo subtype_info = ITEM_SUBTYPE_INFO_DEFAULT;
+    GBAL_RETURN_IF_NULL(item, subtype_info);
+
+    subtype_info.main_color = card_rarity_pal_gfxPal[1];
+    subtype_info.shadow_color = card_rarity_pal_gfxPal[2];
+    subtype_info.name_str = "Карта";
+    return subtype_info;
+}
+
+bool card_object_can_acquire(Item* item)
+{
+    GBAL_RETURN_IF_NULL(item, false);
+    return deck_get_size() < MAX_DECK_SIZE;
+}
+
+void card_object_acquire(Item* item)
+{
+    GBAL_RETURN_IF_NULL(item, RET_NONE);
+    CardObject* card_object = (CardObject*)item;
+    GBAL_RETURN_IF_NULL(card_object->card, RET_NONE);
+
+    // The card joins the deck and the sprite flies away like a redeemed Voucher
+    deck_push(card_object->card);
+    card_object->card = NULL;
+    display_deck_size_max();
+    item_start_discard_animation(item);
+}
+
+int card_object_print_description(Item* item, Rect dest_rect)
+{
+    GBAL_RETURN_IF_NULL(item, 0);
+    const Card* card = ((CardObject*)item)->card;
+    GBAL_RETURN_IF_NULL(card, 0);
+
+    const char* enhancement = card_get_enhancement_name(card);
+    const char* seal = card_get_seal_name(card);
+
+    char desc[120];
+    snprintf(
+        desc,
+        sizeof(desc),
+        TTE_BLACK_TAG "Карта добавляется в вашу колоду%s" TTE_YELLOW_TAG "%s%s%s",
+        (enhancement != NULL || seal != NULL) ? ": " : "",
+        enhancement != NULL ? enhancement : "",
+        enhancement != NULL && seal != NULL ? ", " : "",
+        seal != NULL ? seal : ""
+    );
+
+    return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
+}
+
+#pragma endregion

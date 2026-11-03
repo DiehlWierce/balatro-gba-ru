@@ -84,4 +84,12 @@ Sprite* card_object_get_sprite(CardObject* card_object);
 int card_object_get_buy_price(Item* card_object);
 void card_object_dispose(Item** card_object);
 
+// Playing cards in the Shop (Magic Trick, Illusion), see item_funcs.c
+Item* card_object_roll_new(enum RngSequence key);
+const char* card_object_get_name(Item* item);
+ItemDescSubtypeInfo card_object_get_subtype_info(Item* item);
+bool card_object_can_acquire(Item* item);
+void card_object_acquire(Item* item);
+int card_object_print_description(Item* item, Rect dest_rect);
+
 #endif // CARD_H
