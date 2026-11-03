@@ -1,0 +1,127 @@
+# Spectral and Celestial packs, Omen Globe, Telescope, Magic Trick and Illusion in the Shop.
+# Needs a debug build: touch source/consumable.c && make DEBUG_TAROT=1
+# g_debug_force_top_row: 1 = Packs, 2 = playing cards; g_debug_force_pack: PackType (1 Arcana,
+# 2 Celestial, 3 Spectral). Vouchers are owned by poking owned_vouchers (bit = VoucherType).
+
+wait 460
+press START
+wait 60
+press A
+wait 60
+pokestr {sym:s_seed_str} GBARU1
+poke8 {sym:use_seed} 1
+press DOWN
+wait 10
+press A
+wait 120
+
+# Small Blind won with a forced score, cash out, Shop with 2 Spectral Packs
+poke32 {sym:g_debug_force_top_row} 1
+poke32 {sym:g_debug_force_pack} 3
+press A
+wait 180
+poke32 {gv:score} 100000
+press A
+press L
+wait 1100
+press A
+wait 200
+poke32 {gv:money} 100
+shot 00_shop_spectral_packs
+
+# Description of the first pack
+press DOWN
+wait 20
+press UP
+wait 20
+press RIGHT
+wait 20
+hold B
+wait 90
+shot 01_spectral_pack_description
+release B
+wait 30
+
+# Buy and open it: 2 Spectral cards to choose from
+press A
+wait 60
+shot 02_spectral_pack_open
+press RIGHT
+wait 15
+shot 03_second_selected
+press A
+wait 90
+shot 04_spectral_taken
+
+# Description of the Spectral card in the row of owned consumables
+press UP
+wait 20
+hold B
+wait 90
+shot 05_spectral_description
+release B
+wait 30
+press DOWN
+wait 20
+
+# Celestial Pack with Telescope (bit 10): the first Planet is the one of the most played hand
+# (nothing was played: High Card, Pluto)
+poke32 {gv:owned_vouchers} 1024
+poke32 {sym:g_debug_force_pack} 2
+press DOWN
+wait 20
+press A
+wait 60
+press UP
+wait 20
+press RIGHT
+wait 20
+press A
+wait 60
+shot 06_celestial_pack_open
+press A
+wait 90
+shot 07_planet_taken
+
+# Arcana Pack with Omen Globe (bit 9): Spectral cards can show up among the Tarots. The row is
+# full (2 consumables), so nothing can be taken: the choice stays in the pack
+poke32 {gv:owned_vouchers} 512
+poke32 {sym:g_debug_force_pack} 1
+press DOWN
+wait 20
+press A
+wait 60
+press UP
+wait 20
+press RIGHT
+wait 20
+press A
+wait 60
+shot 08_arcana_pack_open
+press A
+wait 60
+shot 09_full_row_cannot_take
+press START
+wait 60
+shot 10_pack_skipped
+
+# Magic Trick (bit 24) and Illusion (bit 25): playing cards in the Shop
+poke32 {gv:owned_vouchers} 50331648
+poke32 {sym:g_debug_force_top_row} 2
+press DOWN
+wait 20
+press A
+wait 90
+shot 11_shop_playing_cards
+press UP
+wait 20
+press RIGHT
+wait 20
+hold B
+wait 90
+shot 12_playing_card_description
+release B
+wait 30
+press A
+wait 90
+shot 13_card_bought_deck_53

@@ -4,7 +4,7 @@
  * @brief Consumable cards (Planets, Tarots, Spectrals): Item implementation, owned consumables
  *        row, use and sell.
  *
- * Planets and Tarots are implemented. Spectral cards are declared for the next waves.
+ * Planets, Tarots and Spectral cards are implemented (Aura, Ectoplasm and Hex wait for Editions).
  */
 #ifndef CONSUMABLE_H
 #define CONSUMABLE_H
@@ -13,6 +13,7 @@
 #include "item.h"
 #include "list.h"
 #include "random.h"
+#include "spectral_rules.h"
 #include "tarot_rules.h"
 
 #include <tonc.h>
@@ -25,12 +26,13 @@
 
 #define PLANET_BUY_PRICE 3
 #define TAROT_BUY_PRICE  3
+#define SPECTRAL_BUY_PRICE 4
 
 enum ConsumableType
 {
     CONSUMABLE_TYPE_PLANET,
     CONSUMABLE_TYPE_TAROT,    // enum TarotType, see tarot_rules.h
-    CONSUMABLE_TYPE_SPECTRAL, // Not implemented yet
+    CONSUMABLE_TYPE_SPECTRAL, // enum SpectralType, see spectral_rules.h
     CONSUMABLE_TYPE_MAX
 };
 
@@ -123,6 +125,22 @@ enum HandType planet_get_hand_type(enum PlanetType planet);
  * @brief Whether a Planet can appear: secret Planets need their poker hand to have been played.
  */
 bool planet_is_rollable(enum PlanetType planet);
+
+/**
+ * @brief The Planet of a poker hand (a Royal Flush is a Straight Flush), PLANET_TYPE_MAX if none.
+ */
+enum PlanetType planet_for_hand(enum HandType hand_type);
+
+/**
+ * @brief Observatory: the mult of a poker hand is multiplied by 1.5 for each Planet of that hand
+ *        held in the consumables row. Without the Voucher @p mult is returned as it is.
+ */
+u32 consumables_apply_observatory(enum HandType hand_type, u32 mult);
+
+/**
+ * @brief Whether a consumable card can be put in the owned row now (a free slot).
+ */
+bool consumable_has_free_slot(void);
 
 /**
  * @brief Rolls a random rollable Planet.

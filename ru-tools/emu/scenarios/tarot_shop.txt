@@ -1,5 +1,7 @@
 # description, buying, using the Tarot, opening the pack.
 
+# Needs a debug build (touch source/consumable.c && make DEBUG_TAROT=1): the Packs of the Shop are
+# forced to Arcana (g_debug_force_pack), because the Pack type is rolled among 4 types.
 wait 460
 press START
 wait 60
@@ -11,6 +13,7 @@ press DOWN
 wait 10
 press A
 wait 120
+poke32 {sym:g_debug_force_pack} 1
 
 # Small Blind won with a forced score, cash out
 press A

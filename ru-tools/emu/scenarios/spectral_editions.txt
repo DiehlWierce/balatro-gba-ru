@@ -1,0 +1,70 @@
+# Aura, Ectoplasm and Hex, needs a debug build: touch source/consumable.c && make DEBUG_TAROT=1
+# Seed GBARU1, Small Blind round. SpectralType: Aura 4, Wraith 5, Ectoplasm 8, Hex 12.
+# Aura (random edition on the selected card), Wraith (a Joker), Ectoplasm (Negative on it, hand
+# size 8 -> 7), Wraith again, Hex (the Negative Joker is destroyed, the new one is Polychrome).
+
+wait 460
+press START
+wait 60
+press A
+wait 60
+pokestr {sym:s_seed_str} GBARU1
+poke8 {sym:use_seed} 1
+press DOWN
+wait 10
+press A
+wait 120
+press A
+wait 240
+shot 00_round
+
+# Aura on the first card of the hand
+poke32 {sym:g_debug_give_spectral} 4
+wait 90
+press A
+wait 20
+press UP
+wait 30
+shot 00_aura_desc
+press A
+wait 150
+shot 01_aura_used
+
+# Wraith, then Ectoplasm: Negative Joker, hand size 7
+poke32 {sym:g_debug_give_spectral} 5
+wait 90
+press UP
+wait 20
+press A
+wait 150
+poke32 {sym:g_debug_give_spectral} 8
+wait 90
+press UP
+wait 20
+press RIGHT
+wait 30
+shot 01_ectoplasm_desc
+press A
+wait 150
+shot 02_ectoplasm_used
+
+# Wraith again (the Negative Joker takes no slot), then Hex: the other Joker is destroyed
+poke32 {sym:g_debug_give_spectral} 5
+wait 90
+press UP
+wait 20
+press RIGHT
+wait 20
+press A
+wait 150
+shot 03_two_jokers
+poke32 {sym:g_debug_give_spectral} 12
+wait 90
+press UP
+wait 20
+press RIGHT
+wait 30
+shot 03_hex_desc
+press A
+wait 180
+shot 04_hex_used

@@ -6,7 +6,8 @@
  *
  * Each pack type is described by a PackInfo: how many choices it shows, how many can be picked,
  * how a choice is rolled and what picking it does. Only the Standard Pack (playing cards) is
- * implemented; Arcana (Tarots) and Celestial (Planets) are declared for later and never rolled.
+ * implemented: Standard (playing cards), Arcana (Tarots, and Spectral cards with Omen Globe),
+ * Celestial (Planets) and Spectral.
  */
 #ifndef BOOSTER_PACK_H
 #define BOOSTER_PACK_H
@@ -22,7 +23,8 @@ enum PackType
 {
     PACK_TYPE_STANDARD,  // Playing cards, added to the deck
     PACK_TYPE_ARCANA,    // Tarot cards, taken to the consumables row
-    PACK_TYPE_CELESTIAL, // Planet cards, not implemented yet
+    PACK_TYPE_CELESTIAL, // Planet cards, taken to the consumables row
+    PACK_TYPE_SPECTRAL,  // Spectral cards, taken to the consumables row
     PACK_TYPE_MAX
 };
 
@@ -42,6 +44,8 @@ typedef struct PackInfo
     int price;
     int nb_choices; // Items shown when opening the pack
     int nb_picks;   // Items the player can take
+    int weight;     // Chance to be in the Shop, relative to the other packs
+    const char* desc_what; // "Выберите N из M <desc_what>"
 
     /**
      * @brief Creates choice @p idx of an opened pack, NULL when the pack type isn't implemented.
@@ -53,6 +57,11 @@ typedef struct PackInfo
      * @brief Takes a choice: applies it (e.g. adds the card to the deck) and disposes of @p choice.
      */
     void (*pick)(Item** choice);
+
+    /**
+     * @brief Whether a choice can be taken now (e.g. a free consumable slot), NULL for always.
+     */
+    bool (*can_pick)(Item* choice);
 
     /**
      * @brief Disposes of a choice that was not picked.

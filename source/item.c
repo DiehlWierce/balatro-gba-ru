@@ -27,7 +27,8 @@ Item* item_roll_new(enum ItemType item_type, enum RngSequence key)
     }
 
     Item* ret_item = item_funcs->roll_new(key);
-    ret_item->is_owned = false;
+    if (ret_item != NULL)
+        ret_item->is_owned = false;
 
     return ret_item;
 }

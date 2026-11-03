@@ -11,10 +11,12 @@
 #include "card.h"
 #include "consumable.h"
 #include "game.h"
+#include "game_variables.h"
 #include "graphic_utils.h"
 #include "item.h"
 #include "pool.h"
 #include "random.h"
+#include "spectral_rules.h"
 #include "sprite.h"
 #include "util.h"
 #include "voucher.h"
@@ -86,21 +88,32 @@ static void standard_pack_discard(Item** choice)
 
 #pragma region Arcana Pack
 
+static Item* spectral_pack_roll_choice(int idx);
+
 static Item* arcana_pack_roll_choice(int idx)
 {
-    (void)idx;
+    // Omen Globe: a choice may be a Spectral card
+    if (voucher_is_owned(VOUCHER_OMEN_GLOBE) &&
+        pack_choice_is_spectral(true, rng_get_u32(RNG_SEQ_PACK_OMEN_GLOBE)))
+        return spectral_pack_roll_choice(idx);
+
     enum TarotType tarot = tarot_roll(RNG_SEQ_PACK_TAROT);
     if (tarot == TAROT_TYPE_MAX)
         return NULL;
     return (Item*)consumable_object_new(CONSUMABLE_TYPE_TAROT, tarot);
 }
 
+static bool consumable_pack_can_pick(Item* choice)
+{
+    return item_can_acquire(choice);
+}
+
 static void arcana_pack_pick(Item** choice)
 {
     ConsumableObject* consumable = (ConsumableObject*)(*choice);
 
-    // The Tarot goes to the consumables row where it is, to be used later on the cards of a round.
-    // Without a free slot it is lost.
+    // The Tarot goes to the consumables row where it is, to be used later on the cards of a round
+    // (the Shop doesn't let a choice be taken without a free slot)
     if (item_can_acquire(*choice))
         item_acquire(*choice);
     else
@@ -118,6 +131,41 @@ static void arcana_pack_discard(Item** choice)
 
 #pragma endregion
 
+#pragma region Celestial and Spectral Packs
+
+static Item* celestial_pack_roll_choice(int idx)
+{
+    enum PlanetType planet = PLANET_TYPE_MAX;
+
+    // Telescope: the first choice is the Planet of the most played poker hand
+    if (idx == 0 && voucher_is_owned(VOUCHER_TELESCOPE))
+        planet = planet_for_hand(most_played_hand(g_game_vars.nb_played_hands));
+    if (planet == PLANET_TYPE_MAX)
+        planet = planet_roll(RNG_SEQ_PACK_PLANET);
+    if (planet == PLANET_TYPE_MAX)
+        return NULL;
+
+    return (Item*)consumable_object_new(CONSUMABLE_TYPE_PLANET, planet);
+}
+
+static Item* spectral_pack_roll_choice(int idx)
+{
+    (void)idx;
+    enum SpectralType spectral;
+    if (spectral_pack_rolls_black_hole(rng_get_u32(RNG_SEQ_PACK_SPECTRAL)))
+        spectral = SPECTRAL_BLACK_HOLE;
+    else
+        spectral = spectral_common_pool_get(
+            rng_get_u32(RNG_SEQ_PACK_SPECTRAL) % spectral_common_pool_size()
+        );
+    if (spectral == SPECTRAL_TYPE_MAX)
+        return NULL;
+
+    return (Item*)consumable_object_new(CONSUMABLE_TYPE_SPECTRAL, spectral);
+}
+
+#pragma endregion
+
 // clang-format off
 static const PackInfo PACK_INFOS[PACK_TYPE_MAX] = {
     [PACK_TYPE_STANDARD] = {
@@ -125,8 +173,11 @@ static const PackInfo PACK_INFOS[PACK_TYPE_MAX] = {
         .price = 4,
         .nb_choices = 3,
         .nb_picks = 1,
+        .weight = 10,
+        .desc_what = "игральных карт и добавьте в колоду",
         .roll_choice = standard_pack_roll_choice,
         .pick = standard_pack_pick,
+        .can_pick = NULL,
         .discard = standard_pack_discard,
         .body_r = 41, .body_g = 173, .body_b = 255,
     },
@@ -135,21 +186,39 @@ static const PackInfo PACK_INFOS[PACK_TYPE_MAX] = {
         .price = 4,
         .nb_choices = 3,
         .nb_picks = 1,
+        .weight = 10,
+        .desc_what = "карт Таро и возьмите в слот",
         .roll_choice = arcana_pack_roll_choice,
         .pick = arcana_pack_pick,
+        .can_pick = consumable_pack_can_pick,
         .discard = arcana_pack_discard,
         .body_r = 137, .body_g = 105, .body_b = 230,
     },
-    // TODO(A7): Planet cards
     [PACK_TYPE_CELESTIAL] = {
         .name = "Небесный бустер",
         .price = 4,
         .nb_choices = 3,
         .nb_picks = 1,
-        .roll_choice = NULL,
-        .pick = NULL,
-        .discard = NULL,
+        .weight = 10,
+        .desc_what = "карт планет и возьмите в слот",
+        .roll_choice = celestial_pack_roll_choice,
+        .pick = arcana_pack_pick,
+        .can_pick = consumable_pack_can_pick,
+        .discard = arcana_pack_discard,
         .body_r = 35, .body_g = 89, .body_b = 85,
+    },
+    [PACK_TYPE_SPECTRAL] = {
+        .name = "Спектр. бустер",
+        .price = 4,
+        .nb_choices = 2,
+        .nb_picks = 1,
+        .weight = 3,
+        .desc_what = "спектральных карт и возьмите в слот",
+        .roll_choice = spectral_pack_roll_choice,
+        .pick = arcana_pack_pick,
+        .can_pick = consumable_pack_can_pick,
+        .discard = arcana_pack_discard,
+        .body_r = 60, .body_g = 70, .body_b = 170,
     },
 };
 // clang-format on
@@ -323,19 +392,37 @@ void booster_pack_destroy(BoosterPackObject** pack)
     *pack = NULL;
 }
 
+#ifdef DEBUG_GIVE_TAROT
+// The emulator pokes a PackType here to force the Packs of the Shop (-1: roll them normally)
+volatile int g_debug_force_pack = -1;
+#endif
+
 Item* booster_pack_roll_new(enum RngSequence key)
 {
-    enum PackType rollable[PACK_TYPE_MAX];
-    int nb_rollable = 0;
+#ifdef DEBUG_GIVE_TAROT
+    if (g_debug_force_pack >= 0 && g_debug_force_pack < PACK_TYPE_MAX)
+        return (Item*)booster_pack_new(g_debug_force_pack);
+#endif
+
+    int total_weight = 0;
     for (enum PackType type = 0; type < PACK_TYPE_MAX; type++)
     {
         if (booster_pack_is_rollable(type))
-            rollable[nb_rollable++] = type;
+            total_weight += PACK_INFOS[type].weight;
     }
-    if (nb_rollable == 0)
+    if (total_weight == 0)
         return NULL;
 
-    return (Item*)booster_pack_new(rollable[rng_get_u32(key) % nb_rollable]);
+    int pick = rng_get_u32(key) % total_weight;
+    for (enum PackType type = 0; type < PACK_TYPE_MAX; type++)
+    {
+        if (!booster_pack_is_rollable(type))
+            continue;
+        pick -= PACK_INFOS[type].weight;
+        if (pick < 0)
+            return (Item*)booster_pack_new(type);
+    }
+    return NULL;
 }
 
 int booster_pack_get_buy_price(Item* item)
@@ -397,9 +484,10 @@ int booster_pack_print_description(Item* item, Rect dest_rect)
         desc,
         sizeof(desc),
         TTE_BLACK_TAG "Выберите " TTE_YELLOW_TAG "%d" TTE_BLACK_TAG " из " TTE_YELLOW_TAG
-                      "%d" TTE_BLACK_TAG " игральных карт и добавьте в колоду",
+                      "%d" TTE_BLACK_TAG " %s",
         info->nb_picks,
-        info->nb_choices
+        info->nb_choices,
+        info->desc_what
     );
 
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);

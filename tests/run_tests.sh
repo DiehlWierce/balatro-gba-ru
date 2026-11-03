@@ -29,3 +29,4 @@ run_test card_modifiers
 run_test voucher
 run_test ante_table
 run_test edition_rules
+run_test spectral_rules
