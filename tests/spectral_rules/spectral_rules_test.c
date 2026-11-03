@@ -13,8 +13,9 @@ static uint32_t next_from_seq(void* ctx)
 
 static void test_pool(void)
 {
-    // Soul is not implemented, Black Hole has its own chance, the Spectral cards of Editions are checked in test_editions
-    assert(!spectral_is_implemented(SPECTRAL_SOUL));
+    // Soul and Black Hole are out of the common pool, Black Hole has its own chance, the Spectral cards of Editions are checked in test_editions
+    assert(spectral_is_implemented(SPECTRAL_SOUL));
+    assert(!spectral_is_in_common_pool(SPECTRAL_SOUL));
     assert(spectral_is_implemented(SPECTRAL_BLACK_HOLE));
     assert(!spectral_is_in_common_pool(SPECTRAL_BLACK_HOLE));
     assert(spectral_is_implemented(SPECTRAL_AURA) == SPECTRAL_EDITIONS_AVAILABLE);
@@ -179,6 +180,7 @@ static void test_shop_odds(void)
     assert(!spectral_pack_rolls_black_hole(3));
     assert(spectral_pack_rolls_black_hole(2));
     assert(spectral_pack_rolls_black_hole(1000));
+    assert(spectral_pack_rolls_soul(1000) && spectral_pack_rolls_soul(2) && !spectral_pack_rolls_soul(3));
 
     assert(!pack_choice_is_spectral(false, 0));
     assert(pack_choice_is_spectral(true, 19));

@@ -856,6 +856,12 @@ static inline void round_handle_round_over(void)
 
     blind_effects_trigger(BLIND_EVENT_ON_ROUND_END, NULL);
 
+    // Mr. Bones: a lost round with at least 25% of the requirement counts as won
+    u32 requirement = blind_get_requirement(g_game_vars.current_blind, g_game_vars.ante);
+    if (g_game_vars.hands == 0 && g_game_vars.score < requirement &&
+        joker_mr_bones_saves(g_game_vars.score, requirement))
+        g_game_vars.score = requirement;
+
     if (g_game_vars.score >= blind_get_requirement(g_game_vars.current_blind, g_game_vars.ante))
     {
         if (g_game_vars.current_blind > BLIND_TYPE_BIG)
@@ -929,6 +935,7 @@ static inline void card_in_hand_loop_handle_discard_and_shuffling(
                 {
                     // Trading Card: the card leaves the deck for good
                     Card* destroyed_card = hand[card_idx]->card;
+                    joker_on_card_destroyed(destroyed_card);
                     card_destroy(&destroyed_card);
                 }
                 else
@@ -2419,6 +2426,7 @@ static bool play_ended_played_cards_update(int played_idx)
                 card_object_is_selected(s_played_hand[played_idx]))
             {
                 // Sixth Sense: the played 6 leaves the deck for good
+                joker_on_card_destroyed(played_card);
                 card_destroy(&played_card);
             }
             else if (!s_hand_scores_nothing && card_object_is_selected(s_played_hand[played_idx]) &&
@@ -2426,6 +2434,7 @@ static bool play_ended_played_cards_update(int played_idx)
             {
                 // Glass card broke: it leaves the deck for good
                 joker_on_glass_broken();
+                joker_on_card_destroyed(played_card);
                 card_destroy(&played_card);
             }
             else

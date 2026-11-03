@@ -168,6 +168,17 @@ DECLARE_JOKER_DESC_FUNC(obelisk_joker_desc)
 DECLARE_JOKER_DESC_FUNC(turtle_bean_joker_desc)
 DECLARE_JOKER_DESC_FUNC(ceremonial_dagger_joker_desc)
 DECLARE_JOKER_DESC_FUNC(cloud_nine_joker_desc)
+DECLARE_JOKER_DESC_FUNC(canio_joker_desc)
+DECLARE_JOKER_DESC_FUNC(triboulet_joker_desc)
+DECLARE_JOKER_DESC_FUNC(yorick_joker_desc)
+DECLARE_JOKER_DESC_FUNC(chicot_joker_desc)
+DECLARE_JOKER_DESC_FUNC(perkeo_joker_desc)
+DECLARE_JOKER_DESC_FUNC(flash_card_joker_desc)
+DECLARE_JOKER_DESC_FUNC(red_card_joker_desc)
+DECLARE_JOKER_DESC_FUNC(luchador_joker_desc)
+DECLARE_JOKER_DESC_FUNC(mr_bones_joker_desc)
+DECLARE_JOKER_DESC_FUNC(chaos_clown_joker_desc)
+DECLARE_JOKER_DESC_FUNC(astronomer_joker_desc)
 
 // Joker Effect functions
 
@@ -284,6 +295,17 @@ DECLARE_JOKER_EFFECT_FUNC(obelisk_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(turtle_bean_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(ceremonial_dagger_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(cloud_nine_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(canio_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(triboulet_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(yorick_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(chicot_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(perkeo_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(flash_card_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(red_card_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(luchador_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(mr_bones_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(chaos_clown_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(astronomer_joker_effect)
 
 /* The index of a joker in the registry matches its ID.
  *
@@ -442,6 +464,21 @@ const JokerInfo joker_registry[] =
     { "Черепашья фасоль", UNCOMMON_JOKER, 6, false, turtle_bean_joker_desc, turtle_bean_joker_effect }, // 121
     { "Ритуальный кинжал", UNCOMMON_JOKER, 6, false, ceremonial_dagger_joker_desc, ceremonial_dagger_joker_effect }, // 122
     { "Облако 9", UNCOMMON_JOKER, 7, false, cloud_nine_joker_desc, cloud_nine_joker_effect }, // 123
+
+    // Legendary Jokers, only created by The Soul
+    { "Канио", LEGENDARY_JOKER, LEGENDARY_JOKER_VALUE, false, canio_joker_desc, canio_joker_effect }, // 124
+    { "Трибулет", LEGENDARY_JOKER, LEGENDARY_JOKER_VALUE, false, triboulet_joker_desc, triboulet_joker_effect }, // 125
+    { "Йорик", LEGENDARY_JOKER, LEGENDARY_JOKER_VALUE, false, yorick_joker_desc, yorick_joker_effect }, // 126
+    { "Чикот", LEGENDARY_JOKER, LEGENDARY_JOKER_VALUE, false, chicot_joker_desc, chicot_joker_effect }, // 127
+    { "Перкео", LEGENDARY_JOKER, LEGENDARY_JOKER_VALUE, false, perkeo_joker_desc, perkeo_joker_effect }, // 128
+
+    // A8 batch 6: ordinary Jokers
+    { "Вспышка", UNCOMMON_JOKER, 5, false, flash_card_joker_desc, flash_card_joker_effect }, // 129
+    { "Красная карта", COMMON_JOKER, 5, false, red_card_joker_desc, red_card_joker_effect }, // 130
+    { "Лучадор", UNCOMMON_JOKER, 5, false, luchador_joker_desc, luchador_joker_effect }, // 131
+    { "Мистер Кости", UNCOMMON_JOKER, 5, false, mr_bones_joker_desc, mr_bones_joker_effect }, // 132
+    { "Хаос Клоун", COMMON_JOKER, 4, false, chaos_clown_joker_desc, chaos_clown_joker_effect }, // 133
+    { "Астроном", UNCOMMON_JOKER, 8, false, astronomer_joker_desc, astronomer_joker_effect }, // 134
 
     // The following jokers don't have sprites yet,
     // uncomment them when their sprites are added.
@@ -4310,5 +4347,236 @@ static u32 cloud_nine_joker_effect(
     return JOKER_EFFECT_FLAG_NONE;
 }
 
+
+/*******************************************************************************
+ * A8 batch 6: Legendary Jokers (ID 124-128)
+ ******************************************************************************/
+
+static int canio_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc_format[] =
+        TTE_RED_TAG "X1" TTE_BLACK_TAG " множ. за каждую уничтоженную " TTE_YELLOW_TAG "картинку" TTE_BLACK_TAG "\n\n(Сейчас " TTE_RED_TAG XMULT_FMT TTE_BLACK_TAG " множ.)";
+    char desc[200];
+    snprintf(desc, sizeof(desc), desc_format, XMULT_ARGS(joker_batch6_canio_percent(joker->persistent_state)));
+    return print_desc(desc, dest_rect);
+}
+
+static int triboulet_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_BLACK_TAG "Сыгранные " TTE_YELLOW_TAG "Короли" TTE_BLACK_TAG " и " TTE_YELLOW_TAG "Дамы" TTE_BLACK_TAG " дают " TTE_RED_TAG "X2" TTE_BLACK_TAG " множ. при подсчёте";
+    return print_desc(desc, dest_rect);
+}
+
+static int yorick_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc_format[] =
+        TTE_RED_TAG "X1" TTE_BLACK_TAG " множ. за каждые " TTE_YELLOW_TAG "23" TTE_BLACK_TAG " сброшенные карты\n\n(Сейчас " TTE_RED_TAG XMULT_FMT TTE_BLACK_TAG " множ., ещё " TTE_YELLOW_TAG "%d" TTE_BLACK_TAG ")";
+    char desc[220];
+    snprintf(
+        desc,
+        sizeof(desc),
+        desc_format,
+        XMULT_ARGS(joker_batch6_yorick_percent(joker->persistent_state)),
+        joker_batch6_yorick_remaining(joker->persistent_state)
+    );
+    return print_desc(desc, dest_rect);
+}
+
+static int chicot_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_BLACK_TAG "Отключает эффект каждого " TTE_YELLOW_TAG "босс-блайнда";
+    return print_desc(desc, dest_rect);
+}
+
+static int perkeo_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_BLACK_TAG "При выходе из лавки создаёт копию случайного " TTE_YELLOW_TAG "расходника" TTE_BLACK_TAG "\n(нужен свободный слот)";
+    return print_desc(desc, dest_rect);
+}
+
+// Canio: persistent_state counts the face cards destroyed (see joker_on_card_destroyed())
+static u32 canio_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    SCORE_ON_EVENT_ONLY(JOKER_EVENT_INDEPENDENT, joker_event)
+
+    return joker_percent_xmult_effect(joker_batch6_canio_percent(joker->persistent_state), joker_effect);
+}
+
+static u32 triboulet_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    SCORE_ON_EVENT_ONLY_WITH_CARD(scored_card, JOKER_EVENT_ON_CARD_SCORED, joker_event)
+
+    if (!joker_batch6_triboulet_hit(scored_card))
+        return JOKER_EFFECT_FLAG_NONE;
+    return batch4_xmult(TRIBOULET_XMULT, joker_effect);
+}
+
+// Yorick: persistent_state counts the cards discarded (see joker_on_cards_discarded())
+static u32 yorick_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    SCORE_ON_EVENT_ONLY(JOKER_EVENT_INDEPENDENT, joker_event)
+
+    return joker_percent_xmult_effect(joker_batch6_yorick_percent(joker->persistent_state), joker_effect);
+}
+
+// Chicot: works through joker_boss_is_disabled() (blind_effects.c, blind.c)
+static u32 chicot_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    return JOKER_EFFECT_FLAG_NONE;
+}
+
+// Perkeo: works through joker_on_shop_exit() (joker.c)
+static u32 perkeo_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    return JOKER_EFFECT_FLAG_NONE;
+}
+
+/*******************************************************************************
+ * A8 batch 6: ordinary Jokers (ID 129+)
+ ******************************************************************************/
+
+static int flash_card_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc_format[] =
+        TTE_RED_TAG "+2" TTE_BLACK_TAG " множ. за каждый " TTE_YELLOW_TAG "реролл" TTE_BLACK_TAG " в лавке\n\n(Сейчас " TTE_RED_TAG "+%d" TTE_BLACK_TAG " множ.)";
+    char desc[200];
+    snprintf(desc, sizeof(desc), desc_format, joker_batch6_flash_card_mult(joker->persistent_state));
+    return print_desc(desc, dest_rect);
+}
+
+static int red_card_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc_format[] =
+        TTE_RED_TAG "+3" TTE_BLACK_TAG " множ. за каждый пропущенный " TTE_YELLOW_TAG "бустер" TTE_BLACK_TAG "\n\n(Сейчас " TTE_RED_TAG "+%d" TTE_BLACK_TAG " множ.)";
+    char desc[200];
+    snprintf(desc, sizeof(desc), desc_format, joker_batch6_red_card_mult(joker->persistent_state));
+    return print_desc(desc, dest_rect);
+}
+
+static int luchador_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_BLACK_TAG "Продайте, чтобы отключить эффект текущего " TTE_YELLOW_TAG "босс-блайнда";
+    return print_desc(desc, dest_rect);
+}
+
+static int mr_bones_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_BLACK_TAG "Спасает от поражения, если набрано " TTE_YELLOW_TAG "25%" TTE_BLACK_TAG " цели или больше. Уничтожается";
+    return print_desc(desc, dest_rect);
+}
+
+// Flash Card: persistent_state counts the rerolls (see joker_on_shop_reroll())
+static u32 flash_card_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    SCORE_ON_EVENT_ONLY(JOKER_EVENT_INDEPENDENT, joker_event)
+
+    return batch5_mult(joker_batch6_flash_card_mult(joker->persistent_state), joker_effect);
+}
+
+// Red Card: persistent_state counts the Packs skipped (see joker_on_pack_skipped())
+static u32 red_card_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    SCORE_ON_EVENT_ONLY(JOKER_EVENT_INDEPENDENT, joker_event)
+
+    return batch5_mult(joker_batch6_red_card_mult(joker->persistent_state), joker_effect);
+}
+
+// Luchador: works when sold (joker_on_joker_sold() in joker.c)
+static u32 luchador_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    return JOKER_EFFECT_FLAG_NONE;
+}
+
+// Mr. Bones: works when the round is lost (joker_mr_bones_saves() in joker.c)
+static u32 mr_bones_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    return JOKER_EFFECT_FLAG_NONE;
+}
+
+static int chaos_clown_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_BLACK_TAG "Один " TTE_YELLOW_TAG "бесплатный реролл" TTE_BLACK_TAG " в каждой лавке";
+    return print_desc(desc, dest_rect);
+}
+
+static int astronomer_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_BLACK_TAG "Все " TTE_YELLOW_TAG "Планеты" TTE_BLACK_TAG " и " TTE_YELLOW_TAG "Небесные бустеры" TTE_BLACK_TAG " в лавке бесплатны";
+    return print_desc(desc, dest_rect);
+}
+
+// Chaos the Clown: works in the Shop (shop.c)
+static u32 chaos_clown_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    return JOKER_EFFECT_FLAG_NONE;
+}
+
+// Astronomer: works through the prices (consumable.c, booster_pack.c)
+static u32 astronomer_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    return JOKER_EFFECT_FLAG_NONE;
+}
 
 #pragma endregion

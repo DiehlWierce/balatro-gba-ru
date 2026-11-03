@@ -131,7 +131,7 @@ static const SpectralInfo SPECTRAL_INFO[SPECTRAL_TYPE_MAX] = {
     [SPECTRAL_TRANCE]     = {"Транс",       B_ "1 выбранная карта получает печать: " Y_ "Синяя"},
     [SPECTRAL_MEDIUM]     = {"Медиум",      B_ "1 выбранная карта получает печать: " Y_ "Фиолетовая"},
     [SPECTRAL_CRYPTID]    = {"Криптид",     B_ "Создаёт " Y_ "2 " B_ "копии 1 выбранной карты и добавляет в руку"},
-    [SPECTRAL_SOUL]       = {"Душа",        B_ "Нужны легендарные джокеры, пока не реализовано"},
+    [SPECTRAL_SOUL]       = {"Душа",        B_ "Создаёт легендарного джокера (нужен свободный слот)"},
     [SPECTRAL_BLACK_HOLE] = {"Чёрная дыра", B_ "Повышает уровень " Y_ "всех " B_ "комбинаций на 1"},
 };
 // clang-format on
@@ -509,6 +509,26 @@ bool consumable_create_random_spectral(enum RngSequence key, FIXED x, FIXED y)
            consumable_create_owned(CONSUMABLE_TYPE_SPECTRAL, spectral, x, y);
 }
 
+bool consumable_copy_random_owned(enum RngSequence key)
+{
+    int nb = list_get_len(&s_owned_consumables);
+    int pick = joker_batch6_perkeo_pick(
+        rng_get_u32(key),
+        nb,
+        g_game_vars.consumable_slots - nb
+    );
+    if (pick < 0)
+        return false;
+
+    ConsumableObject* src = list_get_at_idx(&s_owned_consumables, pick);
+    return consumable_create_owned(
+        src->consumable_type,
+        src->id,
+        int2fx(CONSUMABLES_PANEL_CENTER_X),
+        int2fx(HELD_JOKERS_POS.y)
+    );
+}
+
 bool consumable_create_random_tarot(enum RngSequence key, FIXED x, FIXED y)
 {
     if (list_get_len(&s_owned_consumables) >= g_game_vars.consumable_slots)
@@ -661,7 +681,7 @@ static bool spectral_can_use_now(enum SpectralType spectral)
     switch (spectral_get_scope(spectral))
     {
         case SPECTRAL_SCOPE_ANYWHERE:
-            if (spectral == SPECTRAL_WRAITH)
+            if (spectral == SPECTRAL_WRAITH || spectral == SPECTRAL_SOUL)
                 return list_get_len(get_jokers_list()) < g_game_vars.joker_slots;
             if (spectral == SPECTRAL_ECTOPLASM || spectral == SPECTRAL_HEX)
                 return wheel_pick_joker(0) != NULL; // Needs a Joker without edition
@@ -737,9 +757,9 @@ static void spectral_add_card_to_hand(Card* card, FIXED x, FIXED y)
         card_destroy(&card);
 }
 
-static void spectral_create_joker(FIXED x, FIXED y)
+static void spectral_create_joker(enum JokerRarity rarity, enum RngSequence key, FIXED x, FIXED y)
 {
-    int joker_id = joker_roll_id(RARE_JOKER, RNG_SEQ_SPECTRAL_WRAITH);
+    int joker_id = joker_roll_id(rarity, key);
     if (joker_id == UNDEFINED)
         return;
 
@@ -844,9 +864,13 @@ static void spectral_use(enum SpectralType spectral, FIXED x, FIXED y)
         case SPECTRAL_SCOPE_ANYWHERE:
             if (spectral == SPECTRAL_WRAITH)
             {
-                spectral_create_joker(x, y);
+                spectral_create_joker(RARE_JOKER, RNG_SEQ_SPECTRAL_WRAITH, x, y);
                 g_game_vars.money = 0;
                 display_money();
+            }
+            else if (spectral == SPECTRAL_SOUL)
+            {
+                spectral_create_joker(LEGENDARY_JOKER, RNG_SEQ_SPECTRAL_SOUL, x, y);
             }
             else if (spectral == SPECTRAL_ANKH)
             {
@@ -1162,7 +1186,7 @@ int consumable_object_get_buy_price(Item* item)
         case CONSUMABLE_TYPE_SPECTRAL:
             return SPECTRAL_BUY_PRICE;
         default:
-            return PLANET_BUY_PRICE;
+            return joker_batch6_astronomer_price(PLANET_BUY_PRICE, is_joker_owned(ASTRONOMER_JOKER_ID));
     }
 }
 

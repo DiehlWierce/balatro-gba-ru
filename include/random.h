@@ -110,6 +110,11 @@ enum RngSequence
     RNG_SEQ_JOKER_CASTLE,         // Suit of the Castle
     RNG_SEQ_JOKER_MAIL_IN,        // Rank of the Mail-In Rebate
 
+    // A8 batch 6: The Soul and the Legendary Jokers, each with its own sequence
+    RNG_SEQ_SPECTRAL_SOUL,        // Legendary Joker created by The Soul
+    RNG_SEQ_JOKER_PERKEO,         // Which consumable Perkeo copies
+    RNG_SEQ_PACK_SOUL,            // Whether a Spectral Pack choice is The Soul (0.3%)
+
     RNG_SEQ_MAX
 };
 

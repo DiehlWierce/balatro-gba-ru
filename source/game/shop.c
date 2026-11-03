@@ -225,6 +225,17 @@ static Button reroll_button = {
 static int s_timer;
 
 static int s_reroll_cost = REROLL_BASE_COST;
+static bool s_free_reroll_used = false; // Chaos the Clown: the free reroll of this Shop was used
+
+/**
+ * @brief What the next reroll costs: $0 with Chaos the Clown until its free reroll is used.
+ */
+static int shop_current_reroll_cost(void)
+{
+    return joker_batch6_chaos_free_reroll(is_joker_owned(CHAOS_CLOWN_JOKER_ID), s_free_reroll_used)
+               ? 0
+               : s_reroll_cost;
+}
 
 /**
  * @brief Reroll cost at the start of each Shop, lowered by Reroll Surplus / Reroll Glut.
@@ -264,7 +275,7 @@ void shop_print_reroll_cost(void)
         SHOP_REROLL_RECT.left,
         SHOP_REROLL_RECT.top,
         TTE_WHITE_PB,
-        s_reroll_cost
+        shop_current_reroll_cost()
     );
 }
 
@@ -274,6 +285,7 @@ void shop_reset(void)
     s_shop_items_list = list_init();
     s_shop_voucher = NULL;
     s_reroll_cost = REROLL_BASE_COST;
+    s_free_reroll_used = false;
     joker_reset_rollable_jokers();
 }
 
@@ -809,7 +821,9 @@ static void shop_buy_voucher(SelectionGrid* selection_grid)
  */
 static inline void shop_reroll(void)
 {
-    g_game_vars.money -= s_reroll_cost;
+    joker_on_shop_reroll(); // Flash Card
+    int paid_cost = shop_current_reroll_cost();
+    g_game_vars.money -= paid_cost;
     display_money(); // Update the money display
 
     List* shop_items_list = &s_shop_items_list;
@@ -842,7 +856,10 @@ static inline void shop_reroll(void)
         }
     }
 
-    s_reroll_cost++;
+    if (paid_cost == 0 && s_reroll_cost > 0 && !s_free_reroll_used)
+        s_free_reroll_used = true; // Chaos the Clown: the free reroll doesn't raise the price
+    else
+        s_reroll_cost++;
     shop_print_reroll_cost();
     // The top row prices were erased with the Voucher's
     shop_print_voucher_price();
@@ -866,10 +883,13 @@ static void shop_reroll_row_on_key_transit(SelectionGrid* selection_grid, Select
 
 static void next_round_on_pressed(void)
 {
+    joker_on_shop_exit(); // Perkeo
+
     // Go to next blind selection game state
     state_machine_change_state(&shop_sm, GAME_SHOP_EXIT);
     s_timer = TM_ZERO;
     s_reroll_cost = shop_get_reroll_base_cost();
+    s_free_reroll_used = false;
 
     pal_bg_mem[NEXT_ROUND_BTN_SELECTED_BORDER_PAL_IDX] = pal_bg_mem[SHOP_PANEL_SHADOW_PAL_IDX];
 }
@@ -882,7 +902,7 @@ static void reroll_on_pressed(void)
 
 static bool reroll_can_be_pressed(void)
 {
-    return game_can_afford(s_reroll_cost);
+    return game_can_afford(shop_current_reroll_cost());
 }
 
 /**
@@ -1328,6 +1348,7 @@ static void shop_pack_open_on_update(void)
 
     if (key_hit(KEY_START))
     {
+        joker_on_pack_skipped(); // Red Card
         shop_pack_close();
         return;
     }

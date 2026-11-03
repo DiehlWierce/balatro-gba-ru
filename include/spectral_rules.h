@@ -38,7 +38,7 @@ enum SpectralType
     SPECTRAL_TRANCE,     // Blue seal on 1 card
     SPECTRAL_MEDIUM,     // Purple seal on 1 card
     SPECTRAL_CRYPTID,    // 2 copies of 1 card are added to the hand
-    SPECTRAL_SOUL,       // Needs Legendary Jokers: not implemented
+    SPECTRAL_SOUL,       // Creates a Legendary Joker (needs a free Joker slot)
     SPECTRAL_BLACK_HOLE, // Every poker hand gains a level
     SPECTRAL_TYPE_MAX
 };
@@ -58,6 +58,7 @@ enum SpectralType
 #define SPECTRAL_OUIJA_HAND_SIZE_MIN 1
 #define SPECTRAL_MAX_CREATED_CARDS   4 // Incantation
 #define SPECTRAL_BLACK_HOLE_PERCENT_X10 3 // 0.3% per pack choice, as in Balatro
+#define SPECTRAL_SOUL_PERCENT_X10       3 // 0.3% per pack choice, as in Balatro
 
 /**
  * @brief Where a Spectral card acts.
@@ -105,18 +106,19 @@ static inline bool spectral_needs_editions(enum SpectralType spectral)
  */
 static inline bool spectral_is_implemented(enum SpectralType spectral)
 {
-    if (spectral < 0 || spectral >= SPECTRAL_TYPE_MAX || spectral == SPECTRAL_SOUL)
+    if (spectral < 0 || spectral >= SPECTRAL_TYPE_MAX)
         return false;
     return SPECTRAL_EDITIONS_AVAILABLE || !spectral_needs_editions(spectral);
 }
 
 /**
  * @brief Whether the Spectral card is in the common pool of Spectral Packs and Omen Globe.
- *        Black Hole has its own small chance and The Soul is not implemented.
+ *        Black Hole and The Soul have their own small chance.
  */
 static inline bool spectral_is_in_common_pool(enum SpectralType spectral)
 {
-    return spectral_is_implemented(spectral) && spectral != SPECTRAL_BLACK_HOLE;
+    return spectral_is_implemented(spectral) && spectral != SPECTRAL_BLACK_HOLE &&
+           spectral != SPECTRAL_SOUL;
 }
 
 /**
@@ -297,6 +299,14 @@ static inline enum Edition spectral_aura_edition(uint32_t roll)
 static inline bool spectral_pack_rolls_black_hole(uint32_t r)
 {
     return r % 1000 < SPECTRAL_BLACK_HOLE_PERCENT_X10;
+}
+
+/**
+ * @brief Whether The Soul replaces a Pack choice, @p r any random number (0.3%).
+ */
+static inline bool spectral_pack_rolls_soul(uint32_t r)
+{
+    return r % 1000 < SPECTRAL_SOUL_PERCENT_X10;
 }
 
 /**

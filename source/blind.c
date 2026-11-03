@@ -12,6 +12,7 @@
 #include "game/common_ui.h"
 #include "graphic_utils.h"
 #include "hand.h"
+#include "joker.h"
 #include "list.h"
 #include "random.h"
 #include "stdbool.h"
@@ -114,10 +115,18 @@ u32 blind_get_requirement(enum BlindType type, int ante)
     if (ante < 0 || ante > ANTE_LAST)
         ante = 0;
 
+    u32 multiplier = (u32)s_blind_type_map[type].score_req_multiplier;
+    if (type == BLIND_TYPE_WALL || type == BLIND_TYPE_VESSEL)
+    {
+        // Chicot: the Boss is disabled, so it asks the plain Boss requirement (X2)
+        if (joker_boss_is_disabled())
+            multiplier = (u32)FIX_ONE * joker_batch6_chicot_requirement_mult(2);
+    }
+
     // 64 bits and saturated: ante 12 Boss Blinds are in the billions
     return ante_table_requirement(
         ante_base_requirement(ante),
-        (u32)s_blind_type_map[type].score_req_multiplier * deck_rules_blind_scale(g_game_vars.deck)
+        multiplier * deck_rules_blind_scale(g_game_vars.deck)
     );
 }
 

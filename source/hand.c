@@ -15,6 +15,7 @@
 #include "game/round.h"
 #include "game_variables.h"
 #include "graphic_utils.h"
+#include "joker.h"
 #include "soundbank.h"
 #include "util.h"
 
@@ -405,6 +406,7 @@ int hand_destroy_selected_cards(void)
         CardObject* card_object = s_hand.cards[i];
         if (card_object != NULL && card_object_is_selected(card_object))
         {
+            joker_on_card_destroyed(card_object->card);
             card_destroy(&card_object->card);
             card_object_destroy(&card_object);
             nb_destroyed++;

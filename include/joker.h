@@ -12,6 +12,7 @@
 #include "graphic_utils.h"
 #include "item.h"
 #include "joker_batch5.h"
+#include "joker_batch6.h"
 #include "random.h"
 
 #include <maxmod.h>
@@ -200,6 +201,34 @@ void joker_on_deck_shuffled(void);               // Certificate (after the deck 
  *         (Trading Card)
  */
 bool joker_on_cards_discarded(const DiscardCounts* discarded);
+
+/**
+ * @brief A card leaves the deck for good (Glass break, Hanged Man, Immolate, Familiar, Trading
+ *        Card...): Canio counts face cards.
+ */
+void joker_on_card_destroyed(Card* card);
+
+/**
+ * @brief The player leaves the Shop: Perkeo copies a random consumable.
+ */
+void joker_on_shop_exit(void);
+
+/**
+ * @brief Whether the current Boss is disabled: an owned Chicot, or a Luchador sold during the Boss.
+ */
+bool joker_boss_is_disabled(void);
+
+void joker_on_shop_reroll(void);           // Flash Card
+void joker_on_pack_skipped(void);          // Red Card
+void joker_on_joker_sold(Joker* joker);    // Luchador (in a Boss Blind round)
+
+/**
+ * @brief Mr. Bones: a lost round is saved when the score is at least 25% of the requirement. The
+ *        Joker destroys itself.
+ *
+ * @return true if the round counts as won
+ */
+bool joker_mr_bones_saves(u32 score, u32 requirement);
 
 /**
  * @brief Starts the expire animation of an owned Joker (it leaves the Jokers row when it ends).
