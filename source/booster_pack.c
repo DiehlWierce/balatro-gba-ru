@@ -69,7 +69,10 @@ static void standard_pack_pick(Item** choice)
 {
     CardObject* card_object = (CardObject*)(*choice);
     if (deck_get_size() < MAX_DECK_SIZE)
-        deck_push(card_object->card);
+        {
+            deck_push(card_object->card);
+            joker_on_card_added(); // Hologram
+        }
     else
         card_destroy(&card_object->card); // The deck is full, the card is lost
     card_object_destroy(&card_object);

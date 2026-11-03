@@ -12,6 +12,7 @@
 #define JOKER_ECONOMY_H
 
 #include "joker_batch5.h"
+#include "joker_batch7.h"
 
 #include <stdbool.h>
 
@@ -51,6 +52,7 @@ typedef struct JokerRunBonus
     int round_end_money;     // $ at the end of the round (Golden Joker, Rocket)
     int delayed_gratification; // Number of Delayed Gratification Jokers
     int cloud_nine;          // Number of Cloud 9 Jokers (paid per 9 in the deck, see round_end.c)
+    int satellite;           // Number of Satellite Jokers (paid per Planet type used, see round_end.c)
 } JokerRunBonus;
 
 /**
@@ -98,6 +100,9 @@ static inline void joker_run_bonus_add(JokerRunBonus* bonus, int joker_id, int p
             break;
         case CLOUD_NINE_JOKER_ID:
             bonus->cloud_nine++;
+            break;
+        case SATELLITE_JOKER_ID:
+            bonus->satellite++;
             break;
         default:
             break;

@@ -113,6 +113,7 @@ static inline void sell_joker(int joker_idx)
     Item* joker_object = (Item*)list_get_at_idx(owned_jokers_list, joker_idx);
     blind_effects_on_joker_removed((JokerObject*)joker_object, true);
     joker_on_joker_sold(((JokerObject*)joker_object)->joker);
+    joker_on_card_sold();
     item_sell(joker_object);
 
     remove_owned_joker(joker_idx);

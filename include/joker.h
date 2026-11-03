@@ -13,6 +13,7 @@
 #include "item.h"
 #include "joker_batch5.h"
 #include "joker_batch6.h"
+#include "joker_batch7.h"
 #include "random.h"
 
 #include <maxmod.h>
@@ -220,6 +221,10 @@ bool joker_boss_is_disabled(void);
 
 void joker_on_shop_reroll(void);           // Flash Card
 void joker_on_pack_skipped(void);          // Red Card
+void joker_on_planet_used(int planet); // Satellite
+void joker_on_first_discard(enum HandType hand_type, bool first_discard); // Burnt Joker
+void joker_on_card_added(void);          // Hologram (a playing card joins the deck)
+void joker_on_card_sold(void);             // Campfire (Jokers and consumables)
 void joker_on_joker_sold(Joker* joker);    // Luchador (in a Boss Blind round)
 
 /**

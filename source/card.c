@@ -668,6 +668,7 @@ void card_object_acquire(Item* item)
 
     // The card joins the deck and the sprite flies away like a redeemed Voucher
     deck_push(card_object->card);
+    joker_on_card_added(); // Hologram
     card_object->card = NULL;
     display_deck_size_max();
     item_start_discard_animation(item);

@@ -10,6 +10,8 @@
 #define EDITION_RULES_H
 
 #include <stddef.h>
+#include "probability.h"
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -144,7 +146,7 @@ static inline enum Edition edition_from_roll(uint32_t roll, int rate, bool allow
  */
 static inline bool edition_wheel_succeeds(uint32_t roll)
 {
-    return roll % EDITION_WHEEL_ODDS == 0;
+    return probability_one_in(roll, EDITION_WHEEL_ODDS); // Oops! All 6s
 }
 
 /**

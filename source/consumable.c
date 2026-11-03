@@ -755,6 +755,8 @@ static void spectral_add_card_to_hand(Card* card, FIXED x, FIXED y)
 {
     if (!hand_add_card(card, x, y))
         card_destroy(&card);
+    else
+        joker_on_card_added(); // Hologram
 }
 
 static void spectral_create_joker(enum JokerRarity rarity, enum RngSequence key, FIXED x, FIXED y)
@@ -779,6 +781,60 @@ static void spectral_create_joker(enum JokerRarity rarity, enum RngSequence key,
     item->tx = x;
     item->ty = y;
     item_acquire(item);
+}
+
+bool consumable_copy_random_joker(const void* sold_joker, enum RngSequence key, FIXED x, FIXED y)
+{
+    const Joker* sold = sold_joker;
+    List* jokers = get_jokers_list();
+    if (list_get_len(jokers) - 1 >= g_game_vars.joker_slots)
+        return false;
+
+    int nb_candidates = 0;
+    for (int i = 0; i < list_get_len(jokers); i++)
+    {
+        const Joker* other = ((JokerObject*)list_get_at_idx(jokers, i))->joker;
+        if (other != sold && !joker_is_perished(other))
+            nb_candidates++;
+    }
+    if (nb_candidates == 0)
+        return false;
+
+    int pick = rng_get_u32(key) % nb_candidates;
+    for (int i = 0; i < list_get_len(jokers); i++)
+    {
+        const Joker* other = ((JokerObject*)list_get_at_idx(jokers, i))->joker;
+        if (other == sold || joker_is_perished(other))
+            continue;
+        if (pick-- > 0)
+            continue;
+
+        Joker* joker = joker_new(other->id);
+        joker->value = other->value;
+        joker->scoring_state = other->scoring_state;
+        joker->persistent_state = other->persistent_state;
+        JokerObject* joker_object = joker_object_new(joker);
+        if (joker_object == NULL)
+        {
+            joker_destroy(&joker);
+            return false;
+        }
+        Item* item = (Item*)joker_object;
+        item->x = x;
+        item->y = y;
+        item->tx = x;
+        item->ty = y;
+        item_acquire(item);
+        return true;
+    }
+    return false;
+}
+
+bool consumable_create_joker(int rarity, enum RngSequence key, FIXED x, FIXED y)
+{
+    int before = list_get_len(get_jokers_list());
+    spectral_create_joker(rarity, key, x, y);
+    return list_get_len(get_jokers_list()) > before;
 }
 
 /**
@@ -1117,6 +1173,8 @@ bool consumable_object_use(ConsumableObject* consumable_object)
             tarot_use(consumable_object->id, consumable_object->x, consumable_object->y);
         else
             planet_use(consumable_object->id);
+        if (!is_tarot(consumable_object))
+            joker_on_planet_used(consumable_object->id);
         joker_on_consumable_used(is_tarot(consumable_object));
     }
 
@@ -1129,6 +1187,7 @@ void consumable_object_sell(ConsumableObject* consumable_object)
     GBAL_RETURN_IF_NULL(consumable_object, RET_NONE);
 
     consumable_object_remove_from_owned(consumable_object);
+    joker_on_card_sold(); // Campfire
     // item_sell() starts the discard animation, the Item is disposed when it ends
     item_sell((Item*)consumable_object);
 }

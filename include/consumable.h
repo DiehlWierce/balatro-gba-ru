@@ -182,6 +182,20 @@ bool consumable_give_at_start(enum ConsumableType type, int id);
 bool consumable_create_random_tarot(enum RngSequence key, FIXED x, FIXED y);
 
 /**
+ * @brief Invisible Joker: copies a random Joker other than @p sold (which is being sold, so its slot is
+ *        free) into the Jokers row.
+ * @return true if a Joker was created
+ */
+/**
+ * @brief Creates a random Joker of the given rarity (enum JokerRarity) in the Jokers row (Riff-Raff), the caller checks
+ *        for a free slot.
+ * @return true if a Joker was created
+ */
+bool consumable_copy_random_joker(const void* sold, enum RngSequence key, FIXED x, FIXED y);
+
+bool consumable_create_joker(int rarity, enum RngSequence key, FIXED x, FIXED y);
+
+/**
  * @brief Creates a random Spectral card of the common pool in the owned row, if a slot is free
  *        (Seance, Sixth Sense).
  */

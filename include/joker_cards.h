@@ -12,6 +12,8 @@
 
 #include "card_rules.h"
 
+#include "probability.h"
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -135,7 +137,7 @@ static inline bool joker_cards_midas_gild(Card* card, bool is_face)
  */
 static inline bool joker_cards_one_in(uint32_t roll, uint32_t chance)
 {
-    return chance != 0 && roll % chance == 0;
+    return probability_one_in(roll, chance); // Oops! All 6s
 }
 
 /**

@@ -15,6 +15,7 @@
 #include "mgba_logger.h"
 #include "pool.h"
 #include "random.h"
+#include "skip_tag.h"
 #include "soundbank.h"
 #include "stake.h"
 #include "util.h"
@@ -30,7 +31,7 @@
 #include <tonc.h>
 
 // what it was before (MAX_DEFINEABLE_JOKERS / JOKERS_PER_SPRITESHEET)
-#define MAX_NUM_JOKERS_SPRITESHEETS 100
+#define MAX_NUM_JOKERS_SPRITESHEETS 120
 
 static const unsigned int* joker_gfxTiles[] = {
 #define DEF_JOKER_GFX(idx) joker_gfx##idx##Tiles,
@@ -90,6 +91,7 @@ static const int JOKER_ID_TO_SPRITE_MAP[] = {
     59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73,
     74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88,
     89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99,
+    100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111,
 };
 
 // Map of Spritesheet idx -> first Joker ID in sheet
@@ -103,7 +105,8 @@ static const int SPRITESHEET_IDX_TO_STARTING_JOKER_ID[] = {
     79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93,
     94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108,
     109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123,
-    124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134
+    124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134,
+    135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146
 };
 
 // Lookup table of Joker Rarity strings. Used to display at the bottom of the description screen.
@@ -589,7 +592,8 @@ Item* joker_object_roll_new(enum RngSequence key)
     if (joker_id == UNDEFINED)
         return NULL;
 
-    joker_set_rollable(joker_id, false);
+    if (joker_batch7_showman_locks_roll(is_joker_owned(SHOWMAN_JOKER_ID)))
+        joker_set_rollable(joker_id, false); // Showman: Jokers can repeat
 
     Joker* joker = joker_new(joker_id);
     stake_roll_joker_stickers(joker);
@@ -894,6 +898,12 @@ void joker_economy_on_round_end(bool boss_defeated)
             }
         }
 
+        if (joker->id == INVISIBLE_JOKER_ID)
+            joker->persistent_state = joker_batch7_invisible_next(joker->persistent_state);
+
+        if (joker->id == CAMPFIRE_JOKER_ID)
+            joker->persistent_state = joker_batch7_campfire_after_round(joker->persistent_state, boss_defeated);
+
         if (joker->id == ROCKET_JOKER_ID)
             joker->persistent_state = joker_economy_rocket_next(joker->persistent_state, boss_defeated);
 
@@ -981,12 +991,27 @@ static void joker_hook_blind_selected(Joker* joker)
                 JOKER_TAROT_SPAWN_Y
             );
             break;
+        case RIFF_RAFF_JOKER_ID:
+            for (int n = joker_batch7_riff_raff_count(g_game_vars.joker_slots - jokers_get_used_slots());
+                 n > 0;
+                 n--)
+            {
+                if (!consumable_create_joker(
+                        COMMON_JOKER,
+                        RNG_SEQ_JOKER_RIFF_RAFF,
+                        JOKER_TAROT_SPAWN_X,
+                        JOKER_TAROT_SPAWN_Y
+                    ))
+                    break;
+            }
+            break;
         case MARBLE_JOKER_ID:
             if (deck_get_size() < MAX_DECK_SIZE)
             {
                 Card* stone = card_new(SPADES, ACE);
                 stone->enhancement = CARD_ENHANCEMENT_STONE;
                 deck_push(stone);
+                joker_on_card_added();
             }
             break;
         default:
@@ -1004,6 +1029,7 @@ static void joker_hook_deck_shuffled(Joker* joker)
         rng_get_u32(RNG_SEQ_JOKER_CERTIFICATE) % NUM_RANKS
     );
     card->seal = CARD_SEAL_NONE + 1 + rng_get_u32(RNG_SEQ_JOKER_CERTIFICATE) % (CARD_SEAL_MAX - 1);
+    joker_on_card_added();
     deck_push(card); // The top of the deck is drawn first: the card lands in the hand
 }
 
@@ -1130,8 +1156,97 @@ void joker_on_pack_skipped(void)
     joker_add_to_all(RED_CARD_JOKER_ID);
 }
 
+void joker_on_first_discard(enum HandType hand_type, bool first_discard)
+{
+    enum HandType target = joker_batch7_burnt_target(hand_type, first_discard);
+    if (target == NONE)
+        return;
+
+    ListItr itr = list_itr_create(get_jokers_list());
+    JokerObject* joker_object;
+    while ((joker_object = list_itr_next(&itr)))
+    {
+        Joker* joker = joker_object->joker;
+        if (joker->id != BURNT_JOKER_ID || joker_is_perished(joker) ||
+            blind_effects_is_joker_disabled(joker_object))
+            continue;
+        hand_level_up(target, 1);
+        joker_object_shake(joker_object, UNDEFINED);
+    }
+}
+
+void joker_on_card_added(void)
+{
+    joker_add_to_all(HOLOGRAM_JOKER_ID);
+}
+
+void joker_on_planet_used(int planet)
+{
+    g_game_vars.planets_used_mask = joker_batch7_planet_mask_add(g_game_vars.planets_used_mask, planet);
+}
+
+void joker_on_card_sold(void)
+{
+    joker_add_to_all(CAMPFIRE_JOKER_ID); // Campfire
+}
+
+// Madness: X0.5 per Small or Big Blind, destroys a random other Joker
+static void joker_madness_on_blind_selected(void)
+{
+    if (!joker_batch7_madness_triggers(g_game_vars.current_blind >= BLIND_TYPE_BOSS))
+        return;
+
+    List* jokers = get_jokers_list();
+    for (int i = 0; i < list_get_len(jokers); i++)
+    {
+        JokerObject* madness = list_get_at_idx(jokers, i);
+        if (madness->joker->id != MADNESS_JOKER_ID || joker_is_perished(madness->joker) ||
+            blind_effects_is_joker_disabled(madness))
+            continue;
+
+        madness->joker->persistent_state++;
+        joker_object_shake(madness, UNDEFINED);
+
+        int nb_candidates = 0;
+        for (int j = 0; j < list_get_len(jokers); j++)
+        {
+            JokerObject* other = list_get_at_idx(jokers, j);
+            if (j != i && !joker_is_perished(other->joker) && joker_can_be_sold(other->joker))
+                nb_candidates++;
+        }
+        int pick = joker_batch7_madness_pick(rng_get_u32(RNG_SEQ_JOKER_MADNESS), nb_candidates);
+        if (pick < 0)
+            continue;
+        for (int j = 0; j < list_get_len(jokers); j++)
+        {
+            JokerObject* victim = list_get_at_idx(jokers, j);
+            if (j == i || joker_is_perished(victim->joker) || !joker_can_be_sold(victim->joker))
+                continue;
+            if (pick-- == 0)
+            {
+                remove_owned_joker(j);
+                item_start_discard_animation((Item*)victim);
+                break;
+            }
+        }
+        return; // The Joker list changed: a second Madness waits for the next Blind
+    }
+}
+
 void joker_on_joker_sold(Joker* joker)
 {
+    // Diet Cola: selling it gives a Double Tag
+    if (joker->id == DIET_COLA_JOKER_ID && !joker_is_perished(joker))
+    {
+        SkipTag* tag = skip_tag_new(SKIP_TAG_TYPE_DOUBLE);
+        add_skip_tag(&tag);
+    }
+
+    // Invisible Joker: after enough rounds a random other Joker is duplicated
+    if (joker->id == INVISIBLE_JOKER_ID && !joker_is_perished(joker) &&
+        joker_batch7_invisible_ready(joker->persistent_state))
+        consumable_copy_random_joker(joker, RNG_SEQ_JOKER_INVISIBLE, JOKER_TAROT_SPAWN_X, JOKER_TAROT_SPAWN_Y);
+
     if (joker->id == LUCHADOR_JOKER_ID && !joker_is_perished(joker) &&
         joker_batch6_luchador_disables(
             game_get_state() == GAME_STATE_ROUND,
@@ -1163,6 +1278,7 @@ void joker_on_blind_selected(void)
     s_luchador_disabled = false;
     joker_for_each_active(joker_hook_blind_selected);
     joker_dagger_on_blind_selected();
+    joker_madness_on_blind_selected();
 }
 
 void joker_on_deck_shuffled(void)

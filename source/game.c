@@ -234,6 +234,7 @@ void game_init()
     g_game_vars.nb_skipped_rounds = 0;
     g_game_vars.nb_unused_discards = 0;
     g_game_vars.tarots_used = 0;
+    g_game_vars.planets_used_mask = 0;
     g_game_vars.current_blind = BLIND_TYPE_SMALL;
     g_game_vars.blinds_states[0] = BLIND_STATE_CURRENT;
     g_game_vars.blinds_states[1] = BLIND_STATE_UPCOMING;
@@ -553,6 +554,9 @@ void add_joker(JokerObject* joker_object)
         s_shortcut_joker_count++;
     }
 
+    g_card_rules_smeared = is_joker_owned(SMEARED_JOKER_ID); // Smeared Joker
+    g_probability_mult = is_joker_owned(OOPS_JOKER_ID) ? 2 : 1;  // Oops! All 6s
+
     apply_joker_bonus_change(&bonus_before);
 }
 
@@ -577,6 +581,8 @@ void remove_owned_joker(int owned_joker_idx)
     // TODO: Move to site of joker_destroy()?
     joker_set_rollable(joker_object->joker->id, true);
     list_remove_at_idx(&s_owned_jokers_list, owned_joker_idx);
+    g_card_rules_smeared = is_joker_owned(SMEARED_JOKER_ID); // Smeared Joker
+    g_probability_mult = is_joker_owned(OOPS_JOKER_ID) ? 2 : 1;  // Oops! All 6s
 
     apply_joker_bonus_change(&bonus_before);
 }
