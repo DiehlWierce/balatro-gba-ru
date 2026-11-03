@@ -1,0 +1,93 @@
+# Seed GBARU1, B-008: top row item types after many rerolls (money forced). With the weights
+# Joker 20, Tarot 4, Planet 4 (+ Packs) about a third of the cards are Tarots or Planets.
+# Count the consumables in the shots 00..15 (before the fix: about one in eight).
+
+wait 460
+press START
+wait 60
+press A
+wait 60
+pokestr {sym:s_seed_str} GBARU1
+poke8 {sym:use_seed} 1
+press DOWN
+wait 10
+press A
+wait 120
+
+# Small Blind won with a forced score, cash out
+press A
+wait 180
+poke32 {gv:score} 100000
+press A
+press L
+wait 1100
+press A
+wait 200
+
+poke32 {gv:money} 999
+press DOWN
+wait 20
+press A
+wait 70
+shot 00_reroll
+poke32 {gv:money} 999
+press A
+wait 70
+shot 01_reroll
+poke32 {gv:money} 999
+press A
+wait 70
+shot 02_reroll
+poke32 {gv:money} 999
+press A
+wait 70
+shot 03_reroll
+poke32 {gv:money} 999
+press A
+wait 70
+shot 04_reroll
+poke32 {gv:money} 999
+press A
+wait 70
+shot 05_reroll
+poke32 {gv:money} 999
+press A
+wait 70
+shot 06_reroll
+poke32 {gv:money} 999
+press A
+wait 70
+shot 07_reroll
+poke32 {gv:money} 999
+press A
+wait 70
+shot 08_reroll
+poke32 {gv:money} 999
+press A
+wait 70
+shot 09_reroll
+poke32 {gv:money} 999
+press A
+wait 70
+shot 10_reroll
+poke32 {gv:money} 999
+press A
+wait 70
+shot 11_reroll
+poke32 {gv:money} 999
+press A
+wait 70
+shot 12_reroll
+poke32 {gv:money} 999
+press A
+wait 70
+shot 13_reroll
+poke32 {gv:money} 999
+press A
+wait 70
+shot 14_reroll
+poke32 {gv:money} 999
+press A
+wait 70
+shot 15_reroll
+poke32 {gv:money} 999

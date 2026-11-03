@@ -13,6 +13,7 @@
 #include "button.h"
 #include "card.h"
 #include "consumable.h"
+#include "deck_rules.h"
 #include "game.h"
 #include "game/blind_select.h"
 #include "game/joker_row.h"
@@ -25,7 +26,9 @@
 #include "random.h"
 #include "save.h"
 #include "shop_economy.h"
+#include "joker_batch7.h"
 #include "skip_tag.h"
+#include "stake.h"
 #include "soundbank.h"
 #include "state_machine.h"
 #include "timer.h"
@@ -47,14 +50,11 @@
 
 // Shop
 
-// Weights of the top row item types in tenths, as in the original game (Jokers 20, Planets 4,
-// Tarots 4, playing cards 0 or 4). The Planet and Tarot Vouchers change the consumables' weight.
-#define SHOP_JOKER_WEIGHT_X10 200
+// Weights of the top row item types: see shop_economy.h
 #define NEXT_ROUND_BTN_SEL_X  0
 #define REROLL_BTN_SEL_X      0
 #define VOUCHER_SEL_X         1
 
-#define SHOP_PACK_WEIGHT 8 // Booster Packs share the top row
 
 // Opened Booster Pack
 #define PACK_CHOICES_SPACING_PX 33
@@ -141,6 +141,7 @@ enum GameShopStates
 
 static void shop_intro(void);
 static void shop_redeem_skip_tags(void);
+static bool shop_tag_pack_open_next(void);
 static void shop_process_user_input(void);
 static void shop_show_item_desc_on_init(void);
 static void shop_show_item_desc_on_update(void);
@@ -336,6 +337,7 @@ static void shop_redeem_skip_tags(void)
     {
         s_timer = TM_ZERO;
         state_machine_change_state(&shop_sm, GAME_SHOP_ACTIVE);
+        shop_tag_pack_open_next(); // Free Packs of the Tags go to PACK_OPEN
     }
 }
 
@@ -359,43 +361,39 @@ static Item* shop_create_top_row_item(void)
         return item_roll_new(ITEM_TYPE_CONSUMABLE, RNG_SEQ_SHOP_PLANETS);
 #endif
 
-    // Smallest integer weights, so that the default 20:4 odds use the same modulus as before
-    // and a given seed keeps rolling the same Shops
-    // A slot of consumables (Planet or Tarot) weighs the mean of both: 4 without Vouchers
-    int joker_weight = SHOP_JOKER_WEIGHT_X10;
-    int planet_weight =
-        (voucher_get_planet_shop_weight_x10() + voucher_get_tarot_shop_weight_x10()) / 2;
-    int pack_weight = SHOP_PACK_WEIGHT * 10;
-    int card_weight = voucher_get_playing_card_shop_weight_x10(); // Magic Trick
-    int divisor = 10;
-    if (planet_weight % 10 != 0 || card_weight % 10 != 0)
-        divisor = 2;
-    joker_weight /= divisor;
-    planet_weight /= divisor;
-    pack_weight /= divisor;
-    card_weight /= divisor;
+    // A consumable slot weighs Tarot + Planet (+ Spectral on the Ghost Deck): 8 / 28 without
+    // Vouchers, as in the original game (Joker 20, Tarot 4, Planet 4)
+    int consumable_weight = shop_economy_consumable_weight_x10(
+        voucher_get_tarot_shop_weight_x10(),
+        voucher_get_planet_shop_weight_x10(),
+        g_game_vars.deck == DECK_TYPE_GHOST
+    );
+    enum ShopTopRowKind kind = shop_economy_top_row_kind(
+        SHOP_JOKER_WEIGHT_X10,
+        consumable_weight,
+        SHOP_PACK_WEIGHT_X10,
+        voucher_get_playing_card_shop_weight_x10(), // Magic Trick
+        rng_get_u32(RNG_SEQ_SHOP_ITEM_TYPE)
+    );
 
-    u32 roll = rng_get_u32(RNG_SEQ_SHOP_ITEM_TYPE) %
-               (joker_weight + planet_weight + pack_weight + card_weight);
-
-    if (roll >= joker_weight + planet_weight + pack_weight)
+    if (kind == SHOP_TOP_ROW_CARD)
     {
         // Magic Trick: a playing card. NULL when no sprite layer is free: fall back to a Joker
         Item* card = item_roll_new(ITEM_TYPE_PLAYING_CARD, RNG_SEQ_SHOP_PLAYING_CARDS);
         if (card != NULL)
             return card;
-        roll = 0;
+        kind = SHOP_TOP_ROW_JOKER;
     }
-    else if (roll >= joker_weight + planet_weight)
+    else if (kind == SHOP_TOP_ROW_PACK)
     {
         // NULL when no pack sprite is free: fall back to a Joker
         Item* pack = item_roll_new(ITEM_TYPE_PACK, RNG_SEQ_SHOP_PACKS);
         if (pack != NULL)
             return pack;
-        roll = 0;
+        kind = SHOP_TOP_ROW_JOKER;
     }
 
-    if (roll < joker_weight)
+    if (kind == SHOP_TOP_ROW_JOKER)
     {
         Item* joker = item_roll_new(ITEM_TYPE_JOKER, RNG_SEQ_SHOP_ITEMS);
         // No Joker left to roll: fall back to a Planet
@@ -426,6 +424,28 @@ static int shop_top_row_item_x(int idx, int nb_items)
  * @brief Setup for the lists of items we can purchase in the top row of the Shop.
  *        i.e. Jokers and consumables and possibly playing cards.
  */
+/**
+ * @brief Prints the price under a top row item. With 3 or 4 slots the cards are closer than the
+ *        width of "$10", so the "$" is dropped to keep the prices apart.
+ */
+static void shop_print_item_price(Item* item)
+{
+    int nb_slots = g_game_vars.shop_slots;
+    if (nb_slots <= 2)
+    {
+        item_print_buy_price_under(item);
+        return;
+    }
+
+    int price = item_get_buy_price(item);
+    if (price == UNDEFINED)
+        return;
+
+    char price_str[INT_MAX_DIGITS + 1];
+    snprintf(price_str, sizeof(price_str), "%d", price);
+    sprite_object_print_text_under((SpriteObject*)item, price_str);
+}
+
 static void shop_create_top_row_items(void)
 {
     tte_erase_rect_wrapper(SHOP_PRICES_TEXT_RECT);
@@ -459,7 +479,7 @@ static void shop_create_top_row_items(void)
         item->tx = item->x;
         item->ty = int2fx(ITEM_SHOP_Y);
 
-        item_print_buy_price_under(item);
+        shop_print_item_price(item);
 
         list_push_back(shop_items_list, item);
     }
@@ -491,7 +511,7 @@ static void shop_print_all_prices(void)
     ListItr itr = list_itr_create(&s_shop_items_list);
     while ((item = list_itr_next(&itr)))
     {
-        item_print_buy_price_under(item);
+        shop_print_item_price(item);
     }
 
     shop_print_reroll_cost();
@@ -630,6 +650,40 @@ static inline void shop_buy_item(int shop_item_idx)
 }
 
 static void shop_pack_open_start(void);
+
+// Packs given by Tags (Charm, Meteor, Ethereal, Standard, Buffoon), opened one after the other
+// once the Shop's Tags are done and after each opened Pack is closed
+#define MAX_TAG_PACKS 4
+static u8 s_tag_packs[MAX_TAG_PACKS];
+static int s_nb_tag_packs = 0;
+
+void shop_tag_open_pack(enum PackType pack_type)
+{
+    if (s_nb_tag_packs < MAX_TAG_PACKS)
+        s_tag_packs[s_nb_tag_packs++] = pack_type;
+}
+
+/**
+ * @brief Opens the next Pack given by a Tag. Returns false when there is none.
+ */
+static bool shop_tag_pack_open_next(void)
+{
+    while (s_nb_tag_packs > 0)
+    {
+        enum PackType pack_type = s_tag_packs[0];
+        for (int i = 1; i < s_nb_tag_packs; i++)
+            s_tag_packs[i - 1] = s_tag_packs[i];
+        s_nb_tag_packs--;
+
+        s_opened_pack = booster_pack_new(pack_type);
+        if (s_opened_pack != NULL)
+        {
+            shop_pack_open_start();
+            return true;
+        }
+    }
+    return false;
+}
 
 /**
  * @brief Handle button inputs for the "Next Round" button and shop Jokers.
@@ -860,6 +914,55 @@ static inline void shop_reroll(void)
     shop_print_reroll_cost();
     // The top row prices were erased with the Voucher's
     shop_print_voucher_price();
+}
+
+void shop_tag_make_items_free(void)
+{
+    Item* item;
+    ListItr itr = list_itr_create(&s_shop_items_list);
+    while ((item = list_itr_next(&itr)))
+        item->is_free = true;
+
+    shop_print_all_prices();
+}
+
+void shop_tag_free_joker(enum JokerRarity rarity)
+{
+    Item* old_item = list_get_at_idx(&s_shop_items_list, 0);
+    if (old_item == NULL)
+        return;
+
+    int x = old_item->x, y = old_item->y, tx = old_item->tx, ty = old_item->ty;
+    item_dispose(&old_item); // A Joker gets back in the pool of the rollable ones
+    (void)list_remove_at_idx(&s_shop_items_list, 0);
+
+    Item* joker_item = NULL;
+    int joker_id = joker_roll_id(rarity, RNG_SEQ_SHOP_ITEMS);
+    if (joker_id != UNDEFINED)
+    {
+        if (joker_batch7_showman_locks_roll(is_joker_owned(SHOWMAN_JOKER_ID)))
+            joker_set_rollable(joker_id, false);
+
+        Joker* joker = joker_new(joker_id);
+        stake_roll_joker_stickers(joker);
+        joker_roll_edition(joker);
+        joker_item = (Item*)joker_object_new(joker);
+    }
+
+    // Nothing rollable or no sprite: the slot is filled the usual way
+    if (joker_item == NULL)
+        joker_item = shop_create_top_row_item();
+    if (joker_item == NULL)
+        return;
+
+    joker_item->x = x;
+    joker_item->y = y;
+    joker_item->tx = tx;
+    joker_item->ty = ty;
+    joker_item->is_free = true;
+    list_insert(&s_shop_items_list, joker_item, 0);
+
+    shop_print_all_prices();
 }
 
 /**
@@ -1159,7 +1262,7 @@ static void shop_hide_item_desc_on_exit(void)
     ListItr itr = list_itr_create(&s_shop_items_list);
     while ((item = list_itr_next(&itr)))
     {
-        item_print_buy_price_under(item);
+        shop_print_item_price(item);
     }
 
     // Revert what we just did so the Item still appears selected
@@ -1226,7 +1329,8 @@ static void shop_pack_print_texts(void)
         }
     }
 
-    else if (choice != NULL && choice->type == ITEM_TYPE_CONSUMABLE)
+    else if (choice != NULL &&
+             (choice->type == ITEM_TYPE_CONSUMABLE || choice->type == ITEM_TYPE_JOKER))
     {
         tte_printf(
             TTE_YELLOW_TAG "#{P:%d,%d}%s",
@@ -1318,7 +1422,7 @@ static void shop_pack_close(void)
     while ((item = list_itr_next(&itr)))
     {
         item->ty = int2fx(ITEM_SHOP_Y);
-        item_print_buy_price_under(item);
+        shop_print_item_price(item);
     }
 
     // Re-highlight what the shop selection points to
@@ -1336,6 +1440,7 @@ static void shop_pack_close(void)
     shop_print_voucher_price();
     display_deck_size_max();
     state_machine_change_state(&shop_sm, GAME_SHOP_ACTIVE);
+    shop_tag_pack_open_next(); // Another free Pack of a Tag
 }
 
 static void shop_pack_open_on_update(void)

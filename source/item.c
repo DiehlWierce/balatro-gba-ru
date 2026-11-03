@@ -28,7 +28,10 @@ Item* item_roll_new(enum ItemType item_type, enum RngSequence key)
 
     Item* ret_item = item_funcs->roll_new(key);
     if (ret_item != NULL)
+    {
         ret_item->is_owned = false;
+        ret_item->is_free = false;
+    }
 
     return ret_item;
 }
@@ -50,8 +53,11 @@ int item_get_buy_price(Item* item)
 
     int price = item_funcs->get_buy_price(item);
 
-    // Clearance Sale / Liquidation: cards in the Shop are cheaper, Vouchers are not
-    if (price != UNDEFINED && item->type != ITEM_TYPE_VOUCHER && !item->is_owned)
+    if (item->is_free && !item->is_owned)
+        return 0;
+
+    // Clearance Sale / Liquidation: everything in the Shop is cheaper, Vouchers and Packs too
+    if (price != UNDEFINED && !item->is_owned)
         price = voucher_apply_shop_discount(price);
 
     return price;

@@ -291,12 +291,14 @@ static void test_hieroglyph_lowers_ante_and_hands(void)
     assert(s_display_ante_calls == 1);
     assert(s_display_hands_calls == 1);
 
-    // Clamped to 1 everywhere
+    // The Ante goes below 1 (0, then -1), hands stay at 1 at least
     g_game_vars.ante = 1;
     g_game_vars.hands_per_round = 1;
     g_game_vars.hands = 1;
     voucher_redeem(VOUCHER_HIEROGLYPH);
-    assert(g_game_vars.ante == 1);
+    assert(g_game_vars.ante == 0);
+    voucher_redeem(VOUCHER_HIEROGLYPH);
+    assert(g_game_vars.ante == -1);
     assert(g_game_vars.hands_per_round == 1 && g_game_vars.hands == 1);
 }
 

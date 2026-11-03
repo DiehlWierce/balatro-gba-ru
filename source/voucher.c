@@ -10,6 +10,7 @@
 #include "game_variables.h"
 #include "graphic_utils.h"
 #include "pool.h"
+#include "shop_economy.h"
 #include "spectral_rules.h"
 #include "sprite.h"
 #include "util.h"
@@ -207,8 +208,8 @@ static inline void clamp_max(s32* value, s32 max)
 
 static void voucher_lower_ante(void)
 {
+    // Hieroglyph and Petroglyph can bring the Ante below 1 (0, then -1 with both)
     g_game_vars.ante--;
-    clamp_min(&g_game_vars.ante, 1);
     // The Voucher offer of this Ante was already bought, lowering the Ante must not roll a new one
     s_offer_ante = g_game_vars.ante;
     display_ante();
@@ -311,13 +312,8 @@ int voucher_get_shop_discount_percent(void)
 
 int voucher_apply_shop_discount(int price)
 {
-    int discount = voucher_get_shop_discount_percent();
-    if (discount == 0 || price <= 0)
-        return price;
-
     // Like in Balatro: floor((price + 0.5) * (100 - discount) / 100), never free
-    int discounted = ((2 * price + 1) * (100 - discount)) / 200;
-    return (discounted < 1) ? 1 : discounted;
+    return shop_economy_discounted_price(price, voucher_get_shop_discount_percent());
 }
 
 int voucher_get_reroll_discount(void)
@@ -405,6 +401,7 @@ VoucherObject* voucher_object_new(enum VoucherType voucher)
 
     voucher_object->type = ITEM_TYPE_VOUCHER;
     voucher_object->is_owned = false;
+    voucher_object->is_free = false;
     voucher_object->voucher_type = voucher;
     voucher_object->layer = layer;
     s_used_layers[layer] = true;
@@ -469,7 +466,7 @@ Item* voucher_object_roll_new(enum RngSequence key)
 int voucher_object_get_buy_price(Item* item)
 {
     GBAL_RETURN_IF_NULL(item, UNDEFINED);
-    return VOUCHER_BUY_PRICE;
+    return VOUCHER_BUY_PRICE; // item_get_buy_price() applies the Shop discount
 }
 
 int voucher_object_get_sell_price(Item* item)

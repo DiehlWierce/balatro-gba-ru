@@ -1,3 +1,4 @@
+#include "consumable.h"
 #include "game.h"
 #include "game/blind_select.h"
 #include "game/common_ui.h"
@@ -33,11 +34,27 @@ DECLARE_SKIP_TAG_EFFECT_FUNC(skip_tag_effect_d6)
 DECLARE_SKIP_TAG_EFFECT_FUNC(skip_tag_effect_top_up)
 DECLARE_SKIP_TAG_EFFECT_FUNC(skip_tag_effect_speed)
 DECLARE_SKIP_TAG_EFFECT_FUNC(skip_tag_effect_economy)
+DECLARE_SKIP_TAG_EFFECT_FUNC(skip_tag_effect_uncommon)
+DECLARE_SKIP_TAG_EFFECT_FUNC(skip_tag_effect_rare)
+DECLARE_SKIP_TAG_EFFECT_FUNC(skip_tag_effect_coupon)
+DECLARE_SKIP_TAG_EFFECT_FUNC(skip_tag_effect_orbital)
+DECLARE_SKIP_TAG_EFFECT_FUNC(skip_tag_effect_charm)
+DECLARE_SKIP_TAG_EFFECT_FUNC(skip_tag_effect_meteor)
+DECLARE_SKIP_TAG_EFFECT_FUNC(skip_tag_effect_ethereal)
+DECLARE_SKIP_TAG_EFFECT_FUNC(skip_tag_effect_standard)
 
 // The index of a skip tag in the registry matches its ID.
 // clang-format off
 const SkipTagInfo skip_tag_registry[] = 
 {
+    [SKIP_TAG_TYPE_UNCOMMON]   = { SKIP_TAG_EVENT_ON_SHOP_INIT,   skip_tag_cond_true,       skip_tag_effect_uncommon},
+    [SKIP_TAG_TYPE_RARE]       = { SKIP_TAG_EVENT_ON_SHOP_INIT,   skip_tag_cond_true,       skip_tag_effect_rare    },
+    [SKIP_TAG_TYPE_COUPON]     = { SKIP_TAG_EVENT_ON_SHOP_INIT,   skip_tag_cond_true,       skip_tag_effect_coupon  },
+    [SKIP_TAG_TYPE_ORBITAL]    = { SKIP_TAG_EVENT_IMMEDIATE,      skip_tag_cond_true,       skip_tag_effect_orbital },
+    [SKIP_TAG_TYPE_CHARM]      = { SKIP_TAG_EVENT_ON_SHOP_INIT,   skip_tag_cond_true,       skip_tag_effect_charm   },
+    [SKIP_TAG_TYPE_METEOR]     = { SKIP_TAG_EVENT_ON_SHOP_INIT,   skip_tag_cond_true,       skip_tag_effect_meteor  },
+    [SKIP_TAG_TYPE_ETHEREAL]   = { SKIP_TAG_EVENT_ON_SHOP_INIT,   skip_tag_cond_true,       skip_tag_effect_ethereal},
+    [SKIP_TAG_TYPE_STANDARD]   = { SKIP_TAG_EVENT_ON_SHOP_INIT,   skip_tag_cond_true,       skip_tag_effect_standard},
     [SKIP_TAG_TYPE_INVESTMENT] = { SKIP_TAG_EVENT_ON_ROUND_END,   skip_tag_cond_investment, skip_tag_effect_noop    },
     [SKIP_TAG_TYPE_BOSS]       = { SKIP_TAG_EVENT_IMMEDIATE,      skip_tag_cond_true,       skip_tag_effect_boss    },
     [SKIP_TAG_TYPE_HANDY]      = { SKIP_TAG_EVENT_IMMEDIATE,      skip_tag_cond_true,       skip_tag_effect_handy   },
@@ -82,7 +99,8 @@ static bool skip_tag_cond_double(void)
 
 static bool skip_tag_cond_juggle(void)
 {
-    return g_game_vars.hand_size < MAX_HAND_SIZE;
+    // Always used up, even when the hand size is already at its maximum
+    return true;
 }
 
 static bool skip_tag_cond_d6(void)
@@ -120,7 +138,12 @@ static void skip_tag_effect_double(void)
     // tag exists and isn't a double tag
     SkipTag* latest_tag = get_owned_skip_tags()->tail->data;
     SkipTag* latest_tag_copy = skip_tag_new(latest_tag->type);
+
+    // add_skip_tag() leaves the pointer alone when the Tag wasn't added (full memory pool):
+    // free the copy instead of losing its slot
     add_skip_tag(&latest_tag_copy);
+    if (latest_tag_copy != NULL)
+        skip_tag_destroy(&latest_tag_copy);
 }
 
 static void skip_tag_effect_juggle(void)
@@ -153,8 +176,16 @@ static void skip_tag_effect_top_up(void)
         Joker* joker = joker_new(joker_id);
         GBAL_RETURN_IF_NULL(joker, RET_NONE);
 
+        JokerObject* joker_object = joker_object_new(joker);
+        if (joker_object == NULL)
+        {
+            // No sprite or pool slot left: free the Joker, its ID stays rollable
+            joker_destroy(&joker);
+            break;
+        }
+
         joker_set_rollable(joker_id, false);
-        item_acquire((Item*)joker_object_new(joker));
+        item_acquire((Item*)joker_object);
     }
 }
 
@@ -173,4 +204,51 @@ static void skip_tag_effect_economy(void)
 
     g_game_vars.money += added_money;
     display_money();
+}
+
+static void skip_tag_effect_uncommon(void)
+{
+    shop_tag_free_joker(UNCOMMON_JOKER);
+}
+
+static void skip_tag_effect_rare(void)
+{
+    shop_tag_free_joker(RARE_JOKER);
+}
+
+static void skip_tag_effect_coupon(void)
+{
+    shop_tag_make_items_free();
+}
+
+#define ORBITAL_TAG_LEVELS 3
+static void skip_tag_effect_orbital(void)
+{
+    // A random poker hand among the ones a Planet card exists for (secret hands need to have been
+    // played)
+    enum PlanetType planet = planet_roll(RNG_SEQ_TAG_TOP_UP);
+    if (planet == PLANET_TYPE_MAX)
+        return;
+
+    hand_level_up(planet_get_hand_type(planet), ORBITAL_TAG_LEVELS);
+}
+
+static void skip_tag_effect_charm(void)
+{
+    shop_tag_open_pack(SKIP_TAG_PACK_CHARM);
+}
+
+static void skip_tag_effect_meteor(void)
+{
+    shop_tag_open_pack(SKIP_TAG_PACK_METEOR);
+}
+
+static void skip_tag_effect_ethereal(void)
+{
+    shop_tag_open_pack(SKIP_TAG_PACK_ETHEREAL);
+}
+
+static void skip_tag_effect_standard(void)
+{
+    shop_tag_open_pack(SKIP_TAG_PACK_STANDARD);
 }

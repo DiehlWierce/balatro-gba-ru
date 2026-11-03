@@ -99,6 +99,12 @@ typedef struct Item
      * different for Items still in the Shop and the ones we have bought.
      */
     bool is_owned;
+
+    /**
+     * @brief Free in the Shop (Coupon, Uncommon and Rare Tags): the buy price is $0 while the item
+     * isn't owned. Reset by item_roll_new(). Fits in the padding after is_owned.
+     */
+    bool is_free;
 } Item;
 
 /**
