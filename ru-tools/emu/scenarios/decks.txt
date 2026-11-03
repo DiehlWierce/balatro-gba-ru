@@ -49,12 +49,17 @@ wait 20
 shot 13_deck_erratic
 press RIGHT
 wait 20
-shot 14_deck_red_again
+shot 14_deck_anaglyph
+press RIGHT
+wait 20
+shot 15_deck_red_again
 press LEFT
 wait 20
-shot 15_deck_erratic_left
+press LEFT
+wait 20
+shot 16_deck_erratic_left
 
-# Back to Green: Erratic -> ... -> Green is 10 steps left
+# Back to Green: Erratic -> ... -> Green is 10 steps left (Anaglyph is 14, after Erratic)
 press LEFT 3
 press LEFT 3
 press LEFT 3
@@ -66,7 +71,7 @@ press LEFT 3
 press LEFT 3
 press LEFT 3
 wait 20
-shot 16_green_chosen
+shot 17_green_chosen
 
 pokestr {sym:s_seed_str} GBARU1
 poke8 {sym:use_seed} 1
