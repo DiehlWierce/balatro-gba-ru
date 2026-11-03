@@ -252,6 +252,7 @@ static int s_cards_drawn = 0;
 static int s_cards_discarded = 0;
 
 // Boss Blind effects
+static int s_held_passes_left = 0; // Mime: passes over the held cards still to do
 static bool s_hand_scores_nothing = false; // The Boss doesn't allow the played hand
 
 // Counters and flags for the Jokers of A8 batch 5, kept in EWRAM
@@ -622,6 +623,8 @@ static inline void round_execute_play_hand(void)
     };
     u32 blind_flags = blind_effects_trigger(BLIND_EVENT_ON_HAND_PLAYED, &blind_event_data);
     s_hand_scores_nothing = (blind_flags & BLIND_EFFECT_FLAG_NO_SCORE) != 0;
+    if (blind_flags & BLIND_EFFECT_FLAG_TRIGGERED)
+        joker_on_boss_triggered(); // Matador
 }
 
 /**
@@ -2100,6 +2103,20 @@ static void print_card_score_result(const CardScoreResult* result)
 }
 
 /**
+ * @brief Steel cards held in hand multiply the mult (done again for every Mime pass).
+ */
+static void score_held_cards_modifiers(void)
+{
+    CardObject** held_cards = get_hand_array();
+    for (int i = 0; i <= get_hand_top(); i++)
+    {
+        if (card_modifiers_on_held(held_cards[i]->card))
+            card_object_shake(held_cards[i], SFX_CARD_SELECT);
+    }
+    display_mult();
+}
+
+/**
  * @brief Score all played cards in order, then Jokers after each one.
  *
  * @return true if the Cards scoring loop has returned early.
@@ -2124,14 +2141,8 @@ static inline bool play_scoring_cards_update(void)
             s_joker_scored_itr = list_itr_create(get_jokers_list());
             s_scored_card_index = get_hand_top();
 
-            // Steel cards held in hand multiply the mult
-            CardObject** held_cards = get_hand_array();
-            for (int i = 0; i <= get_hand_top(); i++)
-            {
-                if (card_modifiers_on_held(held_cards[i]->card))
-                    card_object_shake(held_cards[i], SFX_CARD_SELECT);
-            }
-            display_mult();
+            s_held_passes_left = joker_mime_extra_passes();
+            score_held_cards_modifiers();
 
             play_state = PLAY_SCORING_HELD_CARDS;
 
@@ -2277,6 +2288,16 @@ static inline bool play_scoring_held_cards_update(int played_idx)
                 return true;
             }
             s_joker_scored_itr = list_itr_create(get_jokers_list());
+        }
+
+        if (s_held_passes_left > 0)
+        {
+            // Mime: the held cards score again
+            s_held_passes_left--;
+            s_joker_scored_itr = list_itr_create(get_jokers_list());
+            s_scored_card_index = get_hand_top();
+            score_held_cards_modifiers();
+            return false;
         }
 
         s_scored_card_index = 0;

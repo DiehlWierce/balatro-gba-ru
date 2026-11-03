@@ -14,6 +14,7 @@
 #include "joker_batch5.h"
 #include "joker_batch6.h"
 #include "joker_batch7.h"
+#include "joker_batch8.h"
 #include "random.h"
 
 #include <maxmod.h>
@@ -222,6 +223,8 @@ void joker_on_shop_reroll(void);           // Flash Card
 void joker_on_pack_skipped(void);          // Red Card
 void joker_on_planet_used(int planet); // Satellite
 void joker_on_first_discard(enum HandType hand_type, bool first_discard); // Burnt Joker
+void joker_on_boss_triggered(void);        // Matador (the played hand triggered the Boss ability)
+int joker_mime_extra_passes(void);         // Mime: extra passes over the held cards
 void joker_on_card_added(void);          // Hologram (a playing card joins the deck)
 void joker_on_card_sold(void);             // Campfire (Jokers and consumables)
 void joker_on_joker_sold(Joker* joker);    // Luchador (in a Boss Blind round)

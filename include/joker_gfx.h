@@ -114,6 +114,8 @@
 #include "joker_gfx109.h"
 #include "joker_gfx110.h"
 #include "joker_gfx111.h"
+#include "joker_gfx112.h"
+#include "joker_gfx113.h"
 
 #endif
 // clang-format on

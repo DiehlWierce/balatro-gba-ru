@@ -36,3 +36,4 @@ run_test spectral_rules
 run_test deck_rules
 run_test joker_batch7
 run_test shop_economy
+run_test joker_batch8

@@ -92,7 +92,7 @@ static const int JOKER_ID_TO_SPRITE_MAP[] = {
     59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73,
     74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88,
     89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99,
-    100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111,
+    100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113,
 };
 
 // Map of Spritesheet idx -> first Joker ID in sheet
@@ -107,7 +107,7 @@ static const int SPRITESHEET_IDX_TO_STARTING_JOKER_ID[] = {
     94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108,
     109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123,
     124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134,
-    135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146
+    135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148
 };
 
 // Lookup table of Joker Rarity strings. Used to display at the bottom of the description screen.
@@ -1168,6 +1168,40 @@ void joker_on_first_discard(enum HandType hand_type, bool first_discard)
         hand_level_up(target, 1);
         joker_object_shake(joker_object, UNDEFINED);
     }
+}
+
+void joker_on_boss_triggered(void)
+{
+    ListItr itr = list_itr_create(get_jokers_list());
+    JokerObject* joker_object;
+    while ((joker_object = list_itr_next(&itr)))
+    {
+        Joker* joker = joker_object->joker;
+        if (joker->id != MATADOR_JOKER_ID || joker_is_perished(joker) ||
+            blind_effects_is_joker_disabled(joker_object))
+            continue;
+        g_game_vars.money += joker_batch8_matador_money(true);
+        display_money();
+        joker_object_shake(joker_object, UNDEFINED);
+    }
+}
+
+int joker_mime_extra_passes(void)
+{
+    int nb_mimes = 0;
+    ListItr itr = list_itr_create(get_jokers_list());
+    JokerObject* joker_object;
+    while ((joker_object = list_itr_next(&itr)))
+    {
+        Joker* joker = joker_object->joker;
+        if (joker->id == MIME_JOKER_ID && !joker_is_perished(joker) &&
+            !blind_effects_is_joker_disabled(joker_object))
+        {
+            nb_mimes++;
+            joker_object_shake(joker_object, UNDEFINED);
+        }
+    }
+    return joker_batch8_mime_passes(nb_mimes) - 1;
 }
 
 void joker_on_card_added(void)
