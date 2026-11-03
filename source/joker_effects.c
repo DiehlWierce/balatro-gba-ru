@@ -1868,8 +1868,11 @@ static u32 blackboard_joker_effect(
 
     bool all_cards_are_spades_or_clubs = true;
     CardObject** hand = get_hand_array();
-    for (int i = 0; i < g_game_vars.hand_size; i++)
+    for (int i = 0; i <= get_hand_top(); i++)
     {
+        if (hand[i] == NULL)
+            continue;
+
         Card* card = hand[i]->card;
         if (!card_has_suit(card, SPADES) && !card_has_suit(card, CLUBS))
         {
@@ -1926,8 +1929,12 @@ static u32 raised_fist_joker_effect(
             *p_lowest_value_index = 0;
             u8 lowest_value = IMPOSSIBLY_HIGH_CARD_VALUE;
             CardObject** hand = get_hand_array();
-            for (int i = 0; i < g_game_vars.hand_size; i++)
+            for (int i = 0; i <= get_hand_top(); i++)
             {
+                // Rankless cards (Stone) are never the lowest card
+                if (hand[i] == NULL || !card_has_rank(hand[i]->card))
+                    continue;
+
                 u8 value = card_get_value(hand[i]->card);
                 if (lowest_value > value)
                 {
@@ -2126,7 +2133,7 @@ static u32 even_steven_joker_effect(
         case JACK:
             break;
         default:
-            if (card_get_value(scored_card) % 2 == 0)
+            if (card_has_rank(scored_card) && card_get_value(scored_card) % 2 == 0)
             {
                 *joker_effect = &s_shared_joker_effect;
 
