@@ -86,8 +86,10 @@ def main():
     if not os.path.exists(rom):
         sys.exit(f'{rom} not found, build the ROM first')
     if not os.path.exists(args.gbarun):
-        subprocess.run(['cc', '-O2', '-o', args.gbarun, os.path.join(HERE, 'gbarun.c'),
-                        '-lmgba', '-lpng'], check=True)
+        cmd = ['cc', '-O2', '-o', args.gbarun, os.path.join(HERE, 'gbarun.c')]
+        if os.path.isdir('/opt/homebrew/include'):  # macOS with Homebrew (brew install mgba libpng)
+            cmd += ['-I/opt/homebrew/include', '-L/opt/homebrew/lib']
+        subprocess.run(cmd + ['-lmgba', '-lpng'], check=True)
 
     text = open(args.scenario).read()
     for define in args.defines:

@@ -35,6 +35,7 @@
 #define EGG_VALUE_GAIN            6 // The sell value is value / 2, so this is +$3
 #define GIFT_CARD_VALUE_GAIN      2 // +$1 sell value
 #define ROCKET_START_MONEY        1
+#define ROCKET_BOSS_GAIN          2 // Payout increase for every Boss Blind defeated
 #define JOKER_VALUE_MAX           255
 
 // Everything the owned Jokers add to the run, summed over all of them
@@ -104,6 +105,15 @@ static inline int joker_economy_limit(int base, int bonus, int min_value)
 }
 
 /**
+ * @brief Hand size with the Joker bonus: at least 1 card, at most @p max_size (the hand arrays)
+ */
+static inline int joker_economy_hand_size(int base, int bonus, int max_size)
+{
+    int size = joker_economy_limit(base, bonus, 1);
+    return size > max_size ? max_size : size;
+}
+
+/**
  * @brief Interest paid at the end of the round
  *
  * Every To the Moon adds $1 to the $1 per $5, and raises the cap by the same factor.
@@ -156,7 +166,7 @@ static inline int joker_economy_add_value(int value, int gain)
 // Rocket payout after the round: +$1 for every Boss Blind defeated
 static inline int joker_economy_rocket_next(int payout, bool boss_defeated)
 {
-    return boss_defeated ? payout + 1 : payout;
+    return boss_defeated ? payout + ROCKET_BOSS_GAIN : payout;
 }
 
 #endif // JOKER_ECONOMY_H

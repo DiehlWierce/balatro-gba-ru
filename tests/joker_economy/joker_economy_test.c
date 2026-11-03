@@ -93,7 +93,12 @@ static void test_values(void)
     assert(value == JOKER_VALUE_MAX);
 
     assert(joker_economy_rocket_next(1, false) == 1);
-    assert(joker_economy_rocket_next(1, true) == 2);
+    assert(joker_economy_rocket_next(1, true) == 3);
+
+    // Hand size: Painted Deck (10) + Juggler + Troubadour + Skip Tag never go past the hand arrays
+    assert(joker_economy_hand_size(8, 3, 16) == 11);
+    assert(joker_economy_hand_size(16, 3, 16) == 16);
+    assert(joker_economy_hand_size(8, -9, 16) == 1);
 }
 
 int main(void)

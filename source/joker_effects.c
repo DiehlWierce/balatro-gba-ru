@@ -789,7 +789,7 @@ static int hack_joker_desc(Joker* joker, Rect dest_rect)
 static int seltzer_joker_desc(Joker* joker, Rect dest_rect)
 {
     static const char desc_format[] = TTE_BLACK_TAG
-        "Повторно срабатывают все сыгранные карты ещё " TTE_YELLOW_TAG "%ld" TTE_BLACK_TAG " рук";
+        "Повторно срабатывают все сыгранные карты\n\n(Осталось рук: " TTE_YELLOW_TAG "%ld" TTE_BLACK_TAG ")";
     const u32 desc_max_size = 220;
 
     char desc[desc_max_size];
@@ -870,7 +870,7 @@ static int ice_cream_joker_desc(Joker* joker, Rect dest_rect)
 static int loyalty_card_joker_desc(Joker* joker, Rect dest_rect)
 {
     static const char desc_format[] =
-        TTE_RED_TAG "X4" TTE_BLACK_TAG " множ. каждую " TTE_YELLOW_TAG "6-ю" TTE_BLACK_TAG " руку\n\n(Ещё " TTE_YELLOW_TAG "%ld" TTE_BLACK_TAG " рук до бонуса)";
+        TTE_RED_TAG "X4" TTE_BLACK_TAG " множ. каждую " TTE_YELLOW_TAG "6-ю" TTE_BLACK_TAG " руку\n\n(До бонуса рук: " TTE_YELLOW_TAG "%ld" TTE_BLACK_TAG ")";
     const u32 desc_max_size = 220;
 
     char desc[desc_max_size];
@@ -947,14 +947,14 @@ static int delayed_gratification_joker_desc(Joker* joker, Rect dest_rect)
 static int to_the_moon_joker_desc(Joker* joker, Rect dest_rect)
 {
     static const char desc[] =
-        TTE_BLACK_TAG "Дополнительно " TTE_YELLOW_TAG "$1" TTE_BLACK_TAG " процента за каждые " TTE_YELLOW_TAG "$5" TTE_BLACK_TAG " в конце раунда";
+        TTE_YELLOW_TAG "+$1" TTE_BLACK_TAG " к проценту за каждые " TTE_YELLOW_TAG "$5" TTE_BLACK_TAG " в конце раунда";
     return tte_printf_justified_in_rect(desc, dest_rect, JUSTIFY_CENTER, SCREEN_LEFT, true);
 }
 
 static int rocket_joker_desc(Joker* joker, Rect dest_rect)
 {
     static const char desc_format[] =
-        TTE_BLACK_TAG "В конце раунда даёт " TTE_YELLOW_TAG "$%ld" TTE_BLACK_TAG "\n\nВыплата растёт на " TTE_YELLOW_TAG "$1" TTE_BLACK_TAG " за каждого босса";
+        TTE_BLACK_TAG "В конце раунда даёт " TTE_YELLOW_TAG "$%ld" TTE_BLACK_TAG "\n\nВыплата растёт на " TTE_YELLOW_TAG "$2" TTE_BLACK_TAG " за каждого босса";
     const u32 desc_max_size = 220;
 
     char desc[desc_max_size];
