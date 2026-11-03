@@ -119,6 +119,31 @@ bool blind_effects_is_joker_disabled(const JokerObject* joker_object);
 void blind_effects_on_joker_removed(const JokerObject* joker_object, bool sold);
 
 /**
+ * @brief Forgets the state of the previous Boss (disabled Joker, forced card, Verdant Leaf,
+ *        Needle hands). Done at the start of every round; can also be called when a run is reset.
+ */
+void blind_effects_reset(void);
+
+/**
+ * @brief Called when the ante is entered (its Boss is rolled): The Ox picks its hand once for the
+ *        whole ante, ties between the most played hands are broken at random.
+ */
+void blind_effects_on_ante_entered(void);
+
+/**
+ * @brief Recomputes the debuff of the cards in hand for the current Boss (The Club, Goad, Window,
+ *        Head, Plant, Pillar, Verdant Leaf). To call after a card changed in the hand
+ *        (Tarot, Spectral). Does nothing for other Blinds or when the Boss is disabled.
+ */
+void blind_effects_refresh_debuffs(void);
+
+/**
+ * @brief To call when the current Boss is disabled during its round (a Luchador is sold, a Chicot
+ *        is bought). Gives back what the Boss took away that the wiki confirms: The Needle's hands.
+ */
+void blind_effects_on_boss_disabled(void);
+
+/**
  * @brief Clears the Boss state of a card going back to the Deck or discard pile:
  *        no more debuffed nor face down.
  */

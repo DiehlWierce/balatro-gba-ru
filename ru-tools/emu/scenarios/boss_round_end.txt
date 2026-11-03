@@ -1,0 +1,26 @@
+# B-025: the round end screen after a Boss shows the Boss token and the Boss's requirement.
+# Needs a debug build: make clean && make DEBUG_BOSS=-1
+# usage: run.py scenarios/boss_round_end.txt OUT -D boss=<BlindType number>
+# The Boss is made current BEFORE its round starts (like the real flow), then the score is forced.
+
+wait 460
+press START
+wait 60
+press A
+wait 60
+pokestr {sym:s_seed_str} GBARU1
+poke8 {sym:use_seed} 1
+poke32 {sym:g_debug_forced_boss} {def:boss}
+press DOWN
+wait 10
+press A
+wait 120
+poke32 {gv:current_blind} {def:boss}
+press A
+wait 180
+shot 01_round_start
+poke32 {gv:score} 100000
+press A
+press L
+wait 1100
+shot 02_round_end_boss

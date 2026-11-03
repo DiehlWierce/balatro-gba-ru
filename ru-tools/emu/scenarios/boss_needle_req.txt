@@ -1,0 +1,18 @@
+# B-006: The Needle asks the same as the Small Blind (x1), not x2.
+# Needs a debug build: make clean && make DEBUG_BOSS=-1
+# usage: run.py scenarios/boss_needle_req.txt OUT -D boss=20
+# Seed GBARU1, ante 1: Small Blind 300, Needle 300 (the Blind Select screen shows both).
+
+wait 460
+press START
+wait 60
+press A
+wait 60
+pokestr {sym:s_seed_str} GBARU1
+poke8 {sym:use_seed} 1
+poke32 {sym:g_debug_forced_boss} {def:boss}
+press DOWN
+wait 10
+press A
+wait 120
+shot 01_blind_select_needle

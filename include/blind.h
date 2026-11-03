@@ -6,6 +6,7 @@
 #ifndef BLIND_H
 #define BLIND_H
 
+#include "blind_rules.h"
 #include "sprite.h"
 
 // Ante at which the normal run is won. Endless mode goes on up to ANTE_LAST (ante_table.h): the
@@ -56,62 +57,6 @@ enum BlindColorIndex
     BLIND_BACKGROUND_SHADOW_COLOR_INDEX,
 };
 
-// clang-format off
-/**
- * @enum BlindType
- * @brief All Blind types in the game are listed here.
- *
- * Boss Blinds range from `BLIND_TYPE_BOSS` to `BLIND_TYPE_SHOWDOWN - 1`.
- *
- * Showdown Blinds range from `BLIND_TYPE_SHOWDOWN` to `BLIND_TYPE_MAX - 1`
- */
-enum BlindType
-{
-    // Normal Blinds
-    BLIND_TYPE_SMALL,
-    BLIND_TYPE_BIG,
-
-    // Boss Blinds
-    BLIND_TYPE_BOSS,
-
-    BLIND_TYPE_HOOK = BLIND_TYPE_BOSS,
-    BLIND_TYPE_OX,
-    BLIND_TYPE_HOUSE,
-    BLIND_TYPE_WALL,
-    BLIND_TYPE_WHEEL,
-    BLIND_TYPE_ARM,
-    BLIND_TYPE_CLUB,
-    BLIND_TYPE_FISH,
-    BLIND_TYPE_PSYCHIC,
-    BLIND_TYPE_GOAD,
-    BLIND_TYPE_WATER,
-    BLIND_TYPE_WINDOW,
-    BLIND_TYPE_MANACLE,
-    BLIND_TYPE_EYE,
-    BLIND_TYPE_MOUTH,
-    BLIND_TYPE_PLANT,
-    BLIND_TYPE_SERPENT,
-    BLIND_TYPE_PILLAR,
-    BLIND_TYPE_NEEDLE,
-    BLIND_TYPE_HEAD,
-    BLIND_TYPE_TOOTH,
-    BLIND_TYPE_FLINT,
-    BLIND_TYPE_MARK,
-
-    // Showdown Blinds
-    BLIND_TYPE_SHOWDOWN,
-
-    BLIND_TYPE_ACORN = BLIND_TYPE_SHOWDOWN,
-    BLIND_TYPE_LEAF,
-    BLIND_TYPE_VESSEL,
-    BLIND_TYPE_HEART,
-    BLIND_TYPE_BELL,
-
-    // End of Blinds' list
-    BLIND_TYPE_MAX
-};
-// clang-format on
-
 /**
  * @enum BlindState
  * @brief All the possible states an Ante's Blinds can be in when viewed in the "Blind Select"
@@ -130,13 +75,12 @@ enum BlindState
  * @struct Blind
  * @brief Data structure containing data about a BlindType.
  *
- * Only contains the score requirement multiplier for now, but will contain info about the Blind's
- * effect when implemented.
+ * The score requirement multiplier is in blind_rules.h (blind_rules_req_mult_fx8()), the effects
+ * in blind_effects.c.
  */
 typedef struct
 {
     u8 type;
-    FIXED score_req_multiplier;
 } Blind;
 
 void blind_init();
@@ -174,11 +118,14 @@ u16 blind_get_color(enum BlindType type, enum BlindColorIndex index);
 /**
  * @brief Choose a random Blind among the ones that haven't been beaten yet.
  *
+ * Only the Bosses that can show up at @p ante are rolled (blind_rules_can_roll()).
+ *
  * @param showdown whether we want to roll a Showdown or a regular Boss Blind.
+ * @param ante the Ante the Boss is rolled for (below 1 counts as 1)
  *
  * @return a BlindType value chosen at random
  */
-enum BlindType roll_blind_type(bool showdown);
+enum BlindType roll_blind_type(bool showdown, int ante);
 
 /**
  * @brief Initialize Boss and Showdown Blinds lists to roll from

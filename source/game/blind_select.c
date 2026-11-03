@@ -105,6 +105,8 @@ static const BG_POINT BIG_BLIND_SKIP_TAG_LOW_POS      = {115,     140};
 static const Rect BLIND_SKIP_BTN_GRAY_RECT            = {0,       24,     4,      27};
 // Text rect in pixels, empty top left panel used for the upcoming Boss's rule
 static const Rect BOSS_CAPTION_RECT                   = {0,       0,      68,     44};
+// Gap between the top of the screen and the first line of the Boss rule (5 lines of 8 px must fit)
+#define BOSS_CAPTION_TOP_PAD 6
 static const Rect BLIND_SKIP_BTN_PREANIM_DEST_RECT    = {9,       29,     19,     31};
 static const Rect SINGLE_BLIND_SEL_REQ_SCORE_RECT     = {80,      120,    104,    128};
 static const Rect SINGLE_BLIND_SELECT_RECT            = {9,       7,      13,     31};
@@ -253,7 +255,7 @@ static void blind_select_print_boss_caption(void)
         return;
 
     const int x = BOSS_CAPTION_RECT.left + 3; // Inside the panel border
-    int y = BOSS_CAPTION_RECT.top + 2;
+    int y = BOSS_CAPTION_RECT.top + BOSS_CAPTION_TOP_PAD;
 
     tte_printf("#{P:%d,%d; cx:0x%X000}%s", x, y, TTE_RED_PB, name);
 
@@ -441,7 +443,8 @@ static inline void reroll_boss_blind(void)
 
     // Showdown blinds only show up on ante 8, 16, etc...
     g_game_vars.next_boss_blind =
-        roll_blind_type((g_game_vars.ante % MAX_ANTE == 0) && (g_game_vars.ante > 0));
+        roll_blind_type((g_game_vars.ante % MAX_ANTE == 0) && (g_game_vars.ante > 0), g_game_vars.ante);
+    blind_effects_on_ante_entered(); // The Ox picks its hand once per ante
 
 #ifdef DEBUG_FORCE_BOSS
     if (g_debug_forced_boss >= BLIND_TYPE_BOSS && g_debug_forced_boss < BLIND_TYPE_MAX)
