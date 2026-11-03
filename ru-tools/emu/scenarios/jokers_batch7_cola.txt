@@ -1,0 +1,38 @@
+# A8 batch 7: Diet Cola (ID 144) gives a Double Tag when sold. Needs: make DEBUG_JOKER0=144 (touch source/joker.c first).
+# Seed GBARU1: win the Small Blind (score forced), buy the Cola in the Shop, sell it (L), look at the tags.
+
+wait 460
+press START
+wait 60
+press A
+wait 60
+pokestr {sym:s_seed_str} GBARU1
+poke8 {sym:use_seed} 1
+press DOWN
+wait 10
+press A
+wait 120
+press A
+wait 180
+poke32 {gv:score} 100000
+press A
+press L
+wait 1100
+press A
+wait 200
+poke32 {gv:money} 500
+shot 00_shop
+
+press RIGHT
+wait 20
+press A
+wait 60
+shot 01_bought
+press UP
+wait 30
+shot 02_cursor
+press L
+wait 120
+shot 03_sold
+wait 120
+shot 04_after

@@ -135,7 +135,20 @@ def showman():
     return im
 
 
-JOKERS = [throwback, madness, campfire, riff_raff, satellite, hologram, burnt, invisible, showman]
+def diet_cola():
+    im, d = card((0x3A, 0x7A, 0xB0))
+    d.rectangle((11, 7, 21, 27), fill=RED, outline=INK)
+    d.rectangle((11, 12, 21, 21), fill=WHITE)
+    d.rectangle((13, 5, 19, 7), fill=GREY_L, outline=INK)
+    d.line((13, 15, 19, 15), fill=BLUE, width=2)
+    d.line((13, 18, 17, 18), fill=BLUE)
+    d.line((22, 8, 26, 4), fill=INK)
+    d.ellipse((5, 22, 8, 25), fill=WHITE)
+    d.ellipse((25, 18, 28, 21), fill=WHITE)
+    return im
+
+
+JOKERS = [throwback, madness, campfire, riff_raff, satellite, hologram, burnt, invisible, showman, diet_cola]
 FIRST_SHEET = 100
 
 

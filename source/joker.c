@@ -15,6 +15,7 @@
 #include "mgba_logger.h"
 #include "pool.h"
 #include "random.h"
+#include "skip_tag.h"
 #include "soundbank.h"
 #include "stake.h"
 #include "util.h"
@@ -30,7 +31,7 @@
 #include <tonc.h>
 
 // what it was before (MAX_DEFINEABLE_JOKERS / JOKERS_PER_SPRITESHEET)
-#define MAX_NUM_JOKERS_SPRITESHEETS 110
+#define MAX_NUM_JOKERS_SPRITESHEETS 120
 
 static const unsigned int* joker_gfxTiles[] = {
 #define DEF_JOKER_GFX(idx) joker_gfx##idx##Tiles,
@@ -90,7 +91,7 @@ static const int JOKER_ID_TO_SPRITE_MAP[] = {
     59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73,
     74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88,
     89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99,
-    100, 101, 102, 103, 104, 105, 106, 107, 108,
+    100, 101, 102, 103, 104, 105, 106, 107, 108, 109,
 };
 
 // Map of Spritesheet idx -> first Joker ID in sheet
@@ -105,7 +106,7 @@ static const int SPRITESHEET_IDX_TO_STARTING_JOKER_ID[] = {
     94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108,
     109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123,
     124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134,
-    135, 136, 137, 138, 139, 140, 141, 142, 143
+    135, 136, 137, 138, 139, 140, 141, 142, 143, 144
 };
 
 // Lookup table of Joker Rarity strings. Used to display at the bottom of the description screen.
@@ -1234,6 +1235,13 @@ static void joker_madness_on_blind_selected(void)
 
 void joker_on_joker_sold(Joker* joker)
 {
+    // Diet Cola: selling it gives a Double Tag
+    if (joker->id == DIET_COLA_JOKER_ID && !joker_is_perished(joker))
+    {
+        SkipTag* tag = skip_tag_new(SKIP_TAG_TYPE_DOUBLE);
+        add_skip_tag(&tag);
+    }
+
     // Invisible Joker: after enough rounds a random other Joker is duplicated
     if (joker->id == INVISIBLE_JOKER_ID && !joker_is_perished(joker) &&
         joker_batch7_invisible_ready(joker->persistent_state))
