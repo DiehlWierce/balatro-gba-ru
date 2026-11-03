@@ -809,6 +809,7 @@ static void shop_buy_voucher(SelectionGrid* selection_grid)
  */
 static inline void shop_reroll(void)
 {
+    joker_on_shop_reroll(); // Flash Card
     g_game_vars.money -= s_reroll_cost;
     display_money(); // Update the money display
 
@@ -1330,6 +1331,7 @@ static void shop_pack_open_on_update(void)
 
     if (key_hit(KEY_START))
     {
+        joker_on_pack_skipped(); // Red Card
         shop_pack_close();
         return;
     }

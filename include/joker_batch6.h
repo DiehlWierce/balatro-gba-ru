@@ -22,8 +22,18 @@
 #define CHICOT_JOKER_ID    127
 #define PERKEO_JOKER_ID    128
 
+#define FLASH_CARD_JOKER_ID 129
+#define RED_CARD_JOKER_ID   130
+#define LUCHADOR_JOKER_ID   131
+#define MR_BONES_JOKER_ID   132
+
 #define FIRST_BATCH6_JOKER_ID CANIO_JOKER_ID
-#define LAST_BATCH6_JOKER_ID  PERKEO_JOKER_ID
+#define LAST_BATCH6_JOKER_ID  MR_BONES_JOKER_ID
+
+#define FLASH_CARD_MULT_PER_REROLL 2
+#define RED_CARD_MULT_PER_SKIP     3
+#define MR_BONES_NUMERATOR         1 // Saves the run from a score of at least 1/4 of the requirement
+#define MR_BONES_DENOMINATOR       4
 
 #define LEGENDARY_JOKER_VALUE   20 // Base value (sells for half)
 #define CANIO_PERCENT_PER_FACE  100 // +X1 per face card destroyed
@@ -92,6 +102,48 @@ static inline int joker_batch6_perkeo_pick(uint32_t roll, int nb, int nb_free_sl
     if (nb <= 0 || nb_free_slots <= 0)
         return -1;
     return (int)(roll % (uint32_t)nb);
+}
+
+/**
+ * @brief Flash Card: +2 mult for each reroll (persistent_state counts them).
+ */
+static inline int joker_batch6_flash_card_mult(int rerolls)
+{
+    if (rerolls < 0)
+        rerolls = 0;
+    if (rerolls > STATE_PERCENT_MAX / FLASH_CARD_MULT_PER_REROLL)
+        rerolls = STATE_PERCENT_MAX / FLASH_CARD_MULT_PER_REROLL;
+    return FLASH_CARD_MULT_PER_REROLL * rerolls;
+}
+
+/**
+ * @brief Red Card: +3 mult for each Booster Pack skipped (persistent_state counts them).
+ */
+static inline int joker_batch6_red_card_mult(int skipped)
+{
+    if (skipped < 0)
+        skipped = 0;
+    if (skipped > STATE_PERCENT_MAX / RED_CARD_MULT_PER_SKIP)
+        skipped = STATE_PERCENT_MAX / RED_CARD_MULT_PER_SKIP;
+    return RED_CARD_MULT_PER_SKIP * skipped;
+}
+
+/**
+ * @brief Luchador: whether selling it disables the Boss (only a Boss Blind being played).
+ */
+static inline bool joker_batch6_luchador_disables(bool in_round, bool is_boss_blind)
+{
+    return in_round && is_boss_blind;
+}
+
+/**
+ * @brief Mr. Bones: whether a lost round (no hands left) is saved, the score is at least 25% of the
+ *        requirement.
+ */
+static inline bool joker_batch6_mr_bones_saves(uint32_t score, uint32_t requirement)
+{
+    return requirement > 0 &&
+           (uint64_t)score * MR_BONES_DENOMINATOR >= (uint64_t)requirement * MR_BONES_NUMERATOR;
 }
 
 #endif // JOKER_BATCH6_H

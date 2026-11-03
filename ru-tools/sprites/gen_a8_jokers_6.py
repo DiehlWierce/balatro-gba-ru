@@ -96,7 +96,46 @@ def perkeo():
     return im
 
 
-JOKERS = [canio, triboulet, yorick, chicot, perkeo]
+def flash_card():
+    im, d = card((0x2F, 0x8F, 0x6F))
+    d.rectangle((7, 4, 25, 27), fill=WHITE, outline=INK)
+    d.polygon([(17, 6), (11, 17), (16, 17), (14, 26), (22, 13), (17, 13)], fill=GOLD, outline=INK)
+    d.line((9, 8, 12, 8), fill=GREY_L)
+    d.line((9, 24, 13, 24), fill=GREY_L)
+    return im
+
+
+def red_card():
+    im, d = card((0xA8, 0x2E, 0x3C))
+    d.rectangle((7, 4, 25, 27), fill=RED, outline=INK)
+    d.rectangle((9, 6, 23, 25), outline=WHITE)
+    d.polygon([(16, 22), (9, 13), (12, 9), (16, 12), (20, 9), (23, 13)], fill=WHITE, outline=INK)
+    return im
+
+
+def luchador():
+    im, d = card((0x3E, 0x60, 0xD4))
+    d.ellipse((7, 5, 25, 26), fill=RED, outline=INK)
+    d.polygon([(11, 12), (15, 14), (15, 17), (11, 16)], fill=WHITE, outline=INK)
+    d.polygon([(21, 12), (17, 14), (17, 17), (21, 16)], fill=WHITE, outline=INK)
+    d.line((13, 22, 19, 22), fill=INK)
+    d.polygon([(16, 5), (14, 10), (18, 10)], fill=GOLD, outline=INK)
+    return im
+
+
+def mr_bones():
+    im, d = card((0x4A, 0x4A, 0x58))
+    d.ellipse((8, 6, 24, 21), fill=WHITE, outline=INK)
+    d.ellipse((11, 11, 15, 16), fill=INK)
+    d.ellipse((17, 11, 21, 16), fill=INK)
+    d.polygon([(16, 16), (14, 19), (18, 19)], fill=INK)
+    d.rectangle((4, 24, 12, 26), fill=WHITE, outline=INK)
+    d.rectangle((20, 24, 28, 26), fill=WHITE, outline=INK)
+    d.line((12, 25, 20, 25), fill=GREY_L)
+    return im
+
+
+JOKERS = [canio, triboulet, yorick, chicot, perkeo, flash_card, red_card, luchador, mr_bones]
 FIRST_SHEET = 89
 
 

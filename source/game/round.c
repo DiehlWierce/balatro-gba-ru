@@ -856,6 +856,12 @@ static inline void round_handle_round_over(void)
 
     blind_effects_trigger(BLIND_EVENT_ON_ROUND_END, NULL);
 
+    // Mr. Bones: a lost round with at least 25% of the requirement counts as won
+    u32 requirement = blind_get_requirement(g_game_vars.current_blind, g_game_vars.ante);
+    if (g_game_vars.hands == 0 && g_game_vars.score < requirement &&
+        joker_mr_bones_saves(g_game_vars.score, requirement))
+        g_game_vars.score = requirement;
+
     if (g_game_vars.score >= blind_get_requirement(g_game_vars.current_blind, g_game_vars.ante))
     {
         if (g_game_vars.current_blind > BLIND_TYPE_BIG)

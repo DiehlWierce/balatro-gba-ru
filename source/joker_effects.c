@@ -173,6 +173,10 @@ DECLARE_JOKER_DESC_FUNC(triboulet_joker_desc)
 DECLARE_JOKER_DESC_FUNC(yorick_joker_desc)
 DECLARE_JOKER_DESC_FUNC(chicot_joker_desc)
 DECLARE_JOKER_DESC_FUNC(perkeo_joker_desc)
+DECLARE_JOKER_DESC_FUNC(flash_card_joker_desc)
+DECLARE_JOKER_DESC_FUNC(red_card_joker_desc)
+DECLARE_JOKER_DESC_FUNC(luchador_joker_desc)
+DECLARE_JOKER_DESC_FUNC(mr_bones_joker_desc)
 
 // Joker Effect functions
 
@@ -294,6 +298,10 @@ DECLARE_JOKER_EFFECT_FUNC(triboulet_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(yorick_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(chicot_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(perkeo_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(flash_card_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(red_card_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(luchador_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(mr_bones_joker_effect)
 
 /* The index of a joker in the registry matches its ID.
  *
@@ -459,6 +467,12 @@ const JokerInfo joker_registry[] =
     { "Йорик", LEGENDARY_JOKER, LEGENDARY_JOKER_VALUE, false, yorick_joker_desc, yorick_joker_effect }, // 126
     { "Чикот", LEGENDARY_JOKER, LEGENDARY_JOKER_VALUE, false, chicot_joker_desc, chicot_joker_effect }, // 127
     { "Перкео", LEGENDARY_JOKER, LEGENDARY_JOKER_VALUE, false, perkeo_joker_desc, perkeo_joker_effect }, // 128
+
+    // A8 batch 6: ordinary Jokers
+    { "Вспышка", UNCOMMON_JOKER, 5, false, flash_card_joker_desc, flash_card_joker_effect }, // 129
+    { "Красная карта", COMMON_JOKER, 5, false, red_card_joker_desc, red_card_joker_effect }, // 130
+    { "Лучадор", UNCOMMON_JOKER, 5, false, luchador_joker_desc, luchador_joker_effect }, // 131
+    { "Мистер Кости", UNCOMMON_JOKER, 5, false, mr_bones_joker_desc, mr_bones_joker_effect }, // 132
 
     // The following jokers don't have sprites yet,
     // uncomment them when their sprites are added.
@@ -4430,6 +4444,90 @@ static u32 chicot_joker_effect(
 
 // Perkeo: works through joker_on_shop_exit() (joker.c)
 static u32 perkeo_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    return JOKER_EFFECT_FLAG_NONE;
+}
+
+/*******************************************************************************
+ * A8 batch 6: ordinary Jokers (ID 129+)
+ ******************************************************************************/
+
+static int flash_card_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc_format[] =
+        TTE_RED_TAG "+2" TTE_BLACK_TAG " множ. за каждый " TTE_YELLOW_TAG "реролл" TTE_BLACK_TAG " в лавке\n\n(Сейчас " TTE_RED_TAG "+%d" TTE_BLACK_TAG " множ.)";
+    char desc[200];
+    snprintf(desc, sizeof(desc), desc_format, joker_batch6_flash_card_mult(joker->persistent_state));
+    return print_desc(desc, dest_rect);
+}
+
+static int red_card_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc_format[] =
+        TTE_RED_TAG "+3" TTE_BLACK_TAG " множ. за каждый пропущенный " TTE_YELLOW_TAG "бустер" TTE_BLACK_TAG "\n\n(Сейчас " TTE_RED_TAG "+%d" TTE_BLACK_TAG " множ.)";
+    char desc[200];
+    snprintf(desc, sizeof(desc), desc_format, joker_batch6_red_card_mult(joker->persistent_state));
+    return print_desc(desc, dest_rect);
+}
+
+static int luchador_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_BLACK_TAG "Продайте, чтобы отключить эффект текущего " TTE_YELLOW_TAG "босс-блайнда";
+    return print_desc(desc, dest_rect);
+}
+
+static int mr_bones_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_BLACK_TAG "Спасает от поражения, если набрано " TTE_YELLOW_TAG "25%" TTE_BLACK_TAG " цели или больше. Уничтожается";
+    return print_desc(desc, dest_rect);
+}
+
+// Flash Card: persistent_state counts the rerolls (see joker_on_shop_reroll())
+static u32 flash_card_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    SCORE_ON_EVENT_ONLY(JOKER_EVENT_INDEPENDENT, joker_event)
+
+    return batch5_mult(joker_batch6_flash_card_mult(joker->persistent_state), joker_effect);
+}
+
+// Red Card: persistent_state counts the Packs skipped (see joker_on_pack_skipped())
+static u32 red_card_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    SCORE_ON_EVENT_ONLY(JOKER_EVENT_INDEPENDENT, joker_event)
+
+    return batch5_mult(joker_batch6_red_card_mult(joker->persistent_state), joker_effect);
+}
+
+// Luchador: works when sold (joker_on_joker_sold() in joker.c)
+static u32 luchador_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    return JOKER_EFFECT_FLAG_NONE;
+}
+
+// Mr. Bones: works when the round is lost (joker_mr_bones_saves() in joker.c)
+static u32 mr_bones_joker_effect(
     Joker* joker,
     Card* scored_card,
     enum JokerEvent joker_event,

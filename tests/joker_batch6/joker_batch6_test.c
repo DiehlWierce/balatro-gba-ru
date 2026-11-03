@@ -44,9 +44,24 @@ static void test_legendaries(void)
     assert(joker_batch6_perkeo_pick(8, 2, 1) == 0);
 }
 
+static void test_ordinary(void)
+{
+    assert(joker_batch6_flash_card_mult(0) == 0 && joker_batch6_flash_card_mult(3) == 6);
+    assert(joker_batch6_flash_card_mult(-1) == 0);
+    assert(joker_batch6_red_card_mult(2) == 6 && joker_batch6_red_card_mult(0) == 0);
+    assert(joker_batch6_luchador_disables(true, true));
+    assert(!joker_batch6_luchador_disables(true, false) && !joker_batch6_luchador_disables(false, true));
+    assert(joker_batch6_mr_bones_saves(25, 100));
+    assert(!joker_batch6_mr_bones_saves(24, 100));
+    assert(joker_batch6_mr_bones_saves(100, 100));
+    assert(!joker_batch6_mr_bones_saves(10, 0));
+    assert(joker_batch6_mr_bones_saves(0x40000000u, 0xFFFFFFFFu)); // no overflow
+}
+
 int main(void)
 {
     test_legendaries();
+    test_ordinary();
     printf("joker_batch6: ok\n");
     return 0;
 }
