@@ -24,6 +24,7 @@
 #include "mgba_logger.h"
 #include "random.h"
 #include "save.h"
+#include "shop_economy.h"
 #include "skip_tag.h"
 #include "soundbank.h"
 #include "state_machine.h"
@@ -45,8 +46,6 @@
 #define OWNED_ITEMS_HIDE_Y_OFFSET 50
 
 // Shop
-#define REROLL_BASE_COST             5 // Base cost for rerolling the shop items
-#define REROLL_VOUCHER_COST_DISCOUNT 2 // Reroll Surplus / Reroll Glut
 
 // Weights of the top row item types in tenths, as in the original game (Jokers 20, Planets 4,
 // Tarots 4, playing cards 0 or 4). The Planet and Tarot Vouchers change the consumables' weight.
@@ -224,7 +223,7 @@ static Button reroll_button = {
 
 static int s_timer;
 
-static int s_reroll_cost = REROLL_BASE_COST;
+static int s_reroll_cost = SHOP_REROLL_BASE_COST;
 static bool s_free_reroll_used = false; // Chaos the Clown: the free reroll of this Shop was used
 
 /**
@@ -232,9 +231,11 @@ static bool s_free_reroll_used = false; // Chaos the Clown: the free reroll of t
  */
 static int shop_current_reroll_cost(void)
 {
-    return joker_batch6_chaos_free_reroll(is_joker_owned(CHAOS_CLOWN_JOKER_ID), s_free_reroll_used)
-               ? 0
-               : s_reroll_cost;
+    return shop_economy_current_reroll_cost(
+        s_reroll_cost,
+        is_joker_owned(CHAOS_CLOWN_JOKER_ID),
+        s_free_reroll_used
+    );
 }
 
 /**
@@ -242,8 +243,7 @@ static int shop_current_reroll_cost(void)
  */
 static int shop_get_reroll_base_cost(void)
 {
-    int cost = REROLL_BASE_COST - voucher_get_reroll_discount();
-    return (cost < 0) ? 0 : cost;
+    return shop_economy_reroll_base_cost(voucher_get_reroll_discount());
 }
 
 // Variables relative to the Card we are showing the description of
@@ -284,7 +284,7 @@ void shop_reset(void)
     list_clear(&s_shop_items_list);
     s_shop_items_list = list_init();
     s_shop_voucher = NULL;
-    s_reroll_cost = REROLL_BASE_COST;
+    s_reroll_cost = SHOP_REROLL_BASE_COST;
     s_free_reroll_used = false;
     joker_reset_rollable_jokers();
 }
@@ -777,9 +777,7 @@ static void shop_on_voucher_redeemed(enum VoucherType voucher)
 
         case VOUCHER_REROLL_SURPLUS:
         case VOUCHER_REROLL_GLUT:
-            s_reroll_cost -= REROLL_VOUCHER_COST_DISCOUNT;
-            if (s_reroll_cost < 0)
-                s_reroll_cost = 0;
+            s_reroll_cost = shop_economy_reroll_cost_after_voucher(s_reroll_cost);
             break;
 
         default:
@@ -856,10 +854,9 @@ static inline void shop_reroll(void)
         }
     }
 
-    if (paid_cost == 0 && s_reroll_cost > 0 && !s_free_reroll_used)
-        s_free_reroll_used = true; // Chaos the Clown: the free reroll doesn't raise the price
-    else
-        s_reroll_cost++;
+    // Chaos the Clown: the free reroll doesn't raise the price
+    s_reroll_cost =
+        shop_economy_reroll_cost_after_reroll(s_reroll_cost, paid_cost, &s_free_reroll_used);
     shop_print_reroll_cost();
     // The top row prices were erased with the Voucher's
     shop_print_voucher_price();

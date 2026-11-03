@@ -105,7 +105,6 @@ typedef struct Joker
 #define JOKER_STICKER_RENTAL     (1 << 2) // Costs RENTAL_JOKER_BUY_PRICE, -$RENTAL_JOKER_COST per round
 
 #define PERISHABLE_JOKER_ROUNDS 5
-#define RENTAL_JOKER_BUY_PRICE  1
 #define RENTAL_JOKER_COST       3
 
 typedef struct JokerObject

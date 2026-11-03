@@ -15,6 +15,7 @@
 #include "mgba_logger.h"
 #include "pool.h"
 #include "random.h"
+#include "shop_economy.h"
 #include "skip_tag.h"
 #include "soundbank.h"
 #include "stake.h"
@@ -229,10 +230,7 @@ int joker_get_buy_price(const Joker* joker)
 {
     GBAL_RETURN_IF_NULL(joker, UNDEFINED);
 
-    if (joker->stickers & JOKER_STICKER_RENTAL)
-        return RENTAL_JOKER_BUY_PRICE;
-
-    return joker->value;
+    return shop_economy_joker_buy_price(joker->value, joker->stickers & JOKER_STICKER_RENTAL);
 }
 
 int joker_get_sell_value(const Joker* joker)
@@ -240,10 +238,7 @@ int joker_get_sell_value(const Joker* joker)
     GBAL_RETURN_IF_NULL(joker, UNDEFINED);
 
     // Rental Jokers are bought for RENTAL_JOKER_BUY_PRICE: they sell for the minimum, $1
-    if (joker->stickers & JOKER_STICKER_RENTAL)
-        return 1;
-
-    return joker->value / 2;
+    return shop_economy_joker_sell_value(joker->value, joker->stickers & JOKER_STICKER_RENTAL);
 }
 
 bool joker_can_be_sold(const Joker* joker)
