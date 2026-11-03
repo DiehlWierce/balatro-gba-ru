@@ -10,6 +10,7 @@
 #ifndef SPECTRAL_RULES_H
 #define SPECTRAL_RULES_H
 
+#include "edition_rules.h"
 #include "hand_type.h"
 #include "tarot_rules.h"
 
@@ -25,15 +26,15 @@ enum SpectralType
     SPECTRAL_GRIM,       // Destroys 1 random card in hand, adds 2 random enhanced Aces
     SPECTRAL_INCANTATION, // Destroys 1 random card in hand, adds 4 random enhanced numbered cards
     SPECTRAL_TALISMAN,   // Gold seal on 1 card
-    SPECTRAL_AURA,       // Needs Editions: random edition on 1 card
+    SPECTRAL_AURA,       // random edition (Foil, Holographic, Polychrome) on 1 card
     SPECTRAL_WRAITH,     // Creates a random Rare Joker, money becomes $0
     SPECTRAL_SIGIL,      // Every card in hand becomes one random suit
     SPECTRAL_OUIJA,      // Every card in hand becomes one random rank, -1 hand size
-    SPECTRAL_ECTOPLASM,  // Needs Editions: Negative on a random Joker, -1 hand size
+    SPECTRAL_ECTOPLASM,  // Negative on a random Joker without edition, -1 hand size
     SPECTRAL_IMMOLATE,   // Destroys 5 random cards in hand, +$20
     SPECTRAL_ANKH,       // Copies a random Joker, destroys the others
     SPECTRAL_DEJA_VU,    // Red seal on 1 card
-    SPECTRAL_HEX,        // Needs Editions: Polychrome on a random Joker, destroys the others
+    SPECTRAL_HEX,        // Polychrome on a random Joker without edition, destroys the others
     SPECTRAL_TRANCE,     // Blue seal on 1 card
     SPECTRAL_MEDIUM,     // Purple seal on 1 card
     SPECTRAL_CRYPTID,    // 2 copies of 1 card are added to the hand
@@ -43,11 +44,11 @@ enum SpectralType
 };
 
 /**
- * @brief 1 once the Editions exist and spectral_editions.c (the hooks in consumable.c) apply them.
+ * @brief 1 since the Editions exist (edition_rules.h) and consumable.c applies them.
  *        Aura, Ectoplasm and Hex don't appear and can't be used while it is 0.
  */
 #ifndef SPECTRAL_EDITIONS_AVAILABLE
-#define SPECTRAL_EDITIONS_AVAILABLE 0
+#define SPECTRAL_EDITIONS_AVAILABLE 1
 #endif
 
 #define SPECTRAL_MAX_TARGETS         1
@@ -274,6 +275,20 @@ static inline void card_set_rank(Card* card, uint8_t rank)
 static inline int spectral_hand_size_minus_one(int hand_size)
 {
     return hand_size > SPECTRAL_OUIJA_HAND_SIZE_MIN ? hand_size - 1 : SPECTRAL_OUIJA_HAND_SIZE_MIN;
+}
+
+/**
+ * @brief Edition given by Aura, weighted like the Shop without Negative: Foil 20, Holographic 14,
+ *        Polychrome 3 (out of 37).
+ */
+static inline enum Edition spectral_aura_edition(uint32_t roll)
+{
+    uint32_t value = roll % (EDITION_CHANCE_FOIL + EDITION_CHANCE_HOLOGRAPHIC + EDITION_CHANCE_POLYCHROME);
+    if (value < EDITION_CHANCE_FOIL)
+        return EDITION_FOIL;
+    if (value < EDITION_CHANCE_FOIL + EDITION_CHANCE_HOLOGRAPHIC)
+        return EDITION_HOLOGRAPHIC;
+    return EDITION_POLYCHROME;
 }
 
 /**

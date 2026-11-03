@@ -13,7 +13,7 @@ static uint32_t next_from_seq(void* ctx)
 
 static void test_pool(void)
 {
-    // Soul is not implemented, Black Hole has its own chance, editions are off by default
+    // Soul is not implemented, Black Hole has its own chance, the Spectral cards of Editions are checked in test_editions
     assert(!spectral_is_implemented(SPECTRAL_SOUL));
     assert(spectral_is_implemented(SPECTRAL_BLACK_HOLE));
     assert(!spectral_is_in_common_pool(SPECTRAL_BLACK_HOLE));
@@ -222,6 +222,34 @@ static void test_most_played(void)
     assert(most_played_hand(played) == FLUSH_FIVE);
 }
 
+static void test_editions(void)
+{
+    assert(SPECTRAL_EDITIONS_AVAILABLE == 1);
+    assert(spectral_is_implemented(SPECTRAL_AURA));
+    assert(spectral_is_implemented(SPECTRAL_ECTOPLASM));
+    assert(spectral_is_implemented(SPECTRAL_HEX));
+
+    // Aura never gives Negative or nothing, and every other edition is reachable
+    int counts[EDITION_MAX] = {0};
+    for (uint32_t roll = 0; roll < 37 * 4; roll++)
+        counts[spectral_aura_edition(roll)]++;
+    assert(counts[EDITION_NONE] == 0 && counts[EDITION_NEGATIVE] == 0);
+    assert(counts[EDITION_FOIL] == 20 * 4);
+    assert(counts[EDITION_HOLOGRAPHIC] == 14 * 4);
+    assert(counts[EDITION_POLYCHROME] == 3 * 4);
+
+    // Ectoplasm and Hex pick a Joker without edition (the Wheel rule), none if all have one
+    uint8_t editions[3] = {EDITION_FOIL, EDITION_NONE, EDITION_NONE};
+    assert(edition_wheel_pick_joker(editions, 3, 0) == 1);
+    assert(edition_wheel_pick_joker(editions, 3, 1) == 2);
+    editions[1] = editions[2] = EDITION_NEGATIVE;
+    assert(edition_wheel_pick_joker(editions, 3, 0) == -1);
+
+    // Ectoplasm: -1 hand size, never below 1
+    assert(spectral_hand_size_minus_one(8) == 7);
+    assert(spectral_hand_size_minus_one(1) == 1);
+}
+
 int main(void)
 {
     test_pool();
@@ -232,6 +260,7 @@ int main(void)
     test_pick_distinct();
     test_shop_odds();
     test_most_played();
+    test_editions();
     printf("spectral_rules: all tests passed\n");
     return 0;
 }

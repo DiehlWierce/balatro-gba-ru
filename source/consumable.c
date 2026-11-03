@@ -101,7 +101,7 @@ static const TarotInfo TAROT_INFO[TAROT_TYPE_MAX] = {
 #undef Y_
 #undef B_
 
-// Spectral cards. The ones that need Editions have a short note until the Editions exist.
+// Spectral cards
 typedef struct
 {
     const char* name;
@@ -118,15 +118,15 @@ static const SpectralInfo SPECTRAL_INFO[SPECTRAL_TYPE_MAX] = {
     [SPECTRAL_GRIM]       = {"Мрачный",     B_ "Уничтожает 1 случайную карту в руке, добавляет " Y_ "2 " B_ "случайных улучшенных туза"},
     [SPECTRAL_INCANTATION] = {"Заклинание", B_ "Уничтожает 1 случайную карту в руке, добавляет " Y_ "4 " B_ "случайные улучшенные карты от 2 до 10"},
     [SPECTRAL_TALISMAN]   = {"Талисман",    B_ "1 выбранная карта получает печать: " Y_ "Золотая"},
-    [SPECTRAL_AURA]       = {"Аура",        B_ "Нужны издания, пока не реализовано"},
+    [SPECTRAL_AURA]       = {"Аура",        B_ "1 выбранная карта получает случайное издание: " Y_ "Фольга" B_ ", " Y_ "Голограмма " B_ "или " Y_ "Полихром"},
     [SPECTRAL_WRAITH]     = {"Призрак",     B_ "Создаёт случайного редкого джокера, ваши деньги становятся " Y_ "$0"},
     [SPECTRAL_SIGIL]      = {"Знак",        B_ "Все карты в руке меняют масть на одну случайную"},
     [SPECTRAL_OUIJA]      = {"Уиджа",       B_ "Все карты в руке получают один случайный ранг, " Y_ "-1 " B_ "к размеру руки"},
-    [SPECTRAL_ECTOPLASM]  = {"Эктоплазма",  B_ "Нужны издания, пока не реализовано"},
+    [SPECTRAL_ECTOPLASM]  = {"Эктоплазма",  B_ "Случайный джокер без издания становится " Y_ "Негативом" B_ ", " Y_ "-1 " B_ "к размеру руки"},
     [SPECTRAL_IMMOLATE]   = {"Сожжение",    B_ "Уничтожает " Y_ "5 " B_ "случайных карт в руке, даёт " Y_ "$20"},
     [SPECTRAL_ANKH]       = {"Анх",         B_ "Создаёт копию случайного джокера, остальные джокеры уничтожаются"},
     [SPECTRAL_DEJA_VU]    = {"Дежавю",      B_ "1 выбранная карта получает печать: " Y_ "Красная"},
-    [SPECTRAL_HEX]        = {"Порча",       B_ "Нужны издания, пока не реализовано"},
+    [SPECTRAL_HEX]        = {"Порча",       B_ "Случайный джокер без издания становится " Y_ "Полихромом" B_ ", остальные джокеры уничтожаются"},
     [SPECTRAL_TRANCE]     = {"Транс",       B_ "1 выбранная карта получает печать: " Y_ "Синяя"},
     [SPECTRAL_MEDIUM]     = {"Медиум",      B_ "1 выбранная карта получает печать: " Y_ "Фиолетовая"},
     [SPECTRAL_CRYPTID]    = {"Криптид",     B_ "Создаёт " Y_ "2 " B_ "копии 1 выбранной карты и добавляет в руку"},
@@ -622,29 +622,6 @@ static void tarot_use(enum TarotType tarot, FIXED x, FIXED y)
 
 // Spectrals
 
-// Editions don't exist yet: another branch adds them. These hooks are the only places to connect
-// once they do (and then set SPECTRAL_EDITIONS_AVAILABLE to 1 in spectral_rules.h): Aura, Ectoplasm
-// and Hex can't be created or used until then.
-
-/** Aura: gives a random Edition (Foil, Holographic, Polychrome) to a card. */
-static bool spectral_hook_card_edition(Card* card)
-{
-    (void)card;
-    return false; // TODO(editions)
-}
-
-/** Ectoplasm: Negative on a random Joker without an Edition. */
-static bool spectral_hook_joker_negative(void)
-{
-    return false; // TODO(editions)
-}
-
-/** Hex: Polychrome on a random Joker without an Edition, the other Jokers are destroyed. */
-static bool spectral_hook_joker_polychrome(void)
-{
-    return false; // TODO(editions)
-}
-
 static uint32_t spectral_next_destroy_rng(void* ctx)
 {
     (void)ctx;
@@ -661,8 +638,9 @@ static bool spectral_can_use_now(enum SpectralType spectral)
         case SPECTRAL_SCOPE_ANYWHERE:
             if (spectral == SPECTRAL_WRAITH)
                 return list_get_len(get_jokers_list()) < g_game_vars.joker_slots;
-            if (spectral == SPECTRAL_ANKH || spectral == SPECTRAL_ECTOPLASM ||
-                spectral == SPECTRAL_HEX)
+            if (spectral == SPECTRAL_ECTOPLASM || spectral == SPECTRAL_HEX)
+                return wheel_pick_joker(0) != NULL; // Needs a Joker without edition
+            if (spectral == SPECTRAL_ANKH)
                 return list_get_len(get_jokers_list()) > 0;
             return true;
 
@@ -671,6 +649,8 @@ static bool spectral_can_use_now(enum SpectralType spectral)
             CardObject* selected[TAROT_MAX_TARGETS + 1];
             if (tarot_get_selected_cards(selected) != SPECTRAL_MAX_TARGETS)
                 return false;
+            if (spectral == SPECTRAL_AURA && selected[0]->card->edition != EDITION_NONE)
+                return false; // Aura needs a card without edition
             int nb_created = spectral_get_nb_created_cards(spectral);
             return hand_nb_held_cards() + nb_created <= MAX_HAND_SIZE &&
                    game_get_total_cards() + nb_created <= MAX_DECK_SIZE;
@@ -803,6 +783,31 @@ static void spectral_ankh(FIXED x, FIXED y)
 }
 
 /**
+ * @brief Hex: Polychrome on a random Joker without an edition, the other Jokers are destroyed
+ *        (Eternal ones stay).
+ */
+static void spectral_hex(void)
+{
+    JokerObject* chosen = wheel_pick_joker(rng_get_u32(RNG_SEQ_SPECTRAL_HEX));
+    if (chosen == NULL)
+        return;
+
+    List* jokers = get_jokers_list();
+    for (int i = list_get_len(jokers) - 1; i >= 0; i--)
+    {
+        JokerObject* joker_object = list_get_at_idx(jokers, i);
+        if (joker_object == chosen || !joker_can_be_sold(joker_object->joker))
+            continue;
+
+        remove_owned_joker(i);
+        item_start_discard_animation((Item*)joker_object);
+    }
+
+    joker_object_set_edition(chosen, EDITION_POLYCHROME);
+    joker_object_shake(chosen, SFX_CARD_SELECT);
+}
+
+/**
  * @brief Applies a Spectral card. It was already taken out of the owned row, so its slot is free.
  *
  * @param x, y where the card is, what it creates appears there
@@ -824,8 +829,11 @@ static void spectral_use(enum SpectralType spectral, FIXED x, FIXED y)
             }
             else if (spectral == SPECTRAL_ECTOPLASM)
             {
-                if (spectral_hook_joker_negative())
+                JokerObject* joker = wheel_pick_joker(rng_get_u32(RNG_SEQ_SPECTRAL_ECTOPLASM));
+                if (joker != NULL)
                 {
+                    joker_object_set_edition(joker, EDITION_NEGATIVE);
+                    joker_object_shake(joker, SFX_CARD_SELECT);
                     g_game_vars.base_hand_size =
                         spectral_hand_size_minus_one(g_game_vars.base_hand_size);
                     g_game_vars.hand_size = game_get_hand_size();
@@ -833,7 +841,7 @@ static void spectral_use(enum SpectralType spectral, FIXED x, FIXED y)
             }
             else if (spectral == SPECTRAL_HEX)
             {
-                spectral_hook_joker_polychrome();
+                spectral_hex();
             }
             else if (spectral == SPECTRAL_BLACK_HOLE)
             {
@@ -855,7 +863,7 @@ static void spectral_use(enum SpectralType spectral, FIXED x, FIXED y)
             card_object_shake(selected[0], SFX_CARD_SELECT);
             if (spectral == SPECTRAL_AURA)
             {
-                spectral_hook_card_edition(card);
+                card->edition = spectral_aura_edition(rng_get_u32(RNG_SEQ_SPECTRAL_AURA));
             }
             else if (spectral == SPECTRAL_CRYPTID)
             {

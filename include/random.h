@@ -84,6 +84,11 @@ enum RngSequence
     RNG_SEQ_SHOP_PLAYING_CARDS,   // Magic Trick: rank and suit of the playing cards in the Shop
     RNG_SEQ_SHOP_CARD_MODS,       // Illusion: enhancement and seal of the playing cards in the Shop
 
+    // Spectral cards that need Editions
+    RNG_SEQ_SPECTRAL_AURA,        // Edition given by Aura
+    RNG_SEQ_SPECTRAL_ECTOPLASM,   // Joker that becomes Negative
+    RNG_SEQ_SPECTRAL_HEX,         // Joker that becomes Polychrome
+
     RNG_SEQ_MAX
 };
 
