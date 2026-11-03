@@ -190,6 +190,7 @@ DECLARE_JOKER_DESC_FUNC(invisible_joker_desc)
 DECLARE_JOKER_DESC_FUNC(showman_joker_desc)
 DECLARE_JOKER_DESC_FUNC(diet_cola_joker_desc)
 DECLARE_JOKER_DESC_FUNC(smeared_joker_desc)
+DECLARE_JOKER_DESC_FUNC(oops_joker_desc)
 
 // Joker Effect functions
 
@@ -328,6 +329,7 @@ DECLARE_JOKER_EFFECT_FUNC(invisible_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(showman_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(diet_cola_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(smeared_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(oops_joker_effect)
 
 /* The index of a joker in the registry matches its ID.
  *
@@ -512,6 +514,7 @@ const JokerInfo joker_registry[] =
     { "Шоумен", UNCOMMON_JOKER, 5, false, showman_joker_desc, showman_joker_effect }, // 143
     { "Диет. кола", UNCOMMON_JOKER, 6, false, diet_cola_joker_desc, diet_cola_joker_effect }, // 144
     { "Размытый", UNCOMMON_JOKER, 7, false, smeared_joker_desc, smeared_joker_effect }, // 145
+    { "Ой, все шестёрки", UNCOMMON_JOKER, 4, false, oops_joker_desc, oops_joker_effect }, // 146
 
     // The following jokers don't have sprites yet,
     // uncomment them when their sprites are added.
@@ -1962,7 +1965,7 @@ static u32 reserved_parking_joker_effect(
 
     u32 effect_flags_ret = JOKER_EFFECT_FLAG_NONE;
 
-    if (card_is_face(scored_card) && (rng_get_u32(RNG_SEQ_JOKER_RESERVED_PARKING) % 2 == 0))
+    if (card_is_face(scored_card) && probability_one_in(rng_get_u32(RNG_SEQ_JOKER_RESERVED_PARKING), 2))
     {
         *joker_effect = &s_shared_joker_effect;
 
@@ -1984,7 +1987,7 @@ static u32 business_card_joker_effect(
 
     u32 effect_flags_ret = JOKER_EFFECT_FLAG_NONE;
 
-    if (card_is_face(scored_card) && (rng_get_u32(RNG_SEQ_JOKER_BUSINESS_CARD) % 2 == 0))
+    if (card_is_face(scored_card) && probability_one_in(rng_get_u32(RNG_SEQ_JOKER_BUSINESS_CARD), 2))
     {
         *joker_effect = &s_shared_joker_effect;
 
@@ -4836,6 +4839,24 @@ static int smeared_joker_desc(Joker* joker, Rect dest_rect)
 
 // Smeared Joker: works through g_card_rules_smeared (card_rules.h, set in game.c)
 static u32 smeared_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    return JOKER_EFFECT_FLAG_NONE;
+}
+
+static int oops_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_BLACK_TAG "Все " TTE_YELLOW_TAG "шансы" TTE_BLACK_TAG " удваиваются (1 из 4 станет 2 из 4)";
+    return print_desc(desc, dest_rect);
+}
+
+// Oops! All 6s: works through g_probability_mult (probability.h, set in game.c)
+static u32 oops_joker_effect(
     Joker* joker,
     Card* scored_card,
     enum JokerEvent joker_event,

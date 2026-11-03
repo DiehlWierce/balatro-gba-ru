@@ -4,6 +4,7 @@
  * @brief Gameplay effects of card enhancements and seals, see card_modifiers.h.
  */
 #include "card_modifiers.h"
+#include "probability.h"
 
 #include "consumable.h"
 #include "game.h"
@@ -26,7 +27,7 @@
 
 static inline bool roll_one_in(enum RngSequence key, u32 chance)
 {
-    return rng_get_u32(key) % chance == 0;
+    return probability_one_in(rng_get_u32(key), chance); // Oops! All 6s
 }
 
 CardScoreResult card_modifiers_on_scored(Card* card)

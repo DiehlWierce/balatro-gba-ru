@@ -1,4 +1,4 @@
-# A8 batch 7 (ID 135-145): descriptions of two Jokers in the Shop, needs: make DEBUG_JOKER0=<id> DEBUG_JOKER1=<id> (touch source/joker.c first). Pairs: 135/136, 137/138, 139/140, 141/142, 143/144, 145/135.
+# A8 batch 7 (ID 135-146): descriptions of two Jokers in the Shop, needs: make DEBUG_JOKER0=<id> DEBUG_JOKER1=<id> (touch source/joker.c first). Pairs: 135/136, 137/138, 139/140, 141/142, 143/144, 145/146.
 # Seed GBARU1: win the Small Blind (score forced), in the Shop hold B on both Jokers, buy both,
 # then play the Big Blind: select 5 cards, play one hand and look at the scoring.
 

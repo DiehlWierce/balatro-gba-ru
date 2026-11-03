@@ -157,7 +157,16 @@ def smeared():
     return im
 
 
-JOKERS = [throwback, madness, campfire, riff_raff, satellite, hologram, burnt, invisible, showman, diet_cola, smeared]
+def oops():
+    im, d = card((0x2F, 0x5A, 0x3A))
+    for ox, oy in ((4, 6), (17, 6), (4, 18), (17, 18)):
+        d.rectangle((ox, oy, ox + 10, oy + 10), fill=WHITE, outline=INK)
+        for dx, dy in ((2, 2), (6, 2), (2, 4), (6, 4), (2, 6), (6, 6)):
+            d.rectangle((ox + dx, oy + dy, ox + dx + 1, oy + dy), fill=RED)
+    return im
+
+
+JOKERS = [throwback, madness, campfire, riff_raff, satellite, hologram, burnt, invisible, showman, diet_cola, smeared, oops]
 FIRST_SHEET = 100
 
 

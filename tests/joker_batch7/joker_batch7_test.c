@@ -85,6 +85,17 @@ static void test_smeared(void)
     g_card_rules_smeared = false;
 }
 
+static void test_oops(void)
+{
+    g_probability_mult = 1;
+    assert(probability_one_in(0, 4) && !probability_one_in(1, 4) && !probability_one_in(5, 4));
+    assert(!probability_one_in(1, 0));
+    g_probability_mult = 2;
+    assert(probability_one_in(0, 4) && probability_one_in(1, 4) && !probability_one_in(2, 4));
+    assert(probability_one_in(7, 2)); // 1 in 2 becomes certain
+    g_probability_mult = 1;
+}
+
 int main(void)
 {
     test_xmult_counters();
@@ -92,6 +103,7 @@ int main(void)
     test_riff_raff_satellite();
     test_burnt_invisible_showman();
     test_smeared();
+    test_oops();
     printf("joker_batch7: all tests passed\n");
     return 0;
 }
