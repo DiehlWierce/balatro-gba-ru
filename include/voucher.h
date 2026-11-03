@@ -123,6 +123,11 @@ int voucher_apply_shop_discount(int price);
 int voucher_get_reroll_discount(void);
 
 /**
+ * @brief Multiplier of the chance of editions: 1, 2 with Hone, 4 with Glow Up.
+ */
+int voucher_get_edition_rate_multiplier(void);
+
+/**
  * @brief Weight of Planets in the Shop's top row, in tenths (Planet Merchant, Planet Tycoon).
  */
 int voucher_get_planet_shop_weight_x10(void);

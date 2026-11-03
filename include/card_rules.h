@@ -11,6 +11,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "edition_rules.h"
+
 // Card suits
 #define DIAMONDS  0
 #define CLUBS     1
@@ -72,10 +74,15 @@ typedef struct Card
     uint8_t rank;
     uint8_t enhancement; // enum CardEnhancement
     uint8_t seal;        // enum CardSeal
-    bool debuffed;       // Set by Boss Blinds: the card doesn't score and doesn't trigger Jokers
-    bool face_down;      // Set by Boss Blinds: the card is drawn face down
+    // Set by Boss Blinds: the card doesn't score and doesn't trigger Jokers
+    bool debuffed : 1;
+    // Set by Boss Blinds: the card is drawn face down
+    bool face_down : 1;
+    // enum Edition (Foil, Holographic, Polychrome), packed with the flags to keep Card at 8 bytes
+    uint8_t edition : 6;
     uint8_t played_ante; // Last Ante the card was played in, 0 if never (The Pillar)
     uint8_t bonus_chips; // Chips added for good by Hiker
+    uint8_t reserved;    // Free: keeps Card at 8 bytes
 } Card;
 
 _Static_assert(sizeof(Card) == 8, "Card pool (MAX_CARDS entries in EWRAM) and its tests assume 8 bytes");

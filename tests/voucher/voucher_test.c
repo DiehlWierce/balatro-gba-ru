@@ -387,6 +387,24 @@ static void test_hieroglyph_does_not_reroll_the_offer(void)
     assert(s_rng_calls == 1);
 }
 
+static void test_hone_and_glow_up_edition_rate(void)
+{
+    reset();
+    assert(voucher_get_edition_rate_multiplier() == 1);
+
+    // Both are enabled, Glow Up needs Hone
+    assert(voucher_is_rollable(VOUCHER_HONE));
+    assert(!voucher_is_rollable(VOUCHER_GLOW_UP));
+
+    voucher_redeem(VOUCHER_HONE);
+    assert(voucher_get_edition_rate_multiplier() == 2);
+    assert(!voucher_is_rollable(VOUCHER_HONE));
+    assert(voucher_is_rollable(VOUCHER_GLOW_UP));
+
+    voucher_redeem(VOUCHER_GLOW_UP);
+    assert(voucher_get_edition_rate_multiplier() == 4); // X4 in total, not X8
+}
+
 int main(void)
 {
     test_base_and_upgrade_pairs();
@@ -410,6 +428,7 @@ int main(void)
     test_shop_offer_gone_when_no_longer_rollable();
     test_shop_offer_none_when_everything_owned();
     test_hieroglyph_does_not_reroll_the_offer();
+    test_hone_and_glow_up_edition_rate();
     printf("Voucher Tests Passed :)\n");
     return 0;
 }

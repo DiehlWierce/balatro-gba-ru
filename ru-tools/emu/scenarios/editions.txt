@@ -1,0 +1,97 @@
+# Editions, needs: touch source/joker.c source/game.c && make DEBUG_EDITIONS=1
+# In this build the Shop Jokers roll Foil, Holographic, Polychrome, Negative, none, in turn and the
+# cards of the Deck get an edition by rank (none, Foil, Holographic, Polychrome).
+# Seed GBARU1: a hand with edition cards is played and scored, then the Shop shows 2 Jokers
+# (Foil, Holographic) with their descriptions, both are bought, a reroll shows Polychrome and Negative.
+
+wait 460
+press START
+wait 60
+press A
+wait 60
+pokestr {sym:s_seed_str} GBARU1
+poke8 {sym:use_seed} 1
+press DOWN
+wait 10
+press A
+wait 120
+press A
+wait 240
+shot 00_round
+
+# The 5 leftmost cards
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+wait 10
+shot 01_selected
+press L
+wait 200
+shot 02_scoring_a
+wait 100
+shot 03_scoring_b
+wait 100
+shot 04_scoring_c
+wait 400
+shot 05_hand_done
+
+poke32 {gv:score} 100000
+press A
+press L
+wait 1100
+press A
+wait 200
+poke32 {gv:money} 500
+shot 06_shop
+press RIGHT
+wait 20
+hold B
+wait 90
+shot 07_desc_foil
+release B
+wait 20
+press A
+wait 60
+press RIGHT
+wait 20
+hold B
+wait 90
+shot 08_desc_holo
+release B
+wait 20
+press A
+wait 60
+shot 09_bought_two
+
+# Reroll: the next Shop Jokers are Polychrome and Negative
+press DOWN
+wait 20
+press LEFT
+wait 20
+press LEFT
+wait 20
+press A
+wait 60
+shot 10_rerolled
+press UP
+wait 20
+press RIGHT
+wait 20
+hold B
+wait 90
+shot 11_desc_poly
+release B
+wait 20
+press RIGHT
+wait 20
+hold B
+wait 90
+shot 12_desc_negative
+release B
+wait 20

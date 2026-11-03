@@ -28,3 +28,4 @@ run_test joker_cards
 run_test card_modifiers
 run_test voucher
 run_test ante_table
+run_test edition_rules

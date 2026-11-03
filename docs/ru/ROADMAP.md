@@ -187,7 +187,7 @@
   - Director's Cut / Retcon: тут нужен реролл босса;
   - Tarot Merchant / Tarot Tycoon, Planet Merchant / Planet Tycoon;
   - Magic Trick / Illusion: игральные карты в лавке, их TODO уже есть в `source/item_funcs.c`;
-  - Hone / Glow Up: только после изданий.
+  - Hone / Glow Up: готово вместе с изданиями (ветка `editions`).
 - Ваучеры, которые зависят от ещё не готовых систем, остаются в пуле выключенными.
 
 **Объём:** M–L.
@@ -227,7 +227,7 @@
   - Death;
   - The Hanged Man.
 - Потом улучшения: Magician, Empress, Hierophant, Lovers, Chariot, Justice, Devil, Tower.
-- Потом Wheel of Fortune (нужны издания), High Priestess, Emperor, Judgement.
+- Потом Wheel of Fortune (готово вместе с изданиями, ветка `editions`), High Priestess, Emperor, Judgement.
 - **Режим выбора цели для Таро:** выбрать карты в руке и нажать «использовать».
 - **Бустер Arcana.**
 

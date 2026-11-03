@@ -1,0 +1,89 @@
+# The Wheel of Fortune, needs: touch source/consumable.c source/joker.c source/game.c && make DEBUG_TAROT=1
+# Seed GBARU1: win the Small Blind (score forced), buy both Shop Jokers, then use Wheels
+# (TarotType 10) in the Shop: with a 1 in 4 chance a Joker without edition gets an edition.
+
+wait 460
+press START
+wait 60
+press A
+wait 60
+pokestr {sym:s_seed_str} GBARU1
+poke8 {sym:use_seed} 1
+press DOWN
+wait 10
+press A
+wait 120
+press A
+wait 180
+poke32 {gv:score} 100000
+press A
+press L
+wait 1100
+press A
+wait 200
+poke32 {gv:money} 500
+press RIGHT
+wait 20
+press A
+wait 60
+press RIGHT
+wait 20
+press A
+wait 60
+shot 00_two_jokers
+
+poke32 {sym:g_debug_give_tarot} 10
+wait 60
+shot 01_wheel_given
+press UP
+wait 20
+press RIGHT
+wait 20
+press RIGHT
+wait 20
+shot 02_on_wheel
+hold B
+wait 90
+shot 02b_wheel_description
+release B
+wait 20
+press A
+wait 90
+shot 03_wheel_used_1
+
+# 1 in 4: use more Wheels until one works (fixed seed, so the same turn every time): the 2nd Wheel
+# gives Foil to the Blue Joker, the 3rd one to the first Joker; the 4th Wheel can't be used (every
+# Joker has an edition) and stays in the row.
+poke32 {sym:g_debug_give_tarot} 10
+wait 40
+press UP
+wait 20
+press RIGHT
+wait 20
+press RIGHT
+wait 20
+press A
+wait 90
+shot 04_wheel_used_2
+poke32 {sym:g_debug_give_tarot} 10
+wait 40
+press UP
+wait 20
+press RIGHT
+wait 20
+press RIGHT
+wait 20
+press A
+wait 90
+shot 05_wheel_used_3
+poke32 {sym:g_debug_give_tarot} 10
+wait 40
+press UP
+wait 20
+press RIGHT
+wait 20
+press RIGHT
+wait 20
+press A
+wait 90
+shot 06_wheel_used_4

@@ -78,7 +78,7 @@ static const TarotInfo TAROT_INFO[TAROT_TYPE_MAX] = {
     [TAROT_CHARIOT]        = {"Колесница",       B_ "1 выбранная карта получает улучшение: " Y_ "Стальная"},
     [TAROT_JUSTICE]        = {"Справедливость",  B_ "1 выбранная карта получает улучшение: " Y_ "Стеклянная"},
     [TAROT_HERMIT]         = {"Отшельник",       B_ "Удваивает ваши деньги (максимум " Y_ "+$20" B_ ")"},
-    [TAROT_WHEEL]          = {"Колесо фортуны",  B_ "Нужны издания, пока не реализовано"},
+    [TAROT_WHEEL]          = {"Колесо фортуны",  Y_ "1 из 4: " B_ "случайный джокер без издания получает Фольгу, Голограмму или Полихром"},
     [TAROT_STRENGTH]       = {"Сила",            B_ "Повышает ранг до 2 выбранных карт на 1"},
     [TAROT_HANGED_MAN]     = {"Повешенный",      B_ "Уничтожает до 2 выбранных карт"},
     [TAROT_DEATH]          = {"Смерть",          B_ "Выберите 2 карты: левая станет копией правой"},
@@ -287,6 +287,31 @@ static int tarot_get_selected_cards(CardObject* out[TAROT_MAX_TARGETS + 1])
     return nb_selected;
 }
 
+/**
+ * @brief The Joker the Wheel of Fortune would pick among the owned Jokers without an edition.
+ *
+ * @param roll random number: the pick is the (roll % number of candidates)th candidate
+ *
+ * @return the JokerObject, NULL if every Joker has an edition
+ */
+static JokerObject* wheel_pick_joker(u32 roll)
+{
+    u8 editions[MAX_JOKERS_HELD_SIZE];
+    JokerObject* jokers[MAX_JOKERS_HELD_SIZE];
+    int count = 0;
+
+    ListItr itr = list_itr_create(get_jokers_list());
+    JokerObject* joker_object;
+    while ((joker_object = list_itr_next(&itr)) && count < MAX_JOKERS_HELD_SIZE)
+    {
+        jokers[count] = joker_object;
+        editions[count++] = joker_object->joker->edition;
+    }
+
+    int idx = edition_wheel_pick_joker(editions, count, roll);
+    return idx < 0 ? NULL : jokers[idx];
+}
+
 bool tarot_can_use_now(enum TarotType tarot)
 {
     if (!tarot_is_valid(tarot) || !tarot_is_rollable(tarot))
@@ -310,8 +335,12 @@ bool tarot_can_use_now(enum TarotType tarot)
     if (tarot == TAROT_FOOL)
         return s_last_used_type != CONSUMABLE_TYPE_MAX;
 
+    if (tarot == TAROT_WHEEL)
+        return wheel_pick_joker(0) != NULL; // Needs a Joker without edition
+
     if (tarot == TAROT_JUDGEMENT)
-        return list_get_len(get_jokers_list()) < g_game_vars.joker_slots;
+        return jokers_get_used_slots() < g_game_vars.joker_slots &&
+               list_get_len(get_jokers_list()) < MAX_JOKERS_HELD_SIZE;
 
     return true;
 }
@@ -394,6 +423,22 @@ static void tarot_use(enum TarotType tarot, FIXED x, FIXED y)
             joker->tx = x;
             joker->ty = y;
             item_acquire(joker);
+        }
+    }
+    else if (tarot == TAROT_WHEEL)
+    {
+        // 1 in 4 chance, then a random Joker without edition gets a random edition
+        if (edition_wheel_succeeds(rng_get_u32(RNG_SEQ_TAROT_WHEEL)))
+        {
+            JokerObject* joker = wheel_pick_joker(rng_get_u32(RNG_SEQ_TAROT_WHEEL));
+            if (joker != NULL)
+            {
+                joker_object_set_edition(
+                    joker,
+                    edition_wheel_edition(rng_get_u32(RNG_SEQ_TAROT_WHEEL))
+                );
+                joker_object_shake(joker, SFX_CARD_SELECT);
+            }
         }
     }
     else if (tarot == TAROT_HERMIT)

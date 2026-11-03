@@ -64,6 +64,7 @@
 #define PACK_TEXT_POS_X         76 // Title and card info, in the green area under the choices
 #define PACK_TITLE_POS_Y        44
 #define PACK_CARD_INFO_POS_Y    53
+#define PACK_CARD_EDITION_DY    9 // The edition of a card goes on the line below its modifiers
 #define PACK_HINT_POS_X         116 // Hint, in the Shop panel right of the Reroll button
 #define PACK_HINT_POS_Y         72
 // Top row of the Shop: cards are spread over its width when there are more than 2 of them
@@ -1164,6 +1165,17 @@ static void shop_pack_print_texts(void)
             enhancement != NULL && seal != NULL ? ", " : "",
             seal != NULL ? seal : ""
         );
+
+        const char* edition = card_get_edition_name(card);
+        if (edition != NULL)
+        {
+            tte_printf(
+                TTE_BLUE_TAG "#{P:%d,%d}%s",
+                PACK_TEXT_POS_X,
+                PACK_CARD_INFO_POS_Y + PACK_CARD_EDITION_DY,
+                edition
+            );
+        }
     }
 
     else if (choice != NULL && choice->type == ITEM_TYPE_CONSUMABLE)

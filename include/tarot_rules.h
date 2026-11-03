@@ -29,7 +29,7 @@ enum TarotType
     TAROT_CHARIOT,        // 1 card becomes Steel
     TAROT_JUSTICE,        // 1 card becomes Glass
     TAROT_HERMIT,         // Doubles the money (up to $20)
-    TAROT_WHEEL,          // Not implemented: needs Editions
+    TAROT_WHEEL,          // 1 in 4 chance: a random Joker without edition gets Foil, Holo or Poly
     TAROT_STRENGTH,       // 2 cards get +1 rank
     TAROT_HANGED_MAN,     // Destroys 2 cards
     TAROT_DEATH,          // The left card becomes a copy of the right card
@@ -54,7 +54,7 @@ enum TarotType
  */
 static inline bool tarot_is_rollable(enum TarotType tarot)
 {
-    return tarot >= 0 && tarot < TAROT_TYPE_MAX && tarot != TAROT_WHEEL;
+    return tarot >= 0 && tarot < TAROT_TYPE_MAX;
 }
 
 /**
@@ -172,7 +172,7 @@ static inline void card_rank_up(Card* card)
 }
 
 /**
- * @brief Death: @p dst becomes a copy of @p src, with its suit, rank, enhancement and seal.
+ * @brief Death: @p dst becomes a copy of @p src, with its suit, rank, enhancement, seal and edition.
  *        The runtime flags (debuffed, face down, played Ante) of @p dst are kept.
  */
 static inline void card_copy_from(Card* dst, const Card* src)
@@ -181,6 +181,7 @@ static inline void card_copy_from(Card* dst, const Card* src)
     dst->rank = src->rank;
     dst->enhancement = src->enhancement;
     dst->seal = src->seal;
+    dst->edition = src->edition;
     dst->bonus_chips = src->bonus_chips;
 }
 

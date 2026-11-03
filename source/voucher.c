@@ -27,6 +27,10 @@
 #define SEED_MONEY_INTEREST_CAP         10
 #define MONEY_TREE_INTEREST_CAP         20
 
+// Multipliers of the chance of editions
+#define HONE_EDITION_RATE    2
+#define GLOW_UP_EDITION_RATE 4
+
 // Weights of Planets in the Shop top row, in tenths (Jokers weigh 200)
 #define PLANET_SHOP_WEIGHT_X10          40
 #define PLANET_MERCHANT_SHOP_WEIGHT_X10 96
@@ -50,9 +54,9 @@ static const VoucherInfo VOUCHER_INFO[VOUCHER_TYPE_MAX] = {
     [VOUCHER_LIQUIDATION]     = {"Ликвидация",
         TTE_BLACK_TAG "Все карты в лавке дешевле на " TTE_YELLOW_TAG "50%", true},
     [VOUCHER_HONE]            = {"Заточка",
-        TTE_BLACK_TAG "Издания джокеров в " TTE_YELLOW_TAG "2 раза " TTE_BLACK_TAG "чаще", false},
+        TTE_BLACK_TAG "Издания в " TTE_YELLOW_TAG "2 раза " TTE_BLACK_TAG "чаще", true},
     [VOUCHER_GLOW_UP]         = {"Блеск",
-        TTE_BLACK_TAG "Издания джокеров в " TTE_YELLOW_TAG "4 раза " TTE_BLACK_TAG "чаще", false},
+        TTE_BLACK_TAG "Издания в " TTE_YELLOW_TAG "4 раза " TTE_BLACK_TAG "чаще", true},
     [VOUCHER_REROLL_SURPLUS]  = {"Лишний реролл",
         TTE_BLACK_TAG "Реролл дешевле на " TTE_YELLOW_TAG "$2", true},
     [VOUCHER_REROLL_GLUT]     = {"Избыток реролла",
@@ -322,6 +326,15 @@ int voucher_get_reroll_discount(void)
     if (voucher_is_owned(VOUCHER_REROLL_GLUT))
         discount += REROLL_VOUCHER_DISCOUNT;
     return discount;
+}
+
+int voucher_get_edition_rate_multiplier(void)
+{
+    if (voucher_is_owned(VOUCHER_GLOW_UP))
+        return GLOW_UP_EDITION_RATE;
+    if (voucher_is_owned(VOUCHER_HONE))
+        return HONE_EDITION_RATE;
+    return 1;
 }
 
 int voucher_get_planet_shop_weight_x10(void)

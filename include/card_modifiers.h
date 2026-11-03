@@ -18,10 +18,11 @@
  */
 typedef struct CardScoreResult
 {
-    int chips;  // Chips added (rank value, Bonus, Stone)
-    int mult;   // Mult added (Mult card, Lucky card)
-    bool xmult; // Mult multiplied by 2 (Glass card)
-    int money;  // Money earned (Gold seal, Lucky card)
+    int chips;            // Chips added (rank value, Bonus, Stone, Foil)
+    int mult;             // Mult added (Mult card, Lucky card, Holographic)
+    bool xmult;           // Mult multiplied by 2 (Glass card)
+    bool xmult_1_5;       // Mult multiplied by 1.5 (Polychrome)
+    int money;            // Money earned (Gold seal, Lucky card)
     bool lucky_triggered; // A Lucky card won its mult or its money (Lucky Cat)
 } CardScoreResult;
 

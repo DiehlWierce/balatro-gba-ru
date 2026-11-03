@@ -3,6 +3,7 @@
 #include "blind_effects.h"
 #include "card.h"
 #include "consumable.h"
+#include "edition_gfx.h"
 #include "hand.h"
 #include "game/round.h"
 #include "game_variables.h"
@@ -16,6 +17,7 @@
 #include "soundbank.h"
 #include "stake.h"
 #include "util.h"
+#include "voucher.h"
 
 // Tiles and palettes
 #include "card_rarity_pal_gfx.h"
@@ -112,6 +114,7 @@ static int s_joker_pb_get_num_sprite_users(int joker_pb);
 static int s_get_unused_joker_pb(void);
 static int s_allocate_pb_if_needed(u8 joker_id);
 static void s_joker_draw_sticker_badges(int tile_index, int pb, u8 stickers);
+static void s_joker_load_tiles(const Joker* joker, int tile_index, int pb);
 static enum JokerRarity joker_get_random_rarity(enum RngSequence key);
 
 void joker_init()
@@ -138,6 +141,7 @@ Joker* joker_new(u8 id)
     joker->rarity = jinfo->rarity;
     joker->stickers = 0;
     joker->perish_rounds = 0;
+    joker->edition = EDITION_NONE;
     joker->scoring_state = 0;
     joker->persistent_state = 0;
 
@@ -243,6 +247,31 @@ bool joker_is_perished(const Joker* joker)
            joker->perish_rounds == 0;
 }
 
+void joker_set_edition(Joker* joker, enum Edition edition)
+{
+    GBAL_RETURN_IF_NULL(joker, RET_NONE);
+    if (!edition_is_valid(edition))
+        return;
+
+    // The edition is part of the price: the sell value follows (half of the price)
+    int value = joker->value - edition_extra_price(joker->edition) + edition_extra_price(edition);
+    joker->value = (u8)max(value, 0);
+    joker->edition = edition;
+}
+
+void joker_roll_edition(Joker* joker)
+{
+    GBAL_RETURN_IF_NULL(joker, RET_NONE);
+
+    enum Edition edition = edition_from_roll(
+        rng_get_u32(RNG_SEQ_JOKER_EDITION),
+        voucher_get_edition_rate_multiplier(),
+        true
+    );
+    if (edition != EDITION_NONE)
+        joker_set_edition(joker, edition);
+}
+
 // JokerObject methods
 JokerObject* joker_object_new(Joker* joker)
 {
@@ -268,17 +297,10 @@ JokerObject* joker_object_new(Joker* joker)
     joker_object->face_down = false;
 
     int tile_index = sprite_get_tid(JOKER_SPRITE, layer);
-    int joker_spritesheet_idx = s_joker_get_spritesheet_idx(joker->id);
-    int joker_idx = s_joker_get_sprite_idx_in_sheet(joker->id, joker_spritesheet_idx);
     int joker_pb = s_allocate_pb_if_needed(joker->id);
     s_joker_pb_add_sprite_user(joker_pb);
 
-    memcpy32(
-        &tile_mem[TILE_MEM_OBJ_CHARBLOCK0_IDX][tile_index],
-        &joker_gfxTiles[joker_spritesheet_idx][joker_idx * TILE_SIZE * JOKER_SPRITE_TILES],
-        TILE_SIZE * JOKER_SPRITE_TILES
-    );
-    s_joker_draw_sticker_badges(tile_index, joker_pb, joker->stickers);
+    s_joker_load_tiles(joker, tile_index, joker_pb);
 
     sprite_object_set_sprite(
         (SpriteObject*)joker_object,
@@ -350,12 +372,47 @@ int joker_object_print_description(Item* joker_object_item, Rect dest_rect)
     else
         nb_lines = info->joker_print_desc(joker, dest_rect);
 
-    if (joker->stickers == 0)
+    if (joker->stickers == 0 && joker->edition == EDITION_NONE)
         return nb_lines;
 
-    // Stake stickers on a line below the description
-    char stickers_text[64] = {'\0'};
+    // Edition and Stake stickers on lines below the description
+    char stickers_text[160] = {'\0'};
     int len = 0;
+    switch (joker->edition)
+    {
+        case EDITION_FOIL:
+            len += snprintf(
+                stickers_text + len,
+                sizeof(stickers_text) - len,
+                TTE_BLUE_TAG "Фольга +%d фиш.\n",
+                EDITION_FOIL_CHIPS
+            );
+            break;
+        case EDITION_HOLOGRAPHIC:
+            len += snprintf(
+                stickers_text + len,
+                sizeof(stickers_text) - len,
+                TTE_RED_TAG "Голограмма +%d\n",
+                EDITION_HOLOGRAPHIC_MULT
+            );
+            break;
+        case EDITION_POLYCHROME:
+            len += snprintf(
+                stickers_text + len,
+                sizeof(stickers_text) - len,
+                TTE_RED_TAG "Полихром X1.5\n"
+            );
+            break;
+        case EDITION_NEGATIVE:
+            len += snprintf(
+                stickers_text + len,
+                sizeof(stickers_text) - len,
+                TTE_PURPLE_TAG "Негатив +1 слот\n"
+            );
+            break;
+        default:
+            break;
+    }
     if (joker->stickers & JOKER_STICKER_ETERNAL)
     {
         len +=
@@ -529,6 +586,13 @@ Item* joker_object_roll_new(enum RngSequence key)
 
     Joker* joker = joker_new(joker_id);
     stake_roll_joker_stickers(joker);
+    joker_roll_edition(joker);
+#ifdef DEBUG_EDITIONS
+    static int s_debug_edition_turn = 0;
+    int debug_edition = (s_debug_edition_turn++ % 5) + 1; // 5 means none
+    joker_set_edition(joker, EDITION_NONE);
+    joker_set_edition(joker, debug_edition <= EDITION_NEGATIVE ? debug_edition : EDITION_NONE);
+#endif
 
     return (Item*)joker_object_new(joker);
 }
@@ -564,6 +628,39 @@ static inline enum JokerRarity joker_get_random_rarity(enum RngSequence key)
     return joker_rarity;
 }
 
+/**
+ * @brief Copies the tiles of the Joker to the sprite at @p tile_index and draws its edition effect
+ *        and its Stake stickers on them.
+ */
+static void s_joker_load_tiles(const Joker* joker, int tile_index, int pb)
+{
+    int spritesheet_idx = s_joker_get_spritesheet_idx(joker->id);
+    int joker_idx = s_joker_get_sprite_idx_in_sheet(joker->id, spritesheet_idx);
+    u32* dest = (u32*)&tile_mem[TILE_MEM_OBJ_CHARBLOCK0_IDX][tile_index];
+
+    memcpy32(
+        dest,
+        &joker_gfxTiles[spritesheet_idx][joker_idx * TILE_SIZE * JOKER_SPRITE_TILES],
+        TILE_SIZE * JOKER_SPRITE_TILES
+    );
+    edition_draw_tiles(dest, pb, joker->edition);
+    s_joker_draw_sticker_badges(tile_index, pb, joker->stickers);
+}
+
+void joker_object_set_edition(JokerObject* joker_object, enum Edition edition)
+{
+    GBAL_RETURN_IF_NULL(joker_object, RET_NONE);
+    joker_set_edition(joker_object->joker, edition);
+
+    Sprite* sprite = joker_object_get_sprite(joker_object);
+    if (sprite == NULL || joker_object->face_down)
+        return; // A face down Joker is redrawn with the edition when it is turned face up
+
+    int tile_index = sprite->obj->attr2 & ATTR2_ID_MASK;
+    int spritesheet_idx = s_joker_get_spritesheet_idx(joker_object->joker->id);
+    s_joker_load_tiles(joker_object->joker, tile_index, s_joker_spritesheet_pb_map[spritesheet_idx]);
+}
+
 void joker_object_set_face_down(JokerObject* joker_object, bool face_down)
 {
     GBAL_RETURN_IF_NULL(joker_object, RET_NONE);
@@ -580,14 +677,8 @@ void joker_object_set_face_down(JokerObject* joker_object, bool face_down)
     else
     {
         int spritesheet_idx = s_joker_get_spritesheet_idx(joker_object->joker->id);
-        int joker_idx = s_joker_get_sprite_idx_in_sheet(joker_object->joker->id, spritesheet_idx);
-        memcpy32(
-            &tile_mem[TILE_MEM_OBJ_CHARBLOCK0_IDX][tile_index],
-            &joker_gfxTiles[spritesheet_idx][joker_idx * TILE_SIZE * JOKER_SPRITE_TILES],
-            TILE_SIZE * JOKER_SPRITE_TILES
-        );
         pb = s_joker_spritesheet_pb_map[spritesheet_idx];
-        s_joker_draw_sticker_badges(tile_index, pb, joker_object->joker->stickers);
+        s_joker_load_tiles(joker_object->joker, tile_index, pb);
     }
 
     sprite->obj->attr2 = (sprite->obj->attr2 & ~ATTR2_PALBANK_MASK) | ATTR2_PALBANK(pb);

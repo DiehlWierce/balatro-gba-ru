@@ -1714,7 +1714,14 @@ static bool joker_object_score(
     u32 effect_flags_ret =
         joker_get_score_effect(joker_object->joker, card_object->card, joker_event, &joker_effect);
 
-    if (effect_flags_ret == JOKER_EFFECT_FLAG_NONE)
+    // Foil, Holographic and Polychrome score once per hand, with the independent effect of the
+    // Joker. A perished Joker is disabled, so is its edition.
+    u8 edition = joker_object->joker->edition;
+    bool edition_scores = joker_event == JOKER_EVENT_INDEPENDENT &&
+                          edition_has_score_effect(edition) &&
+                          !joker_is_perished(joker_object->joker);
+
+    if (effect_flags_ret == JOKER_EFFECT_FLAG_NONE && !edition_scores)
     {
         return false;
     }
@@ -1739,7 +1746,33 @@ static bool joker_object_score(
         cursorPosY = JOKER_SCORE_TEXT_Y;
     }
 
-    mm_word sfx_id;
+    mm_word sfx_id = SFX_CHIPS_GENERIC;
+    if (edition_scores && edition == EDITION_FOIL)
+    {
+        g_game_vars.chips = u32_protected_add(g_game_vars.chips, EDITION_FOIL_CHIPS);
+        tte_printf(
+            "#{P:%d,%d; cx:0x%X000;}+%d",
+            cursorPosX,
+            cursorPosY,
+            TTE_BLUE_PB,
+            EDITION_FOIL_CHIPS
+        );
+        joker_scoring_increment_text_cursor(&cursorPosX);
+        sfx_id = SFX_CHIPS_GENERIC;
+    }
+    else if (edition_scores && edition == EDITION_HOLOGRAPHIC)
+    {
+        g_game_vars.mult = u32_protected_add(g_game_vars.mult, EDITION_HOLOGRAPHIC_MULT);
+        tte_printf(
+            "#{P:%d,%d; cx:0x%X000;}+%d",
+            cursorPosX,
+            cursorPosY,
+            TTE_RED_PB,
+            EDITION_HOLOGRAPHIC_MULT
+        );
+        joker_scoring_increment_text_cursor(&cursorPosX);
+        sfx_id = SFX_MULT;
+    }
     if (effect_flags_ret & JOKER_EFFECT_FLAG_CHIPS)
     {
         g_game_vars.chips = u32_protected_add(g_game_vars.chips, joker_effect->chips);
@@ -1809,6 +1842,19 @@ static bool joker_object_score(
         );
         joker_scoring_increment_text_cursor(&cursorPosX);
         // TODO: Money sound effect
+    }
+    // Polychrome multiplies after the effect of the Joker
+    if (edition_scores && edition == EDITION_POLYCHROME)
+    {
+        g_game_vars.mult = edition_polychrome_apply(g_game_vars.mult);
+        tte_printf(
+            "#{P:%d,%d; cx:0x%X000;}X1.5",
+            cursorPosX,
+            cursorPosY,
+            TTE_RED_PB
+        );
+        joker_scoring_increment_text_cursor(&cursorPosX);
+        sfx_id = SFX_XMULT;
     }
     // custom message for Jokers (including retriggers where Jokers will say "Again!")
     // joker_effect->message will have been set if the Joker had anything custom to say
@@ -1961,16 +2007,21 @@ static void print_card_score_result(const CardScoreResult* result)
     snprintf(buffer, sizeof(buffer), "+%d", result->chips);
     tte_write(buffer);
 
+    if (result->mult > 0)
+    {
+        tte_set_special(TTE_RED_PB * TTE_SPECIAL_PB_MULT_OFFSET);
+        snprintf(buffer, sizeof(buffer), " +%d", result->mult);
+        tte_write(buffer);
+    }
     if (result->xmult)
     {
         tte_set_special(TTE_RED_PB * TTE_SPECIAL_PB_MULT_OFFSET);
         tte_write(" X2");
     }
-    else if (result->mult > 0)
+    if (result->xmult_1_5)
     {
         tte_set_special(TTE_RED_PB * TTE_SPECIAL_PB_MULT_OFFSET);
-        snprintf(buffer, sizeof(buffer), " +%d", result->mult);
-        tte_write(buffer);
+        tte_write(" X1.5");
     }
 
     if (result->money > 0)

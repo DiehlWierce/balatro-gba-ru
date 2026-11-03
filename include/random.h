@@ -66,6 +66,11 @@ enum RngSequence
     RNG_SEQ_JOKER_SPACE,          // 1 in 4 chance to level up the played hand
     RNG_SEQ_JOKER_CERTIFICATE,    // Rank, suit and seal of the card created by Certificate
 
+    // Editions
+    RNG_SEQ_JOKER_EDITION, // Edition of the Jokers rolled in the Shop
+    RNG_SEQ_PACK_EDITION,  // Edition of the cards of a Standard Pack
+    RNG_SEQ_TAROT_WHEEL,   // The Wheel of Fortune: chance, Joker and edition
+
     RNG_SEQ_MAX
 };
 
