@@ -503,12 +503,21 @@ static inline void round_execute_discard(void)
 
     // Seals of the discarded cards (Purple)
     CardObject** hand = get_hand_array();
+    int nb_discarded = 0, nb_faces = 0, nb_jacks = 0;
     for (int i = 0; i <= get_hand_top(); i++)
     {
-        if (card_object_is_selected(hand[i]) &&
-            card_modifiers_on_discarded(hand[i]->card, hand[i]->x, hand[i]->y))
+        if (!card_object_is_selected(hand[i]))
+            continue;
+
+        nb_discarded++;
+        if (card_is_face(hand[i]->card))
+            nb_faces++;
+        if (card_has_rank(hand[i]->card) && hand[i]->card->rank == JACK)
+            nb_jacks++;
+        if (card_modifiers_on_discarded(hand[i]->card, hand[i]->x, hand[i]->y))
             card_object_shake(hand[i], SFX_CARD_SELECT);
     }
+    joker_on_cards_discarded(nb_discarded, nb_faces, nb_jacks); // Green, Faceless, Hit the Road
 }
 
 /**

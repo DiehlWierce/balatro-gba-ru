@@ -192,6 +192,12 @@ void joker_on_blind_selected(void);              // Burglar, Cartomancer, Marble
 void joker_on_deck_shuffled(void);               // Certificate (after the deck is shuffled)
 
 /**
+ * @brief A discard of the player: Green Joker (-1), Faceless Joker ($5 for 3 face cards) and Hit
+ *        the Road (counts Jacks). Counts are those of the discarded cards.
+ */
+void joker_on_cards_discarded(int nb_cards, int nb_face_cards, int nb_jacks);
+
+/**
  * @brief Sets the edition of a Joker and adjusts its price: the extra price of the old edition is
  *        removed and the one of the new edition added. Doesn't redraw the sprite.
  */
