@@ -44,20 +44,66 @@ static bool s_heart_choose = false;
 // Cerulean Bell: the card that stays selected
 static const Card* s_bell_card = NULL;
 
+// The Needle: hands taken away when the round started, given back if the Boss is disabled
+static int s_needle_hands_removed = 0;
+// The Ox: the hand chosen when the ante was entered, valid for the ante and seed below
+static u8 s_ox_ante = 0;
+static u32 s_ox_seed = 0;
+static u8 s_ox_chosen_hand = HIGH_CARD;
+
 /**
  * @brief The most played poker hand of the run, High Card if none was played.
- *        Ties go to the lowest hand, like the Game Over screen.
+ *        A Royal Flush counts as a Straight Flush. Ties are broken at random.
  */
-static enum HandType most_played_hand(void)
+static enum HandType pick_most_played_hand(void)
 {
-    enum HandType most_played = HIGH_CARD;
-    for (enum HandType hand_type = PAIR; hand_type <= HAND_TYPE_MAX; hand_type++)
+    u32 best_count = 0;
+    enum HandType candidates[HAND_TYPE_MAX];
+    int nb_candidates = 0;
+
+    for (enum HandType hand_type = HIGH_CARD; hand_type <= HAND_TYPE_MAX; hand_type++)
     {
-        if (g_game_vars.nb_played_hands[hand_type - 1] >
-            g_game_vars.nb_played_hands[most_played - 1])
-            most_played = hand_type;
+        if (hand_type == ROYAL_FLUSH)
+            continue;
+
+        u32 count = g_game_vars.nb_played_hands[hand_type - 1];
+        if (hand_type == STRAIGHT_FLUSH)
+            count += g_game_vars.nb_played_hands[ROYAL_FLUSH - 1];
+
+        if (count == 0 || count < best_count)
+            continue;
+        if (count > best_count)
+        {
+            best_count = count;
+            nb_candidates = 0;
+        }
+        candidates[nb_candidates++] = hand_type;
     }
-    return most_played;
+
+    if (nb_candidates == 0)
+        return HIGH_CARD;
+    if (nb_candidates == 1)
+        return candidates[0];
+    return candidates[rng_get_u32(RNG_SEQ_BLIND) % nb_candidates];
+}
+
+/**
+ * @brief The hand The Ox punishes in this ante: chosen once when the ante is entered.
+ */
+static enum HandType ox_hand_of_ante(void)
+{
+    if (s_ox_ante != g_game_vars.ante || s_ox_seed != g_game_vars.rng_info.seed || s_ox_ante == 0)
+    {
+        s_ox_chosen_hand = pick_most_played_hand();
+        s_ox_ante = g_game_vars.ante;
+        s_ox_seed = g_game_vars.rng_info.seed;
+    }
+    return s_ox_chosen_hand;
+}
+
+void blind_effects_on_ante_entered(void)
+{
+    ox_hand_of_ante();
 }
 
 static u32 blind_effect_needle(enum BlindEvent event, const BlindEventData* data)
@@ -65,6 +111,9 @@ static u32 blind_effect_needle(enum BlindEvent event, const BlindEventData* data
     if (event != BLIND_EVENT_ON_BLIND_SELECTED)
         return BLIND_EFFECT_FLAG_NONE;
 
+    s_needle_hands_removed = (g_game_vars.hands > NEEDLE_NB_HANDS)
+                                 ? g_game_vars.hands - NEEDLE_NB_HANDS
+                                 : 0;
     g_game_vars.hands = NEEDLE_NB_HANDS;
     display_hands();
     return BLIND_EFFECT_FLAG_TRIGGERED;
@@ -163,9 +212,11 @@ static u32 blind_effect_ox(enum BlindEvent event, const BlindEventData* data)
 {
     if (event == BLIND_EVENT_ON_BLIND_SELECTED)
     {
-        s_ox_hand = most_played_hand();
+        s_ox_hand = ox_hand_of_ante();
     }
-    else if (event == BLIND_EVENT_ON_HAND_PLAYED && data->hand_type == s_ox_hand)
+    else if (event == BLIND_EVENT_ON_HAND_PLAYED &&
+             (data->hand_type == s_ox_hand ||
+              (s_ox_hand == STRAIGHT_FLUSH && data->hand_type == ROYAL_FLUSH)))
     {
         g_game_vars.money = 0;
         display_money();
@@ -181,11 +232,11 @@ static u32 blind_effect_arm(enum BlindEvent event, const BlindEventData* data)
         data->hand_type > HAND_TYPE_MAX)
         return BLIND_EFFECT_FLAG_NONE;
 
-    u16* level = &g_game_vars.hand_levels[data->hand_type - 1];
-    if (*level <= DEFAULT_HAND_LEVEL)
+    // A Royal Flush lowers the level of the Straight Flush
+    if (hand_get_level(data->hand_type) <= DEFAULT_HAND_LEVEL)
         return BLIND_EFFECT_FLAG_NONE;
 
-    (*level)--;
+    hand_level_up(data->hand_type, -1);
     return BLIND_EFFECT_FLAG_TRIGGERED;
 }
 
@@ -481,12 +532,29 @@ bool blind_effects_is_implemented(enum BlindType blind)
     return blind_type_is_valid(blind) && BLIND_EFFECT_FUNCS[blind] != NULL;
 }
 
+void blind_effects_reset(void)
+{
+    // The Joker objects may be gone (new run): the pointers are only dropped, never used
+    s_heart_joker = NULL;
+    s_heart_choose = false;
+    s_bell_card = NULL;
+    s_leaf_active = false;
+    s_needle_hands_removed = 0;
+}
+
 u32 blind_effects_trigger(enum BlindEvent event, const BlindEventData* data)
 {
     enum BlindType blind = g_game_vars.current_blind;
 
+    // A new round never keeps what the previous Boss left behind
+    if (event == BLIND_EVENT_ON_BLIND_SELECTED)
+        blind_effects_reset();
+
+    // The cleanup at the end of the round also happens when the Boss is disabled (Luchador, Chicot)
+    bool muted = joker_boss_is_disabled() && event != BLIND_EVENT_ON_ROUND_END;
+
     if (!blind_effects_is_implemented(blind) || (int)event < 0 || event >= BLIND_EVENT_MAX ||
-        joker_boss_is_disabled())
+        muted)
         return BLIND_EFFECT_FLAG_NONE;
 
     static const BlindEventData NO_DATA = {.card = NULL, .hand_type = NONE, .nb_cards = 0};
@@ -520,7 +588,7 @@ const char* blind_effects_get_caption_line(enum BlindType blind, int line)
 
     const char* text = BLIND_CAPTIONS[blind].lines[line];
     if (blind == BLIND_TYPE_OX && text != NULL && text[0] == '\0')
-        return get_hand_type_name(most_played_hand());
+        return get_hand_type_name(ox_hand_of_ante());
 
     return text;
 }
@@ -630,6 +698,56 @@ void blind_effects_on_joker_removed(const JokerObject* joker_object, bool sold)
                 hand[i]->card->debuffed = false;
         }
         reorder_card_sprites_layers();
+    }
+}
+
+void blind_effects_refresh_debuffs(void)
+{
+    enum BlindType blind = g_game_vars.current_blind;
+    if (joker_boss_is_disabled())
+        return;
+
+    switch (blind)
+    {
+        case BLIND_TYPE_CLUB:
+        case BLIND_TYPE_GOAD:
+        case BLIND_TYPE_WINDOW:
+        case BLIND_TYPE_HEAD:
+        case BLIND_TYPE_PLANT:
+        case BLIND_TYPE_PILLAR:
+        case BLIND_TYPE_LEAF:
+            break;
+        default:
+            return;
+    }
+
+    bool changed = false;
+    CardObject** hand = get_hand_array();
+    for (int i = 0; i <= get_hand_top(); i++)
+    {
+        if (hand[i] == NULL)
+            continue;
+        Card* card = hand[i]->card;
+        bool debuffed = boss_debuffs_card(blind, card);
+        if (card->debuffed != debuffed)
+        {
+            card->debuffed = debuffed;
+            changed = true;
+        }
+    }
+
+    if (changed)
+        reorder_card_sprites_layers();
+}
+
+void blind_effects_on_boss_disabled(void)
+{
+    // Only The Needle gives something back: the hands it took away
+    if (g_game_vars.current_blind == BLIND_TYPE_NEEDLE && s_needle_hands_removed > 0)
+    {
+        g_game_vars.hands += s_needle_hands_removed;
+        s_needle_hands_removed = 0;
+        display_hands();
     }
 }
 

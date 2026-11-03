@@ -1,0 +1,18 @@
+# B-005: the Boss of an ante can only be one allowed from that ante on. Run it for several seeds
+# with a normal build (ante 1):
+#   run.py scenarios/boss_min_ante.txt OUT -D seed=GBARU1
+# The Boss shown on the screen must be one of: Hook, Club, Psychic, Goad, Window, Manacle,
+#   Pillar, Head (Крюк, Трефа, Медиум, Стрекало, Окно, Кандалы, Столп, Голова).
+
+wait 460
+press START
+wait 60
+press A
+wait 60
+pokestr {sym:s_seed_str} {def:seed}
+poke8 {sym:use_seed} 1
+press DOWN
+wait 10
+press A
+wait 120
+shot 01_blind_select

@@ -59,46 +59,13 @@ static inline u32 ante_base_requirement(int ante)
     return ante_table_base(scaling, ante);
 }
 
-// clang-format off
+
 /**
- * @brief Stores an instance of the Blind struct for each BlindType value, indexed by BlindType.
- *         The Wall (x4) and Violet Vessel (x6) effects are their score requirement.
- *         Acts the same way the Joker registry does, and may need to go in its own file depending
- *         on how Blind effects are implemented.
+ * @brief One Blind struct for each BlindType value, indexed by BlindType, filled when the lists of
+ *         unbeaten Blinds are built. The score requirement multipliers are in blind_rules.h
+ *         (The Wall x4 and Violet Vessel x6 effects are their score requirement).
  */
-static Blind s_blind_type_map[BLIND_TYPE_MAX] = {
-    [BLIND_TYPE_SMALL]   = {BLIND_TYPE_SMALL,   FIX_ONE          },
-    [BLIND_TYPE_BIG]     = {BLIND_TYPE_BIG,     (FIX_ONE * 3) / 2},
-    [BLIND_TYPE_HOOK]    = {BLIND_TYPE_HOOK,    FIX_ONE * 2      },
-    [BLIND_TYPE_OX]      = {BLIND_TYPE_OX,      FIX_ONE * 2      },
-    [BLIND_TYPE_HOUSE]   = {BLIND_TYPE_HOUSE,   FIX_ONE * 2      },
-    [BLIND_TYPE_WALL]    = {BLIND_TYPE_WALL,    FIX_ONE * 4      },
-    [BLIND_TYPE_WHEEL]   = {BLIND_TYPE_WHEEL,   FIX_ONE * 2      },
-    [BLIND_TYPE_ARM]     = {BLIND_TYPE_ARM,     FIX_ONE * 2      },
-    [BLIND_TYPE_CLUB]    = {BLIND_TYPE_CLUB,    FIX_ONE * 2      },
-    [BLIND_TYPE_FISH]    = {BLIND_TYPE_FISH,    FIX_ONE * 2      },
-    [BLIND_TYPE_PSYCHIC] = {BLIND_TYPE_PSYCHIC, FIX_ONE * 2      },
-    [BLIND_TYPE_GOAD]    = {BLIND_TYPE_GOAD,    FIX_ONE * 2      },
-    [BLIND_TYPE_WATER]   = {BLIND_TYPE_WATER,   FIX_ONE * 2      },
-    [BLIND_TYPE_WINDOW]  = {BLIND_TYPE_WINDOW,  FIX_ONE * 2      },
-    [BLIND_TYPE_MANACLE] = {BLIND_TYPE_MANACLE, FIX_ONE * 2      },
-    [BLIND_TYPE_EYE]     = {BLIND_TYPE_EYE,     FIX_ONE * 2      },
-    [BLIND_TYPE_MOUTH]   = {BLIND_TYPE_MOUTH,   FIX_ONE * 2      },
-    [BLIND_TYPE_PLANT]   = {BLIND_TYPE_PLANT,   FIX_ONE * 2      },
-    [BLIND_TYPE_SERPENT] = {BLIND_TYPE_SERPENT, FIX_ONE * 2      },
-    [BLIND_TYPE_PILLAR]  = {BLIND_TYPE_PILLAR,  FIX_ONE * 2      },
-    [BLIND_TYPE_NEEDLE]  = {BLIND_TYPE_NEEDLE,  FIX_ONE * 2      },
-    [BLIND_TYPE_HEAD]    = {BLIND_TYPE_HEAD,    FIX_ONE * 2      },
-    [BLIND_TYPE_TOOTH]   = {BLIND_TYPE_TOOTH,   FIX_ONE * 2      },
-    [BLIND_TYPE_FLINT]   = {BLIND_TYPE_FLINT,   FIX_ONE * 2      },
-    [BLIND_TYPE_MARK]    = {BLIND_TYPE_MARK,    FIX_ONE * 2      },
-    [BLIND_TYPE_ACORN]   = {BLIND_TYPE_ACORN,   FIX_ONE * 2      },
-    [BLIND_TYPE_LEAF]    = {BLIND_TYPE_LEAF,    FIX_ONE * 2      },
-    [BLIND_TYPE_VESSEL]  = {BLIND_TYPE_VESSEL,  FIX_ONE * 6      },
-    [BLIND_TYPE_HEART]   = {BLIND_TYPE_HEART,   FIX_ONE * 2      },
-    [BLIND_TYPE_BELL]    = {BLIND_TYPE_BELL,    FIX_ONE * 2      }
-};
-// clang-format on
+static Blind s_blind_type_map[BLIND_TYPE_MAX];
 
 void blind_init()
 {
@@ -115,7 +82,7 @@ u32 blind_get_requirement(enum BlindType type, int ante)
     if (ante < 0 || ante > ANTE_LAST)
         ante = 0;
 
-    u32 multiplier = (u32)s_blind_type_map[type].score_req_multiplier;
+    u32 multiplier = blind_rules_req_mult_fx8(type);
     if (type == BLIND_TYPE_WALL || type == BLIND_TYPE_VESSEL)
     {
         // Chicot: the Boss is disabled, so it asks the plain Boss requirement (X2)
@@ -168,6 +135,7 @@ static void init_unbeaten_blinds_list(bool showdown)
 
     for (int i = lower_blind; i <= upper_blind; i++)
     {
+        s_blind_type_map[i].type = i;
         list_push_back(p_unbeaten_blinds, &s_blind_type_map[i]);
     }
 }
@@ -178,22 +146,49 @@ void init_unbeaten_blinds_lists(void)
     init_unbeaten_blinds_list(true);
 }
 
-enum BlindType roll_blind_type(bool showdown)
+/**
+ * @brief Types of the unbeaten Blinds of a list, returns how many there are
+ */
+static int unbeaten_blinds_types(List* p_unbeaten_blinds, u8* types)
+{
+    int nb_types = 0;
+    ListItr itr = list_itr_create(p_unbeaten_blinds);
+    Blind* blind = NULL;
+    while ((blind = list_itr_next(&itr)))
+        types[nb_types++] = blind->type;
+    return nb_types;
+}
+
+enum BlindType roll_blind_type(bool showdown, int ante)
 {
     List* p_unbeaten_blinds = showdown ? &s_unbeaten_showdown_blinds : &s_unbeaten_boss_blinds;
+    u8 types[BLIND_TYPE_MAX];
 
-    // Fill the list with all blinds if it is empty
-    // (happens on startup or if we have beaten all blinds)
-    if (list_is_empty(p_unbeaten_blinds))
+    // Roll among the unbeaten Blinds that can show up at this ante
+    int nb_types = unbeaten_blinds_types(p_unbeaten_blinds, types);
+    int nb_eligible = 0;
+    blind_rules_pick(types, nb_types, ante, 0, &nb_eligible);
+
+    // Fill the list with all blinds if none can be rolled
+    // (happens on startup or if we have beaten all the blinds of this ante)
+    if (nb_eligible == 0)
     {
         init_unbeaten_blinds_list(showdown);
+        nb_types = unbeaten_blinds_types(p_unbeaten_blinds, types);
+        blind_rules_pick(types, nb_types, ante, 0, &nb_eligible);
     }
 
-    // roll a random blind among the unbeaten ones
-    int random_blind_idx = rng_get_u32(RNG_SEQ_BLIND) % list_get_len(p_unbeaten_blinds);
-    Blind* random_blind = list_get_at_idx(p_unbeaten_blinds, random_blind_idx);
+    // Never happens: every ante has Blinds of its kind. Falls back on the first of the list.
+    if (nb_eligible == 0)
+        return showdown ? BLIND_TYPE_SHOWDOWN : BLIND_TYPE_BOSS;
 
-    return random_blind->type;
+    return (enum BlindType)blind_rules_pick(
+        types,
+        nb_types,
+        ante,
+        rng_get_u32(RNG_SEQ_BLIND),
+        NULL
+    );
 }
 
 void set_blind_beaten(enum BlindType type)
