@@ -204,16 +204,20 @@ static inline int spectral_get_nb_destroyed_cards(enum SpectralType spectral)
 }
 
 /**
- * @brief A random enhancement from the 8 real ones, @p r any random number.
+ * @brief A random enhancement among the real ones except Stone (a created card has a rank),
+ *        @p r any random number.
  */
 static inline enum CardEnhancement spectral_random_enhancement(uint32_t r)
 {
-    return (enum CardEnhancement)(CARD_ENHANCEMENT_BONUS + r % (CARD_ENHANCEMENT_MAX - 1));
+    int enhancement = CARD_ENHANCEMENT_BONUS + r % (CARD_ENHANCEMENT_MAX - 2);
+    if (enhancement >= CARD_ENHANCEMENT_STONE)
+        enhancement++;
+    return (enum CardEnhancement)enhancement;
 }
 
 /**
  * @brief Builds a card created by Familiar (face card), Grim (Ace) or Incantation (2 to 10),
- *        always enhanced. Stone cards would have no rank, so they are replaced by Bonus.
+ *        always enhanced, never with Stone.
  *
  * @param r_rank, r_suit, r_enhancement random numbers
  */

@@ -73,10 +73,12 @@ static void test_created_cards(void)
         assert(face.rank >= JACK && face.rank <= KING);
         assert(face.suit < NUM_SUITS);
         assert(face.enhancement != CARD_ENHANCEMENT_NONE && face.enhancement < CARD_ENHANCEMENT_MAX);
+        assert(face.enhancement != CARD_ENHANCEMENT_STONE);
         assert(face.seal == CARD_SEAL_NONE);
 
         Card ace = spectral_make_card(SPECTRAL_GRIM, r, r, r);
         assert(ace.rank == ACE && ace.enhancement != CARD_ENHANCEMENT_NONE);
+        assert(ace.enhancement != CARD_ENHANCEMENT_STONE);
 
         Card num = spectral_make_card(SPECTRAL_INCANTATION, r, r, r);
         assert(num.rank >= TWO && num.rank <= TEN);
@@ -94,7 +96,7 @@ static void test_created_cards(void)
     for (int rank = TWO; rank <= TEN; rank++)
         assert(ranks[rank]);
     for (int e = CARD_ENHANCEMENT_BONUS; e < CARD_ENHANCEMENT_MAX; e++)
-        assert(enhancements[e]);
+        assert(enhancements[e] == (e != CARD_ENHANCEMENT_STONE));
 }
 
 static void test_cryptid_copy(void)
