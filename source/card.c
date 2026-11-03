@@ -278,7 +278,7 @@ static const Rgb SEAL_COLORS[CARD_SEAL_MAX] = {
     [CARD_SEAL_GOLD]   = {255, 163, 0  },
     [CARD_SEAL_RED]    = {240, 52,  100},
     [CARD_SEAL_BLUE]   = {41,  173, 255},
-    [CARD_SEAL_PURPLE] = {137, 105, 230},
+    [CARD_SEAL_PURPLE] = {60,  67,  104}, // No purple in the deck palette: dark blue, not the grey it snapped to
 };
 
 // 6x6 disc: 'o' outline, 'x' seal colour, 'w' shine
