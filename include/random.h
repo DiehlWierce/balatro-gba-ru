@@ -98,6 +98,15 @@ enum RngSequence
     RNG_SEQ_SPECTRAL_ECTOPLASM,   // Joker that becomes Negative
     RNG_SEQ_SPECTRAL_HEX,         // Joker that becomes Polychrome
 
+    // Jokers of A8 batch 5 (ID 109-123), each with its own sequence
+    RNG_SEQ_JOKER_SEANCE,         // Which Spectral card Seance creates
+    RNG_SEQ_JOKER_SIXTH_SENSE,    // Which Spectral card Sixth Sense creates
+    RNG_SEQ_JOKER_VAGABOND,       // Which Tarot Vagabond creates
+    RNG_SEQ_JOKER_GROS_MICHEL,    // 1 in 6 chance to be destroyed at the end of the round
+    RNG_SEQ_JOKER_CAVENDISH,      // 1 in 1000 chance to be destroyed at the end of the round
+    RNG_SEQ_JOKER_CASTLE,         // Suit of the Castle
+    RNG_SEQ_JOKER_MAIL_IN,        // Rank of the Mail-In Rebate
+
     RNG_SEQ_MAX
 };
 

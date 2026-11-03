@@ -113,6 +113,12 @@ int game_get_total_cards(void);
  *        and discard pile (Steel Joker, Stone Joker)
  */
 int game_count_deck_enhancement(u8 enhancement);
+
+/**
+ * @brief Number of cards of @p rank in the whole deck, same cards as game_count_deck_enhancement
+ *        (Cloud 9). Stone cards have no rank.
+ */
+int game_count_deck_rank(u8 rank);
 int get_deck_top(void);
 void deck_push(Card* card);
 Card* deck_pop(void);

@@ -30,7 +30,7 @@
 #include <tonc.h>
 
 // what it was before (MAX_DEFINEABLE_JOKERS / JOKERS_PER_SPRITESHEET)
-#define MAX_NUM_JOKERS_SPRITESHEETS 75
+#define MAX_NUM_JOKERS_SPRITESHEETS 100
 
 static const unsigned int* joker_gfxTiles[] = {
 #define DEF_JOKER_GFX(idx) joker_gfx##idx##Tiles,
@@ -88,6 +88,7 @@ static const int JOKER_ID_TO_SPRITE_MAP[] = {
     29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43,
     44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58,
     59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73,
+    74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88,
 };
 
 // Map of Spritesheet idx -> first Joker ID in sheet
@@ -99,7 +100,8 @@ static const int SPRITESHEET_IDX_TO_STARTING_JOKER_ID[] = {
     45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
     64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78,
     79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93,
-    94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108
+    94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108,
+    109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123
 };
 
 // Lookup table of Joker Rarity strings. Used to display at the bottom of the description screen.
@@ -899,6 +901,18 @@ void joker_economy_on_round_end(bool boss_defeated)
             JokerEffect* round_end_effect = NULL;
             joker_get_score_effect(joker, NULL, JOKER_EVENT_ON_ROUND_END, &round_end_effect);
         }
+
+        // Batch 5: new targets (Castle, Mail-In Rebate), per-round counters, food that is eaten
+        // up or destroyed by chance (Gros Michel, Cavendish, Popcorn, Turtle Bean)
+        if (joker->id >= FIRST_BATCH5_JOKER_ID && joker->id <= LAST_BATCH5_JOKER_ID)
+        {
+            JokerEffect* round_end_effect = NULL;
+            u32 flags =
+                joker_get_score_effect(joker, NULL, JOKER_EVENT_ON_ROUND_END, &round_end_effect);
+            if ((flags & JOKER_EFFECT_FLAG_EXPIRE) && round_end_effect != NULL &&
+                round_end_effect->expire)
+                joker_object_expire(joker_object);
+        }
     }
 }
 
@@ -1014,9 +1028,35 @@ void joker_on_pack_opened(void)
     joker_for_each_active(joker_hook_pack_opened);
 }
 
+// Ceremonial Dagger: destroys the Joker to its right and gains twice its sell value as mult
+static void joker_dagger_on_blind_selected(void)
+{
+    List* jokers = get_jokers_list();
+    for (int i = 0; i < list_get_len(jokers) - 1; i++)
+    {
+        JokerObject* dagger = list_get_at_idx(jokers, i);
+        if (dagger->joker->id != CEREMONIAL_DAGGER_JOKER_ID || joker_is_perished(dagger->joker) ||
+            blind_effects_is_joker_disabled(dagger))
+            continue;
+
+        JokerObject* victim = list_get_at_idx(jokers, i + 1);
+        if (!joker_can_be_sold(victim->joker))
+            continue;
+
+        dagger->joker->persistent_state = joker_batch5_dagger_add(
+            dagger->joker->persistent_state,
+            joker_get_sell_value(victim->joker)
+        );
+        joker_object_shake(dagger, UNDEFINED);
+        remove_owned_joker(i + 1);
+        item_start_discard_animation((Item*)victim);
+    }
+}
+
 void joker_on_blind_selected(void)
 {
     joker_for_each_active(joker_hook_blind_selected);
+    joker_dagger_on_blind_selected();
 }
 
 void joker_on_deck_shuffled(void)
@@ -1024,10 +1064,30 @@ void joker_on_deck_shuffled(void)
     joker_for_each_active(joker_hook_deck_shuffled);
 }
 
-void joker_on_cards_discarded(int nb_cards, int nb_face_cards, int nb_jacks)
+bool joker_object_expire(JokerObject* joker_object)
 {
-    if (nb_cards <= 0)
-        return;
+    if (joker_object == NULL || !joker_can_be_sold(joker_object->joker))
+        return false;
+
+    List* expired = get_expired_jokers_list();
+    ListItr itr = list_itr_create(expired);
+    JokerObject* other;
+    while ((other = list_itr_next(&itr)))
+    {
+        if (other == joker_object)
+            return false;
+    }
+
+    joker_object_shake(joker_object, UNDEFINED);
+    list_push_back(expired, joker_object);
+    return true;
+}
+
+bool joker_on_cards_discarded(const DiscardCounts* discarded)
+{
+    bool destroy_cards = false;
+    if (discarded->nb_cards <= 0)
+        return false;
 
     ListItr itr = list_itr_create(get_jokers_list());
     JokerObject* joker_object;
@@ -1037,27 +1097,57 @@ void joker_on_cards_discarded(int nb_cards, int nb_face_cards, int nb_jacks)
         if (joker_is_perished(joker) || blind_effects_is_joker_disabled(joker_object))
             continue;
 
+        int money = 0;
         switch (joker->id)
         {
             case GREEN_JOKER_ID:
                 joker->persistent_state = joker_batch4_green_discard(joker->persistent_state);
                 break;
             case FACELESS_JOKER_ID:
+                money = joker_batch4_faceless_money(discarded->nb_face_cards);
+                break;
+            case HIT_THE_ROAD_JOKER_ID:
+                joker->persistent_state += discarded->nb_jacks;
+                break;
+            case RAMEN_JOKER_ID:
+                joker->persistent_state =
+                    joker_batch5_ramen_discard(joker->persistent_state, discarded->nb_cards);
+                if (joker_batch5_ramen_gone(joker->persistent_state))
+                    joker_object_expire(joker_object);
+                else
+                    joker_object_shake(joker_object, UNDEFINED);
+                break;
+            case CASTLE_JOKER_ID:
             {
-                int money = joker_batch4_faceless_money(nb_face_cards);
-                if (money > 0)
+                int cards = discarded->suits[joker_batch5_castle_suit(joker->persistent_state)];
+                if (cards > 0)
                 {
-                    g_game_vars.money += money;
-                    display_money();
+                    joker->persistent_state =
+                        joker_batch5_castle_discard(joker->persistent_state, cards);
                     joker_object_shake(joker_object, UNDEFINED);
                 }
                 break;
             }
-            case HIT_THE_ROAD_JOKER_ID:
-                joker->persistent_state += nb_jacks;
+            case MAIL_IN_REBATE_JOKER_ID:
+                money = joker_batch5_mail_in_money(discarded->ranks[joker->persistent_state % NUM_RANKS]);
+                break;
+            case TRADING_CARD_JOKER_ID:
+                if (joker_batch5_trading_card_hit(round_get_discards_used(), discarded->nb_cards))
+                {
+                    money = TRADING_CARD_MONEY;
+                    destroy_cards = true;
+                }
                 break;
             default:
                 break;
         }
+
+        if (money > 0)
+        {
+            g_game_vars.money += money;
+            display_money();
+            joker_object_shake(joker_object, UNDEFINED);
+        }
     }
+    return destroy_cards;
 }

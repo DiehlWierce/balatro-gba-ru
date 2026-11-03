@@ -176,6 +176,12 @@ bool consumable_create_owned(enum ConsumableType type, int id, FIXED x, FIXED y)
 bool consumable_create_random_tarot(enum RngSequence key, FIXED x, FIXED y);
 
 /**
+ * @brief Creates a random Spectral card of the common pool in the owned row, if a slot is free
+ *        (Seance, Sixth Sense).
+ */
+bool consumable_create_random_spectral(enum RngSequence key, FIXED x, FIXED y);
+
+/**
  * @brief Forgets the last used consumable (The Fool), when a run starts.
  */
 void consumables_forget_last_used(void);

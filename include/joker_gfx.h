@@ -76,6 +76,21 @@
 #include "joker_gfx71.h"
 #include "joker_gfx72.h"
 #include "joker_gfx73.h"
+#include "joker_gfx74.h"
+#include "joker_gfx75.h"
+#include "joker_gfx76.h"
+#include "joker_gfx77.h"
+#include "joker_gfx78.h"
+#include "joker_gfx79.h"
+#include "joker_gfx80.h"
+#include "joker_gfx81.h"
+#include "joker_gfx82.h"
+#include "joker_gfx83.h"
+#include "joker_gfx84.h"
+#include "joker_gfx85.h"
+#include "joker_gfx86.h"
+#include "joker_gfx87.h"
+#include "joker_gfx88.h"
 
 #endif
 // clang-format on

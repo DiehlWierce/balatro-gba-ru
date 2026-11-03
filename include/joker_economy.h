@@ -11,6 +11,8 @@
 #ifndef JOKER_ECONOMY_H
 #define JOKER_ECONOMY_H
 
+#include "joker_batch5.h"
+
 #include <stdbool.h>
 
 #define GOLDEN_JOKER_ID           64
@@ -48,6 +50,7 @@ typedef struct JokerRunBonus
     int debt_limit;          // How far below $0 the money can go
     int round_end_money;     // $ at the end of the round (Golden Joker, Rocket)
     int delayed_gratification; // Number of Delayed Gratification Jokers
+    int cloud_nine;          // Number of Cloud 9 Jokers (paid per 9 in the deck, see round_end.c)
 } JokerRunBonus;
 
 /**
@@ -89,6 +92,12 @@ static inline void joker_run_bonus_add(JokerRunBonus* bonus, int joker_id, int p
             break;
         case STUNTMAN_JOKER_ID:
             bonus->hand_size -= 2;
+            break;
+        case TURTLE_BEAN_JOKER_ID:
+            bonus->hand_size += persistent_state > 0 ? persistent_state : 0;
+            break;
+        case CLOUD_NINE_JOKER_ID:
+            bonus->cloud_nine++;
             break;
         default:
             break;
