@@ -239,8 +239,9 @@ static ListItr s_joker_round_end_itr;
 
 static u32 s_temp_score = 0; // This is the score that shows in the same spot as the hand type.
 static bool s_score_flames_active = false;
-static FIXED s_lerped_score = 0;
-static FIXED s_lerped_temp_score = 0;
+// 24.8 fixed point in 64 bits: FIXED (s32) overflows from a score of 2^23 (8 388 608)
+static s64 s_lerped_score = 0;
+static s64 s_lerped_temp_score = 0;
 
 // discarded cards specific
 static bool s_sound_played = false;
@@ -341,7 +342,13 @@ void round_destroy_played_cards(void)
 static inline void played_push(CardObject* card_object)
 {
     if (s_played_top >= MAX_SELECTION_SIZE - 1)
+    {
+        // No room: release the card and its object instead of leaking them from the pools
+        Card* card = card_object->card;
+        card_object_destroy(&card_object);
+        card_destroy(&card);
         return;
+    }
     s_played_hand[++s_played_top] = card_object;
 }
 
@@ -360,7 +367,10 @@ int get_discard_top(void)
 static inline void discard_push(Card* card)
 {
     if (s_discard_top >= MAX_DECK_SIZE - 1)
+    {
+        card_destroy(&card); // No room: release it instead of leaking it from the pool
         return;
+    }
     blind_effects_reset_card(card);
     s_discard_pile[++s_discard_top] = card;
 }
@@ -535,6 +545,9 @@ static inline void round_execute_discard(void)
     if (!can_discard_hand())
         return;
 
+    // The type of the discarded hand, read before HAND_DISCARD blanks it (Burnt Joker)
+    enum HandType discarded_hand_type = get_hand_type();
+
     set_hand_state(HAND_DISCARD);
     --g_game_vars.discards;
     display_discards();
@@ -555,7 +568,7 @@ static inline void round_execute_discard(void)
         if (card_modifiers_on_discarded(hand[i]->card, hand[i]->x, hand[i]->y))
             card_object_shake(hand[i], SFX_CARD_SELECT);
     }
-    joker_on_first_discard(get_hand_type(), s_discards_used_round == 0); // Burnt Joker
+    joker_on_first_discard(discarded_hand_type, s_discards_used_round == 0); // Burnt Joker
     s_discards_used_round++;
     // Green, Faceless, Hit the Road and the Jokers of batch 5, Trading Card destroys the card
     s_destroy_discarded_cards = joker_on_cards_discarded(&discarded);
@@ -851,6 +864,18 @@ static inline void round_process_hand_select_input(void)
 }
 
 /**
+ * @brief Mr. Bones: a lost round with at least 25% of the requirement counts as won. Safe to call
+ *         twice: once the score is raised to the requirement it does nothing.
+ */
+static void round_apply_mr_bones(void)
+{
+    u32 requirement = blind_get_requirement(g_game_vars.current_blind, g_game_vars.ante);
+    if (g_game_vars.hands == 0 && g_game_vars.score < requirement &&
+        joker_mr_bones_saves(g_game_vars.score, requirement))
+        g_game_vars.score = requirement;
+}
+
+/**
  * @brief Evaluates if we have won or lost when we can no longer play so that we land on the correct
  *         Game Over screen
  */
@@ -860,33 +885,23 @@ static inline void round_handle_round_over(void)
 
     blind_effects_trigger(BLIND_EVENT_ON_ROUND_END, NULL);
 
-    // Mr. Bones: a lost round with at least 25% of the requirement counts as won
-    u32 requirement = blind_get_requirement(g_game_vars.current_blind, g_game_vars.ante);
-    if (g_game_vars.hands == 0 && g_game_vars.score < requirement &&
-        joker_mr_bones_saves(g_game_vars.score, requirement))
-        g_game_vars.score = requirement;
+    round_apply_mr_bones();
 
     if (g_game_vars.score >= blind_get_requirement(g_game_vars.current_blind, g_game_vars.ante))
     {
         if (g_game_vars.current_blind > BLIND_TYPE_BIG)
         {
-            if (g_game_vars.ante < ANTE_LAST)
-            {
-                // Beating the ante 8 Boss wins the run: the win screen comes after the cash out
-                // and offers to go on (Endless mode). The last ante ends the game right away.
-                if (g_game_vars.ante == MAX_ANTE)
-                    g_game_vars.win_pending = true;
+            // Beating the ante 8 Boss wins the run: the win screen comes after the cash out
+            // and offers to go on (Endless mode). The last ante ends the game after the cash out
+            // too. The ante goes up even then: the round end screen reads the previous one.
+            if (g_game_vars.ante == MAX_ANTE || g_game_vars.ante >= ANTE_LAST)
+                g_game_vars.win_pending = true;
 
-                g_game_vars.ante++;
-                display_ante();
+            g_game_vars.ante++;
+            display_ante();
 
-                // mark current boss blind as beaten and allow for reroll
-                set_blind_beaten(g_game_vars.next_boss_blind);
-            }
-            else
-            {
-                next_state = GAME_STATE_WIN;
-            }
+            // mark current boss blind as beaten and allow for reroll
+            set_blind_beaten(g_game_vars.next_boss_blind);
         }
     }
     else if (g_game_vars.hands == 0)
@@ -1279,8 +1294,8 @@ static inline void round_process_input_and_state(void)
         {
             // protect against score overflow
             s_temp_score = u32_protected_mult(g_game_vars.chips, g_game_vars.mult);
-            s_lerped_temp_score = int2fx(s_temp_score);
-            s_lerped_score = int2fx(g_game_vars.score);
+            s_lerped_temp_score = (s64)s_temp_score << FIX_SHIFT;
+            s_lerped_score = (s64)g_game_vars.score << FIX_SHIFT;
 
             if (s_temp_score > g_game_vars.best_hand_score)
                 g_game_vars.best_hand_score = s_temp_score;
@@ -1310,15 +1325,17 @@ static inline void round_process_input_and_state(void)
          * The operation is equivalent to
          * fxdiv(int2fx(temp_score * g_game_vars.game_speed), int2fx(NUM_SCORE_LERP_STEPS))
          */
-        s_lerped_temp_score -= int2fx(s_temp_score * g_game_vars.game_speed) / NUM_SCORE_LERP_STEPS;
-        s_lerped_score += int2fx(s_temp_score * g_game_vars.game_speed) / NUM_SCORE_LERP_STEPS;
+        s64 lerp_step = (((s64)s_temp_score * g_game_vars.game_speed) << FIX_SHIFT) /
+                        NUM_SCORE_LERP_STEPS;
+        s_lerped_temp_score -= lerp_step;
+        s_lerped_score += lerp_step;
 
         if (s_lerped_temp_score > 0)
         {
             // Set the score display first because it's more important
             // in case there isn't enough time within the frame to display both
-            display_score(fx2uint(s_lerped_score));
-            display_temp_score(fx2uint(s_lerped_temp_score));
+            display_score((u32)(s_lerped_score >> FIX_SHIFT));
+            display_temp_score((u32)(s_lerped_temp_score >> FIX_SHIFT));
         }
         else
         {
@@ -1457,7 +1474,7 @@ static inline void round_discarded_cards_loop(void)
             discarded_card_object->x = int2fx(240);
             discarded_card_object->y = int2fx(80);
         }
-        else
+        else if (discarded_card_object != NULL)
         {
             if (discarded_card_object->y >= discarded_card_object->ty)
             {
@@ -2478,6 +2495,7 @@ static bool play_ended_played_cards_update(int played_idx)
             {
                 if (round_is_over())
                 {
+                    round_apply_mr_bones(); // A saved round pays the held cards like a won one
                     round_apply_held_cards_round_won();
                     set_hand_state(HAND_SHUFFLING);
                 }
