@@ -11,10 +11,12 @@
 #define JOKER_BATCH4_H
 
 #include "card_rules.h"
+#include "hand_type.h"
 
 #include "probability.h"
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #define BLOODSTONE_JOKER_ID     94
@@ -37,7 +39,7 @@
 #define BLOODSTONE_PERCENT      150
 #define EIGHT_BALL_CHANCE       4  // 1 in 4
 #define EROSION_MULT_PER_CARD   4
-#define EROSION_DECK_SIZE       52
+#define EROSION_DECK_SIZE       52 // Fallback when the starting size of the Deck is unknown
 #define DRIVERS_LICENSE_CARDS   16
 #define DRIVERS_LICENSE_XMULT   3
 #define FLOWER_POT_XMULT        3
@@ -57,6 +59,8 @@
 #define TO_DO_LIST_NUM_HANDS  9
 #define TO_DO_LIST_ROYAL_FLUSH 10
 #define TO_DO_LIST_STRAIGHT_FLUSH 9
+#define TO_DO_LIST_FIRST_SECRET 11 // Five of a Kind, Flush House, Flush Five: only once played
+#define TO_DO_LIST_SECRET_LAST  13
 
 static inline bool joker_batch4_one_in(uint32_t roll, uint32_t chance)
 {
@@ -128,23 +132,33 @@ static inline int joker_batch4_idol_suit(int32_t state)
     return (int)((state >> 8) & 0xFF) % NUM_SUITS;
 }
 
+#define BASEBALL_PERCENT_MAX 100000000 // X1,000,000: saturates, fits in an int
+
 /**
  * @brief X(1.5^n) as a percent for Baseball Card with @p uncommon Uncommon Jokers, rounded.
+ *        Every Uncommon Joker counts, the result saturates at BASEBALL_PERCENT_MAX.
  */
 static inline int joker_batch4_baseball_percent(int uncommon)
 {
     uint64_t percent = 100;
-    for (int i = 0; i < uncommon && i < 8; i++)
+    for (int i = 0; i < uncommon; i++)
+    {
         percent = (percent * BASEBALL_PERCENT + 50) / 100;
+        if (percent >= BASEBALL_PERCENT_MAX)
+            return BASEBALL_PERCENT_MAX;
+    }
     return (int)percent;
 }
 
 /**
- * @brief Erosion: +4 mult for every card missing from the starting 52 cards.
+ * @brief Erosion: +4 mult for every card missing from the starting size of the Deck
+ *        (@p start_size, 52 for most Decks, 40 for the Abandoned Deck).
  */
-static inline int joker_batch4_erosion_mult(int deck_cards)
+static inline int joker_batch4_erosion_mult(int deck_cards, int start_size)
 {
-    return deck_cards >= EROSION_DECK_SIZE ? 0 : EROSION_MULT_PER_CARD * (EROSION_DECK_SIZE - deck_cards);
+    if (start_size <= 0)
+        start_size = EROSION_DECK_SIZE;
+    return deck_cards >= start_size ? 0 : EROSION_MULT_PER_CARD * (start_size - deck_cards);
 }
 
 /**
@@ -175,6 +189,33 @@ static inline bool joker_batch4_card_sharp_seen(uint32_t mask, int hand_type)
 }
 
 /**
+ * @brief Card Sharp: whether @p hand_type was already played earlier this round.
+ * @param played nb_played_hands of the run (indexed with hand_type - 1), the hand being scored is
+ *               already counted in it
+ * @param round_start copy of @p played taken when the round started
+ * A Royal Flush and a Straight Flush are the same hand.
+ */
+static inline bool joker_batch4_played_earlier_in_round(
+    const uint32_t* played,
+    const uint32_t* round_start,
+    int hand_type
+)
+{
+    if (hand_type <= 0 || hand_type > TO_DO_LIST_SECRET_LAST)
+        return false;
+    if (hand_type == TO_DO_LIST_ROYAL_FLUSH)
+        hand_type = TO_DO_LIST_STRAIGHT_FLUSH;
+    uint32_t now = played[hand_type - 1];
+    uint32_t before = round_start[hand_type - 1];
+    if (hand_type == TO_DO_LIST_STRAIGHT_FLUSH)
+    {
+        now += played[TO_DO_LIST_ROYAL_FLUSH - 1];
+        before += round_start[TO_DO_LIST_ROYAL_FLUSH - 1];
+    }
+    return now - before >= 2;
+}
+
+/**
  * @brief Superposition: the hand is a Straight and one scoring card is an Ace.
  */
 static inline bool joker_batch4_superposition(bool has_straight, const Card* const* cards, int count)
@@ -190,11 +231,26 @@ static inline bool joker_batch4_superposition(bool has_straight, const Card* con
 }
 
 /**
- * @brief To Do List: the hand type wanted for a random roll (High Card ... Straight Flush).
+ * @brief To Do List: the hand type wanted for a random roll. It is a visible hand other than the
+ *        current target @p current (0 for none): High Card ... Straight Flush, plus the secret
+ *        hands that were played at least once.
+ * @param nb_played nb_played_hands of the run (indexed with hand_type - 1)
  */
-static inline int joker_batch4_todo_target(uint32_t roll)
+static inline int joker_batch4_todo_target(uint32_t roll, int current, const uint32_t* nb_played)
 {
-    return TO_DO_LIST_FIRST_HAND + (int)(roll % TO_DO_LIST_NUM_HANDS);
+    int candidates[TO_DO_LIST_NUM_HANDS + 3];
+    int count = 0;
+    for (int hand = TO_DO_LIST_FIRST_HAND; hand <= TO_DO_LIST_STRAIGHT_FLUSH; hand++)
+    {
+        if (hand != current)
+            candidates[count++] = hand;
+    }
+    for (int hand = TO_DO_LIST_FIRST_SECRET; hand <= TO_DO_LIST_SECRET_LAST; hand++)
+    {
+        if (hand != current && nb_played != NULL && nb_played[hand - 1] > 0)
+            candidates[count++] = hand;
+    }
+    return candidates[roll % (uint32_t)count];
 }
 
 /**

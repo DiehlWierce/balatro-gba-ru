@@ -27,6 +27,14 @@ typedef struct CardScoreResult
 } CardScoreResult;
 
 /**
+ * @brief Multiplies an integer mult by the fraction @p num / @p den (X1.5 = 3 / 2), rounded to the
+ *        nearest (halves up) and saturated at UINT32_MAX. The one rounding rule of every X1.5 in
+ *        the game (Steel, Polychrome, Observatory): the mult is an integer on this port, so
+ *        3 x 1.5 is 5 everywhere, not 4 in one place and 5 in another.
+ */
+u32 card_modifiers_apply_xmult(u32 mult, u32 num, u32 den);
+
+/**
  * @brief Applies the effects of a played card when it scores: chips, enhancement and seal.
  *
  * @param card the scoring card

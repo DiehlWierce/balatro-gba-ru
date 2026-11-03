@@ -282,6 +282,20 @@ static void test_steel_card_held_rounding(void)
     assert(g_game_vars.mult == UINT32_MAX);
 }
 
+static void test_apply_xmult_rounding(void)
+{
+    // One rounding rule for every X1.5: halves go up, 3 -> 5 (Steel, Polychrome, Observatory)
+    assert(card_modifiers_apply_xmult(3, 3, 2) == 5);
+    assert(card_modifiers_apply_xmult(1, 3, 2) == 2);
+    assert(card_modifiers_apply_xmult(4, 3, 2) == 6);
+    assert(card_modifiers_apply_xmult(0, 3, 2) == 0);
+    assert(card_modifiers_apply_xmult(7, 2, 1) == 14);
+    assert(card_modifiers_apply_xmult(10, 5, 4) == 13); // X1.25: 12.5 -> 13
+    assert(card_modifiers_apply_xmult(5, 1, 0) == 5);   // No division by zero
+    assert(card_modifiers_apply_xmult(UINT32_MAX, 3, 2) == UINT32_MAX);
+    assert(card_modifiers_apply_xmult(2863311530u, 3, 2) == UINT32_MAX);
+}
+
 static void test_non_steel_card_held_is_inert(void)
 {
     reset();
@@ -492,6 +506,7 @@ int main(void)
     test_gold_seal_pays_when_scored();
     test_gold_card_pays_only_when_round_won();
     test_steel_card_held_rounding();
+    test_apply_xmult_rounding();
     test_non_steel_card_held_is_inert();
     test_red_seal_retriggers();
     test_blue_seal_creates_planet_of_last_hand();

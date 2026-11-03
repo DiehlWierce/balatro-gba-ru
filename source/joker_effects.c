@@ -1,3 +1,4 @@
+#include "blind_effects.h"
 #include "game.h"
 #include "game/round.h"
 #include "game_variables.h"
@@ -41,6 +42,10 @@
     }
 
 static JokerEffect s_shared_joker_effect = {0};
+
+// The Joker a Blueprint/Brainstorm is copying while its effect runs, NULL otherwise: effects that
+// look at "the other Jokers" (Swashbuckler) leave out the copied Joker, not the copy
+static const Joker* s_copy_target = NULL;
 
 // Joker Descriptions
 
@@ -503,7 +508,7 @@ const JokerInfo joker_registry[] =
     { "Астроном", UNCOMMON_JOKER, 8, false, astronomer_joker_desc, astronomer_joker_effect }, // 134
     { "Ретро", UNCOMMON_JOKER, 6, false, throwback_joker_desc, throwback_joker_effect }, // 135
     { "Безумие", UNCOMMON_JOKER, 7, false, madness_joker_desc, madness_joker_effect }, // 136
-    { "Костёр", UNCOMMON_JOKER, 9, false, campfire_joker_desc, campfire_joker_effect }, // 137
+    { "Костёр", RARE_JOKER, 9, false, campfire_joker_desc, campfire_joker_effect }, // 137
     { "Riff-Raff", COMMON_JOKER, 6, false, riff_raff_joker_desc, riff_raff_joker_effect }, // 138
     { "Спутник", UNCOMMON_JOKER, 6, false, satellite_joker_desc, satellite_joker_effect }, // 139
     { "Голограмма", UNCOMMON_JOKER, 7, false, hologram_joker_desc, hologram_joker_effect }, // 140
@@ -1086,6 +1091,8 @@ static int arrowhead_joker_desc(Joker* joker, Rect dest_rect)
 
 static int swashbuckler_get_mult(const Joker* joker)
 {
+    if (s_copy_target != NULL)
+        joker = s_copy_target; // Blueprint: the sum leaves out the copied Swashbuckler
     int mult = 0;
     ListItr itr = list_itr_create(get_jokers_list());
     JokerObject* other;
@@ -1924,9 +1931,8 @@ static u32 raised_fist_joker_effect(
         // Use this event to compute the index of the lowest value card only once.
         // Aces are always considered high value, even in an ace-low straight
         case JOKER_EVENT_ON_HAND_PLAYED:
-            // index initialized at 0 but accessed only if
-            // hand_size > 0 so we're never out of bounds
-            *p_lowest_value_index = 0;
+            // No ranked card in hand (only Stone cards): nothing is the lowest card
+            *p_lowest_value_index = UNDEFINED;
             u8 lowest_value = IMPOSSIBLY_HIGH_CARD_VALUE;
             CardObject** hand = get_hand_array();
             for (int i = 0; i <= get_hand_top(); i++)
@@ -2468,23 +2474,13 @@ static u32 dusk_joker_effect(
     return effect_flags_ret;
 }
 
-static u32 blueprint_brainstorm_joker_effect(
-    Joker* joker,
-    Card* scored_card,
-    enum JokerEvent joker_event,
-    JokerEffect** joker_effect
-)
+/**
+ * @brief Finds the Joker a Blueprint or a Brainstorm copies, bouncing around Blueprints and
+ *        Brainstorms. NULL if there is nothing to copy: a Blueprint at the end of the row, a loop
+ *        of Brainstorms, or a target disabled by the Boss (a debuffed Joker copies nothing).
+ */
+Joker* joker_get_copy_target(const Joker* joker)
 {
-    u32 effect_flags_ret = JOKER_EFFECT_FLAG_NONE;
-
-    // No need for this kind of init since these Jokers
-    // will have their data copied when needed
-    if (joker_event == JOKER_EVENT_ON_JOKER_CREATED ||
-        joker_event == JOKER_EVENT_ON_HAND_SCORED_END || joker_event == JOKER_EVENT_ON_ROUND_END)
-    {
-        return effect_flags_ret;
-    }
-
     // find ourselves in the Jokers list
     List* jokers = get_jokers_list();
     ListItr itr = list_itr_create(jokers);
@@ -2501,10 +2497,9 @@ static u32 blueprint_brainstorm_joker_effect(
     // be part of the Jokers list, but being extra careful doesn't cost much
     if (copied_joker_object == NULL)
     {
-        return effect_flags_ret;
+        return NULL;
     }
 
-    // find the copied Joker, may need to bounce around Blueprints and a Brainstorm
     // If we encounter NULL, we have a Blueprint at the end of the list that can't copy anything.
     // If we go through a Brainstorms twice, we will be in a loop and need to exit
     u8 brainstorm_counter = 0;
@@ -2524,31 +2519,58 @@ static u32 blueprint_brainstorm_joker_effect(
                 copied_joker_object = list_itr_next(&itr);
                 break;
 
-            // We encountered a Joker that isn't a Copying Joker and copy it now
-            // but how we copy it depends on this Joker's ID because they don't
-            // all handle data the same way.
+            // We encountered a Joker that isn't a Copying Joker
             default:
-                u8 copied_joker_id = copied_joker_object->joker->id;
-                const JokerInfo* copied_joker_info = get_joker_registry_entry(copied_joker_id);
-
-                // Copy the persistent data
-                joker->persistent_state = copied_joker_object->joker->persistent_state;
-
-                // Then regardless of if we copied the data above, apply the
-                // copied JokerEffect function to the local data
-                effect_flags_ret =
-                    copied_joker_info
-                        ->joker_effect_func(joker, scored_card, joker_event, joker_effect);
-
-                // make also sure we don't expire
-                effect_flags_ret &= ~JOKER_EFFECT_FLAG_EXPIRE;
-
-                // exit the loop
-                copied_joker_object = NULL;
-
-                break;
+                if (blind_effects_is_joker_disabled(copied_joker_object))
+                    return NULL;
+                return copied_joker_object->joker;
         }
     } while (copied_joker_object != NULL && brainstorm_counter < 2);
+
+    return NULL;
+}
+
+static u32 blueprint_brainstorm_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    u32 effect_flags_ret = JOKER_EFFECT_FLAG_NONE;
+
+    // No need for this kind of init since these Jokers
+    // will have their data copied when needed
+    if (joker_event == JOKER_EVENT_ON_JOKER_CREATED ||
+        joker_event == JOKER_EVENT_ON_HAND_SCORED_END || joker_event == JOKER_EVENT_ON_ROUND_END)
+    {
+        return effect_flags_ret;
+    }
+
+    Joker* copied_joker = joker_get_copy_target(joker);
+    if (copied_joker == NULL)
+        return effect_flags_ret;
+
+    // Midas Mask can't be copied: it changes the cards, not the score
+    if (copied_joker->id == MIDAS_MASK_JOKER_ID)
+        return effect_flags_ret;
+
+    const JokerInfo* copied_joker_info = get_joker_registry_entry(copied_joker->id);
+    if (copied_joker_info == NULL)
+        return effect_flags_ret;
+
+    // Copy the persistent data
+    joker->persistent_state = copied_joker->persistent_state;
+
+    // Then regardless of if we copied the data above, apply the
+    // copied JokerEffect function to the local data
+    s_copy_target = copied_joker;
+    effect_flags_ret =
+        copied_joker_info->joker_effect_func(joker, scored_card, joker_event, joker_effect);
+    s_copy_target = NULL;
+
+    // make also sure we don't expire
+    effect_flags_ret &= ~JOKER_EFFECT_FLAG_EXPIRE;
 
     return effect_flags_ret;
 }
@@ -3505,9 +3527,9 @@ static int baseball_card_joker_desc(Joker* joker, Rect dest_rect)
 static int erosion_joker_desc(Joker* joker, Rect dest_rect)
 {
     static const char desc_format[] =
-        TTE_RED_TAG "+4" TTE_BLACK_TAG " множ. за каждую карту, которой не хватает до " TTE_YELLOW_TAG "52" TTE_BLACK_TAG " в колоде\n\n(Сейчас " TTE_RED_TAG "+%d" TTE_BLACK_TAG " множ.)";
+        TTE_RED_TAG "+4" TTE_BLACK_TAG " множ. за каждую карту ниже " TTE_YELLOW_TAG "стартового размера" TTE_BLACK_TAG " колоды\n\n(Сейчас " TTE_RED_TAG "+%d" TTE_BLACK_TAG " множ.)";
     char desc[200];
-    snprintf(desc, sizeof(desc), desc_format, joker_batch4_erosion_mult(batch4_deck_cards()));
+    snprintf(desc, sizeof(desc), desc_format, joker_batch4_erosion_mult(batch4_deck_cards(), joker_deck_start_size()));
     return print_desc(desc, dest_rect);
 }
 
@@ -3710,7 +3732,7 @@ static u32 erosion_joker_effect(
 {
     SCORE_ON_EVENT_ONLY(JOKER_EVENT_INDEPENDENT, joker_event)
 
-    int mult = joker_batch4_erosion_mult(batch4_deck_cards());
+    int mult = joker_batch4_erosion_mult(batch4_deck_cards(), joker_deck_start_size());
     if (mult <= 0)
         return JOKER_EFFECT_FLAG_NONE;
 
@@ -3734,8 +3756,8 @@ static u32 drivers_license_joker_effect(
     return batch4_xmult(DRIVERS_LICENSE_XMULT, joker_effect);
 }
 
-// Card Sharp: persistent_state is a bit mask of the hands played this round, updated once the
-// played hand has scored so that a Blueprint copying it sees the same mask
+// Card Sharp: compares the hands played in the run with the counters taken when the round started
+// (joker_round_start_hands()), so a Card Sharp bought during the round knows the earlier hands
 static u32 card_sharp_joker_effect(
     Joker* joker,
     Card* scored_card,
@@ -3745,18 +3767,14 @@ static u32 card_sharp_joker_effect(
 {
     switch (joker_event)
     {
-        case JOKER_EVENT_ON_ROUND_END:
-            joker->persistent_state = 0;
-            return JOKER_EFFECT_FLAG_NONE;
-
         case JOKER_EVENT_INDEPENDENT:
-            if (joker_batch4_card_sharp_seen(joker->persistent_state, get_hand_type()))
+            // The hand being scored is already counted in nb_played_hands
+            if (joker_batch4_played_earlier_in_round(
+                    g_game_vars.nb_played_hands,
+                    joker_round_start_hands(),
+                    get_hand_type()
+                ))
                 return batch4_xmult(CARD_SHARP_XMULT, joker_effect);
-            return JOKER_EFFECT_FLAG_NONE;
-
-        case JOKER_EVENT_ON_HAND_SCORED_END:
-            if (get_hand_type() != NONE)
-                joker->persistent_state |= joker_batch4_hand_bit(get_hand_type());
             return JOKER_EFFECT_FLAG_NONE;
 
         default:
@@ -3812,7 +3830,12 @@ static u32 to_do_list_joker_effect(
     {
         case JOKER_EVENT_ON_JOKER_CREATED:
         case JOKER_EVENT_ON_ROUND_END:
-            joker->persistent_state = joker_batch4_todo_target(rng_get_u32(RNG_SEQ_JOKER_TO_DO_LIST));
+            // Every To Do List rolls its own hand, never the same twice in a row
+            joker->persistent_state = joker_batch4_todo_target(
+                rng_get_u32(RNG_SEQ_JOKER_TO_DO_LIST),
+                joker_event == JOKER_EVENT_ON_JOKER_CREATED ? 0 : joker->persistent_state,
+                g_game_vars.nb_played_hands
+            );
             return JOKER_EFFECT_FLAG_NONE;
 
         case JOKER_EVENT_ON_HAND_PLAYED:

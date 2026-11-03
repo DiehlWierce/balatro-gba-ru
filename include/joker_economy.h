@@ -165,7 +165,7 @@ static inline int joker_economy_self_value_gain(int joker_id)
     return joker_id == EGG_JOKER_ID ? EGG_VALUE_GAIN : 0;
 }
 
-// Value added to every other owned Joker at the end of the round by this Joker (Gift Card)
+// Value added to every owned Joker, itself included, at the end of the round by this Joker (Gift Card)
 static inline int joker_economy_others_value_gain(int joker_id)
 {
     return joker_id == GIFT_CARD_JOKER_ID ? GIFT_CARD_VALUE_GAIN : 0;

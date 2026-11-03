@@ -94,17 +94,23 @@ bool card_modifiers_has_retrigger(const Card* card)
     return card != NULL && !card->debuffed && card->seal == CARD_SEAL_RED;
 }
 
+u32 card_modifiers_apply_xmult(u32 mult, u32 num, u32 den)
+{
+    if (den == 0)
+        return mult;
+
+    // 64 bits so that neither the product nor the rounding can wrap around near UINT32_MAX
+    unsigned long long scaled = ((unsigned long long)mult * num + den / 2) / den;
+    return scaled > UINT32_MAX ? UINT32_MAX : (u32)scaled;
+}
+
 bool card_modifiers_on_held(Card* card)
 {
     if (card == NULL || card->debuffed || card->enhancement != CARD_ENHANCEMENT_STEEL)
         return false;
 
     // The mult is an integer: round X1.5 to the nearest (1 -> 2, 3 -> 5) so Steel always counts
-    // 64 bits so that neither the product nor the rounding can wrap around near UINT32_MAX
-    unsigned long long mult =
-        ((unsigned long long)g_game_vars.mult * STEEL_XMULT_NUM + STEEL_XMULT_DEN / 2) /
-        STEEL_XMULT_DEN;
-    g_game_vars.mult = mult > UINT32_MAX ? UINT32_MAX : (u32)mult;
+    g_game_vars.mult = card_modifiers_apply_xmult(g_game_vars.mult, STEEL_XMULT_NUM, STEEL_XMULT_DEN);
     return true;
 }
 

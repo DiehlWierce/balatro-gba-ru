@@ -46,7 +46,7 @@
 #define POPCORN_ROUND_LOSS     4
 #define RAMEN_START_PERCENT    200 // X2
 #define RAMEN_CARD_LOSS        1   // X0.01 per discarded card
-#define RAMEN_MIN_PERCENT      100 // Destroyed when it would go below X1
+#define RAMEN_MIN_PERCENT      100 // Destroyed when it reaches X1
 #define CASTLE_CHIPS_PER_CARD  3
 #define CASTLE_CHIPS_MAX       0xFFFFFF
 #define MAIL_IN_REBATE_MONEY   5
@@ -114,7 +114,21 @@ static inline int32_t joker_batch5_popcorn_next(int32_t mult)
 }
 
 /**
- * @brief Ramen: percent left after discarding @p nb_cards, below X1 it is eaten up.
+ * @brief Gros Michel and Cavendish in the Shop: Cavendish only shows up once a Gros Michel has
+ *        been destroyed in the run, and Gros Michel stops showing up then.
+ * @return false if the Joker can't be rolled for the Shop and Packs
+ */
+static inline bool joker_batch5_can_roll(int joker_id, bool gros_michel_extinct)
+{
+    if (joker_id == GROS_MICHEL_JOKER_ID)
+        return !gros_michel_extinct;
+    if (joker_id == CAVENDISH_JOKER_ID)
+        return gros_michel_extinct;
+    return true;
+}
+
+/**
+ * @brief Ramen: percent left after discarding @p nb_cards, X1 or less it is eaten up.
  */
 static inline int32_t joker_batch5_ramen_discard(int32_t percent, int nb_cards)
 {
@@ -123,7 +137,7 @@ static inline int32_t joker_batch5_ramen_discard(int32_t percent, int nb_cards)
 
 static inline bool joker_batch5_ramen_gone(int32_t percent)
 {
-    return percent < RAMEN_MIN_PERCENT;
+    return percent <= RAMEN_MIN_PERCENT;
 }
 
 /**

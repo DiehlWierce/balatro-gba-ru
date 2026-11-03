@@ -6,6 +6,7 @@
 #include "edition_gfx.h"
 #include "hand.h"
 #include "game/round.h"
+#include "game/common_ui.h"
 #include "game_variables.h"
 #include "graphic_utils.h"
 #include "item.h"
@@ -53,6 +54,12 @@ static const unsigned short* joker_gfxPal[] = {
    them wouldn't look good enough to warrant the effort.
 */
 static bool s_used_layers[MAX_JOKER_OBJECTS] = {false}; // Track used layers for joker sprites
+
+// Run state of the Jokers (reset with the rollable Jokers when a run starts)
+static bool s_gros_michel_extinct = false; // A Gros Michel was destroyed: Cavendish can show up
+static bool s_luchador_disabled = false;   // A Luchador was sold during the current Boss
+static int s_deck_start_size = 0;          // Cards in the Deck when the run started (Erosion)
+EWRAM_BSS static u32 s_round_start_hands[HAND_TYPE_MAX]; // nb_played_hands when the round began
 // TODO: Refactor sorting into SpriteObject?
 
 // Maps the spritesheet index to the palette bank index allocated to it.
@@ -127,6 +134,11 @@ static int s_allocate_pb_if_needed(u8 joker_id);
 static void s_joker_draw_sticker_badges(int tile_index, int pb, u8 stickers);
 static void s_joker_load_tiles(const Joker* joker, int tile_index, int pb);
 static enum JokerRarity joker_get_random_rarity(enum RngSequence key);
+static int joker_count_deck_cards(void);
+
+// Raises the sell value of the owned consumables by dollars. consumable.c (G-3) provides it; weak so
+// the build works before it exists
+void consumables_add_sell_value(int dollars) __attribute__((weak));
 
 void joker_init()
 {
@@ -145,6 +157,8 @@ Joker* joker_new(u8 id)
         return NULL;
 
     Joker* joker = POOL_GET(Joker);
+    if (joker == NULL)
+        return NULL;
     const JokerInfo* jinfo = get_joker_registry_entry(id);
 
     joker->id = id;
@@ -281,20 +295,26 @@ void joker_roll_edition(Joker* joker)
 JokerObject* joker_object_new(Joker* joker)
 {
     GBAL_RETURN_IF_NULL(joker, NULL);
-    JokerObject* joker_object = POOL_GET(JokerObject);
 
-    sprite_object_init((SpriteObject*)joker_object);
-
-    s16 layer = 0;
+    // The VRAM tiles and the OAM slots only exist for MAX_JOKER_OBJECTS layers: no layer, no object
+    s16 layer = UNDEFINED;
     for (s16 i = 0; i < MAX_JOKER_OBJECTS; i++)
     {
         if (!s_used_layers[i])
         {
             layer = i;
-            s_used_layers[i] = true; // Mark this layer as used
             break;
         }
     }
+    if (layer == UNDEFINED)
+        return NULL;
+
+    JokerObject* joker_object = POOL_GET(JokerObject);
+    if (joker_object == NULL)
+        return NULL;
+
+    s_used_layers[layer] = true; // Mark this layer as used
+    sprite_object_init((SpriteObject*)joker_object);
 
     joker_object->joker = joker;
     joker_object->type = ITEM_TYPE_JOKER;
@@ -523,6 +543,12 @@ void joker_reset_rollable_jokers(void)
     {
         bitset_set_idx(&s_rollable_jokers_bitset, i, true);
     }
+
+    // Called when a run starts
+    s_gros_michel_extinct = false;
+    s_luchador_disabled = false;
+    s_deck_start_size = 0;
+    memset(s_round_start_hands, 0, sizeof(s_round_start_hands));
 }
 
 int joker_roll_id(enum JokerRarity joker_rarity, enum RngSequence key)
@@ -533,30 +559,34 @@ int joker_roll_id(enum JokerRarity joker_rarity, enum RngSequence key)
     if (jokers_avail_size == 0)
         return UNDEFINED;
 
-    int matching_joker_ids[jokers_avail_size];
-    int fallback_random_idx = rng_get_u32(key) % jokers_avail_size;
-    int fallback_random_joker_id = UNDEFINED;
+    // Joker IDs are below MAX_DEFINABLE_JOKERS (150) so they fit in a byte
+    u8 matching_joker_ids[jokers_avail_size];
+    u8 fallback_joker_ids[jokers_avail_size];
     int match_count = 0;
+    int fallback_count = 0;
+    u32 fallback_roll = rng_get_u32(key);
 
     BitsetItr itr = bitset_itr_create(&s_rollable_jokers_bitset);
 
-    int i = 0;
     int joker_id = UNDEFINED;
     while ((joker_id = bitset_itr_next(&itr)) != UNDEFINED)
     {
-        if (i++ == fallback_random_idx)
-            fallback_random_joker_id = joker_id;
+        // Cavendish only after a Gros Michel went extinct, and then no more Gros Michel
+        if (!joker_batch5_can_roll(joker_id, s_gros_michel_extinct))
+            continue;
+
         const JokerInfo* info = get_joker_registry_entry(joker_id);
         if (info->rarity == joker_rarity)
-        {
             matching_joker_ids[match_count++] = joker_id;
-        }
+        else if (info->rarity != LEGENDARY_JOKER) // Legendary Jokers only come from The Soul
+            fallback_joker_ids[fallback_count++] = joker_id;
     }
 
-    int selected_joker_id = (match_count > 0) ? matching_joker_ids[rng_get_u32(key) % match_count]
-                                              : fallback_random_joker_id;
-
-    return selected_joker_id;
+    if (match_count > 0)
+        return matching_joker_ids[rng_get_u32(key) % match_count];
+    if (fallback_count > 0)
+        return fallback_joker_ids[fallback_roll % fallback_count];
+    return UNDEFINED;
 }
 
 Item* joker_object_roll_new(enum RngSequence key)
@@ -591,7 +621,14 @@ Item* joker_object_roll_new(enum RngSequence key)
         joker_set_rollable(joker_id, false); // Showman: Jokers can repeat
 
     Joker* joker = joker_new(joker_id);
-    stake_roll_joker_stickers(joker);
+    if (joker == NULL)
+    {
+        joker_set_rollable(joker_id, true);
+        return NULL;
+    }
+    // Judgement gives a Joker without Stake stickers, it can still get an edition
+    if (key != RNG_SEQ_TAROT_JUDGEMENT)
+        stake_roll_joker_stickers(joker);
     joker_roll_edition(joker);
 #ifdef DEBUG_EDITIONS
     static int s_debug_edition_turn = 0;
@@ -600,7 +637,13 @@ Item* joker_object_roll_new(enum RngSequence key)
     joker_set_edition(joker, debug_edition <= EDITION_NEGATIVE ? debug_edition : EDITION_NONE);
 #endif
 
-    return (Item*)joker_object_new(joker);
+    JokerObject* joker_object = joker_object_new(joker);
+    if (joker_object == NULL) // No free sprite layer
+    {
+        joker_set_rollable(joker_id, true);
+        joker_destroy(&joker);
+    }
+    return (Item*)joker_object;
 }
 
 /**
@@ -871,6 +914,8 @@ void joker_economy_on_round_end(bool boss_defeated)
 {
     List* jokers = get_jokers_list();
 
+    s_luchador_disabled = false; // The Boss is over: the next one works again
+
     ListItr itr = list_itr_create(jokers);
     JokerObject* joker_object;
     while ((joker_object = list_itr_next(&itr)))
@@ -887,10 +932,11 @@ void joker_economy_on_round_end(bool boss_defeated)
             ListItr other_itr = list_itr_create(jokers);
             JokerObject* other;
             while ((other = list_itr_next(&other_itr)))
-            {
-                if (other->joker != joker)
-                    other->joker->value = joker_economy_add_value(other->joker->value, others_gain);
-            }
+                other->joker->value = joker_economy_add_value(other->joker->value, others_gain);
+
+            // Gift Card also raises the sell value of the consumables (+$1 each)
+            if (consumables_add_sell_value != NULL)
+                consumables_add_sell_value(others_gain / 2);
         }
 
         if (joker->id == INVISIBLE_JOKER_ID)
@@ -917,8 +963,9 @@ void joker_economy_on_round_end(bool boss_defeated)
             u32 flags =
                 joker_get_score_effect(joker, NULL, JOKER_EVENT_ON_ROUND_END, &round_end_effect);
             if ((flags & JOKER_EFFECT_FLAG_EXPIRE) && round_end_effect != NULL &&
-                round_end_effect->expire)
-                joker_object_expire(joker_object);
+                round_end_effect->expire && joker_object_expire(joker_object) &&
+                joker->id == GROS_MICHEL_JOKER_ID)
+                s_gros_michel_extinct = true;
         }
     }
 }
@@ -927,12 +974,23 @@ void joker_economy_on_round_end(bool boss_defeated)
  * A8 batch 3: hooks of the Jokers tied to cards, Tarots and the deck
  ******************************************************************************/
 
+
 // Where Tarots created by Jokers appear
 #define JOKER_TAROT_SPAWN_X int2fx(120)
 #define JOKER_TAROT_SPAWN_Y int2fx(60)
 
+// The Joker whose ability a hook runs: the copied Joker for a Blueprint or a Brainstorm, the Joker
+// itself for the others. Only hooks that don't keep a counter ask for it (the copy has no state).
+static Joker* joker_hook_source(Joker* joker)
+{
+    if (joker->id != BLUEPRINT_JOKER_ID && joker->id != BRAINSTORM_JOKER_ID)
+        return joker;
+    Joker* target = joker_get_copy_target(joker);
+    return target != NULL ? target : joker;
+}
+
 // Runs @p fn for every owned Joker that works (not Perishable-expired, not disabled by a Boss)
-static void joker_for_each_active(void (*fn)(Joker* joker))
+static void joker_for_each_active(void (*fn)(Joker* joker, Joker* source))
 {
     ListItr itr = list_itr_create(get_jokers_list());
     JokerObject* joker_object;
@@ -940,37 +998,38 @@ static void joker_for_each_active(void (*fn)(Joker* joker))
     {
         if (joker_is_perished(joker_object->joker) || blind_effects_is_joker_disabled(joker_object))
             continue;
-        fn(joker_object->joker);
+        fn(joker_object->joker, joker_hook_source(joker_object->joker));
     }
 }
 
-static void joker_hook_glass_broken(Joker* joker)
+static void joker_hook_glass_broken(Joker* joker, Joker* source)
 {
     if (joker->id == GLASS_JOKER_ID)
         joker->persistent_state++;
 }
 
-static void joker_hook_lucky_triggered(Joker* joker)
+static void joker_hook_lucky_triggered(Joker* joker, Joker* source)
 {
     if (joker->id == LUCKY_CAT_JOKER_ID)
         joker->persistent_state++;
 }
 
-static void joker_hook_planet_used(Joker* joker)
+static void joker_hook_planet_used(Joker* joker, Joker* source)
 {
     if (joker->id == CONSTELLATION_JOKER_ID)
         joker->persistent_state++;
 }
 
-static void joker_hook_pack_opened(Joker* joker)
+static void joker_hook_pack_opened(Joker* joker, Joker* source)
 {
     if (joker->id == HALLUCINATION_JOKER_ID &&
         joker_cards_one_in(rng_get_u32(RNG_SEQ_JOKER_HALLUCINATION), HALLUCINATION_CHANCE))
         consumable_create_random_tarot(RNG_SEQ_JOKER_TAROT, JOKER_TAROT_SPAWN_X, JOKER_TAROT_SPAWN_Y);
 }
 
-static void joker_hook_blind_selected(Joker* joker)
+static void joker_hook_blind_selected(Joker* joker, Joker* source)
 {
+    // Burglar and Marble Joker change the run for good: no Blueprint copy
     switch (joker->id)
     {
         case BURGLAR_JOKER_ID:
@@ -979,6 +1038,22 @@ static void joker_hook_blind_selected(Joker* joker)
             display_hands();
             display_discards();
             break;
+        case MARBLE_JOKER_ID:
+            if (deck_get_size() < MAX_DECK_SIZE)
+            {
+                Card* stone = card_new(SPADES, ACE);
+                stone->enhancement = CARD_ENHANCEMENT_STONE;
+                deck_push(stone);
+                joker_on_card_added();
+            }
+            break;
+        default:
+            break;
+    }
+
+    // Cartomancer and Riff-Raff can be copied by Blueprint and Brainstorm
+    switch (source->id)
+    {
         case CARTOMANCER_JOKER_ID:
             consumable_create_random_tarot(
                 RNG_SEQ_JOKER_TAROT,
@@ -1000,21 +1075,12 @@ static void joker_hook_blind_selected(Joker* joker)
                     break;
             }
             break;
-        case MARBLE_JOKER_ID:
-            if (deck_get_size() < MAX_DECK_SIZE)
-            {
-                Card* stone = card_new(SPADES, ACE);
-                stone->enhancement = CARD_ENHANCEMENT_STONE;
-                deck_push(stone);
-                joker_on_card_added();
-            }
-            break;
         default:
             break;
     }
 }
 
-static void joker_hook_deck_shuffled(Joker* joker)
+static void joker_hook_deck_shuffled(Joker* joker, Joker* source)
 {
     if (joker->id != CERTIFICATE_JOKER_ID || deck_get_size() >= MAX_DECK_SIZE)
         return;
@@ -1101,15 +1167,13 @@ void joker_on_shop_exit(void)
     while ((joker_object = list_itr_next(&itr)))
     {
         Joker* joker = joker_object->joker;
-        if (joker->id != PERKEO_JOKER_ID || joker_is_perished(joker) ||
+        if (joker_hook_source(joker)->id != PERKEO_JOKER_ID || joker_is_perished(joker) ||
             blind_effects_is_joker_disabled(joker_object))
             continue;
         consumable_copy_random_owned(RNG_SEQ_JOKER_PERKEO);
         joker_object_shake(joker_object, UNDEFINED);
     }
 }
-
-static bool s_luchador_disabled = false; // A Luchador was sold during the current Boss
 
 bool joker_boss_is_disabled(void)
 {
@@ -1162,7 +1226,7 @@ void joker_on_first_discard(enum HandType hand_type, bool first_discard)
     while ((joker_object = list_itr_next(&itr)))
     {
         Joker* joker = joker_object->joker;
-        if (joker->id != BURNT_JOKER_ID || joker_is_perished(joker) ||
+        if (joker_hook_source(joker)->id != BURNT_JOKER_ID || joker_is_perished(joker) ||
             blind_effects_is_joker_disabled(joker_object))
             continue;
         hand_level_up(target, 1);
@@ -1177,7 +1241,7 @@ void joker_on_boss_triggered(void)
     while ((joker_object = list_itr_next(&itr)))
     {
         Joker* joker = joker_object->joker;
-        if (joker->id != MATADOR_JOKER_ID || joker_is_perished(joker) ||
+        if (joker_hook_source(joker)->id != MATADOR_JOKER_ID || joker_is_perished(joker) ||
             blind_effects_is_joker_disabled(joker_object))
             continue;
         g_game_vars.money += joker_batch8_matador_money(true);
@@ -1194,7 +1258,7 @@ int joker_mime_extra_passes(void)
     while ((joker_object = list_itr_next(&itr)))
     {
         Joker* joker = joker_object->joker;
-        if (joker->id == MIME_JOKER_ID && !joker_is_perished(joker) &&
+        if (joker_hook_source(joker)->id == MIME_JOKER_ID && !joker_is_perished(joker) &&
             !blind_effects_is_joker_disabled(joker_object))
         {
             nb_mimes++;
@@ -1219,19 +1283,30 @@ void joker_on_card_sold(void)
     joker_add_to_all(CAMPFIRE_JOKER_ID); // Campfire
 }
 
-// Madness: X0.5 per Small or Big Blind, destroys a random other Joker
+// Madness: X0.5 per Small or Big Blind, destroys a random other Joker. Every Madness triggers.
 static void joker_madness_on_blind_selected(void)
 {
     if (!joker_batch7_madness_triggers(g_game_vars.current_blind >= BLIND_TYPE_BOSS))
         return;
 
-    List* jokers = get_jokers_list();
-    for (int i = 0; i < list_get_len(jokers); i++)
+    // Collect the Madness first: destroying a Joker changes the list under our feet
+    JokerObject* madnesses[MAX_ACTIVE_JOKERS];
+    int nb_madnesses = 0;
+    ListItr itr = list_itr_create(get_jokers_list());
+    JokerObject* joker_object;
+    while ((joker_object = list_itr_next(&itr)) && nb_madnesses < MAX_ACTIVE_JOKERS)
     {
-        JokerObject* madness = list_get_at_idx(jokers, i);
-        if (madness->joker->id != MADNESS_JOKER_ID || joker_is_perished(madness->joker) ||
-            blind_effects_is_joker_disabled(madness))
-            continue;
+        if (joker_object->joker->id == MADNESS_JOKER_ID && !joker_is_perished(joker_object->joker) &&
+            !blind_effects_is_joker_disabled(joker_object))
+            madnesses[nb_madnesses++] = joker_object;
+    }
+
+    List* jokers = get_jokers_list();
+    for (int m = 0; m < nb_madnesses; m++)
+    {
+        JokerObject* madness = madnesses[m];
+        if (madness == NULL)
+            continue; // Destroyed by a Madness before it
 
         madness->joker->persistent_state++;
         joker_object_shake(madness, UNDEFINED);
@@ -1240,7 +1315,7 @@ static void joker_madness_on_blind_selected(void)
         for (int j = 0; j < list_get_len(jokers); j++)
         {
             JokerObject* other = list_get_at_idx(jokers, j);
-            if (j != i && !joker_is_perished(other->joker) && joker_can_be_sold(other->joker))
+            if (other != madness && joker_can_be_sold(other->joker))
                 nb_candidates++;
         }
         int pick = joker_batch7_madness_pick(rng_get_u32(RNG_SEQ_JOKER_MADNESS), nb_candidates);
@@ -1249,16 +1324,20 @@ static void joker_madness_on_blind_selected(void)
         for (int j = 0; j < list_get_len(jokers); j++)
         {
             JokerObject* victim = list_get_at_idx(jokers, j);
-            if (j == i || joker_is_perished(victim->joker) || !joker_can_be_sold(victim->joker))
+            if (victim == madness || !joker_can_be_sold(victim->joker))
                 continue;
             if (pick-- == 0)
             {
+                for (int k = m + 1; k < nb_madnesses; k++)
+                {
+                    if (madnesses[k] == victim)
+                        madnesses[k] = NULL;
+                }
                 remove_owned_joker(j);
                 item_start_discard_animation((Item*)victim);
                 break;
             }
         }
-        return; // The Joker list changed: a second Madness waits for the next Blind
     }
 }
 
@@ -1308,6 +1387,10 @@ bool joker_mr_bones_saves(u32 score, u32 requirement)
 void joker_on_blind_selected(void)
 {
     s_luchador_disabled = false;
+    if (s_deck_start_size == 0)
+        s_deck_start_size = joker_count_deck_cards();
+    // Card Sharp: the hands played in the run so far, to tell the hands of this round apart
+    memcpy(s_round_start_hands, g_game_vars.nb_played_hands, sizeof(s_round_start_hands));
     joker_for_each_active(joker_hook_blind_selected);
     joker_dagger_on_blind_selected();
     joker_madness_on_blind_selected();
@@ -1316,6 +1399,25 @@ void joker_on_blind_selected(void)
 void joker_on_deck_shuffled(void)
 {
     joker_for_each_active(joker_hook_deck_shuffled);
+}
+
+static int joker_count_deck_cards(void)
+{
+    int total = 0;
+    for (int e = 0; e < CARD_ENHANCEMENT_MAX; e++)
+        total += game_count_deck_enhancement(e);
+    return total;
+}
+
+int joker_deck_start_size(void)
+{
+    // Normally taken when the first Blind is selected, before any card is added or destroyed
+    return s_deck_start_size > 0 ? s_deck_start_size : joker_count_deck_cards();
+}
+
+const u32* joker_round_start_hands(void)
+{
+    return s_round_start_hands;
 }
 
 bool joker_object_expire(JokerObject* joker_object)
@@ -1352,13 +1454,32 @@ bool joker_on_cards_discarded(const DiscardCounts* discarded)
             continue;
 
         int money = 0;
+
+        // Faceless Joker, Mail-In Rebate and Trading Card can be copied by Blueprint/Brainstorm
+        const Joker* source = joker_hook_source(joker);
+        switch (source->id)
+        {
+            case FACELESS_JOKER_ID:
+                money = joker_batch4_faceless_money(discarded->nb_face_cards);
+                break;
+            case MAIL_IN_REBATE_JOKER_ID:
+                money = joker_batch5_mail_in_money(discarded->ranks[source->persistent_state % NUM_RANKS]);
+                break;
+            case TRADING_CARD_JOKER_ID:
+                if (joker_batch5_trading_card_hit(round_get_discards_used(), discarded->nb_cards))
+                {
+                    money = TRADING_CARD_MONEY;
+                    destroy_cards = true;
+                }
+                break;
+            default:
+                break;
+        }
+
         switch (joker->id)
         {
             case GREEN_JOKER_ID:
                 joker->persistent_state = joker_batch4_green_discard(joker->persistent_state);
-                break;
-            case FACELESS_JOKER_ID:
-                money = joker_batch4_faceless_money(discarded->nb_face_cards);
                 break;
             case HIT_THE_ROAD_JOKER_ID:
                 joker->persistent_state += discarded->nb_jacks;
@@ -1390,16 +1511,6 @@ bool joker_on_cards_discarded(const DiscardCounts* discarded)
                 }
                 break;
             }
-            case MAIL_IN_REBATE_JOKER_ID:
-                money = joker_batch5_mail_in_money(discarded->ranks[joker->persistent_state % NUM_RANKS]);
-                break;
-            case TRADING_CARD_JOKER_ID:
-                if (joker_batch5_trading_card_hit(round_get_discards_used(), discarded->nb_cards))
-                {
-                    money = TRADING_CARD_MONEY;
-                    destroy_cards = true;
-                }
-                break;
             default:
                 break;
         }
