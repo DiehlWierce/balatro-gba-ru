@@ -176,8 +176,8 @@ static inline uint32_t joker_batch5_played_count(const uint32_t* played, int han
 }
 
 /**
- * @brief Obelisk: whether @p hand_type is the most played hand (ties count), the hand being
- *        played is already counted in @p played.
+ * @brief Obelisk: whether @p hand_type is strictly the most played hand, a tie with another hand
+ *        does not count. The hand being played is already counted in @p played.
  */
 static inline bool joker_batch5_is_most_played(const uint32_t* played, int hand_type)
 {
@@ -187,9 +187,11 @@ static inline bool joker_batch5_is_most_played(const uint32_t* played, int hand_
     uint32_t current = joker_batch5_played_count(played, hand_type);
     for (int other = HIGH_CARD; other <= HAND_TYPE_MAX; other++)
     {
-        if (other == ROYAL_FLUSH)
+        // Royal Flush is counted with the Straight Flush, and a hand is not its own rival
+        if (other == ROYAL_FLUSH || other == hand_type ||
+            (hand_type == ROYAL_FLUSH && other == STRAIGHT_FLUSH))
             continue;
-        if (joker_batch5_played_count(played, other) > current)
+        if (joker_batch5_played_count(played, other) >= current)
             return false;
     }
     return true;

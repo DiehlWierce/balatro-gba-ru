@@ -98,8 +98,11 @@ static void test_obelisk(void)
     // Playing the most played hand again resets the streak
     played[PAIR - 1] = 3;
     assert(joker_batch5_obelisk_next(streak, played, PAIR) == 0);
-    // A tie with the most played hand counts as the most played
+    // A tie with the most played hand is not the most played: the streak goes on
     played[FLUSH - 1] = 3;
+    assert(!joker_batch5_is_most_played(played, FLUSH));
+    assert(joker_batch5_obelisk_next(5, played, FLUSH) == 6);
+    played[FLUSH - 1] = 4;
     assert(joker_batch5_is_most_played(played, FLUSH));
     assert(joker_batch5_obelisk_next(5, played, FLUSH) == 0);
     // Invalid hand: nothing changes
@@ -114,7 +117,9 @@ static void test_obelisk(void)
     sf[ROYAL_FLUSH - 1] = 1;
     sf[PAIR - 1] = 2;
     assert(joker_batch5_played_count(sf, ROYAL_FLUSH) == 2);
-    assert(joker_batch5_is_most_played(sf, ROYAL_FLUSH)); // 2 = 2
+    assert(!joker_batch5_is_most_played(sf, ROYAL_FLUSH)); // 2 = 2 is a tie
+    sf[PAIR - 1] = 1;
+    assert(joker_batch5_is_most_played(sf, ROYAL_FLUSH));
     sf[PAIR - 1] = 3;
     assert(!joker_batch5_is_most_played(sf, STRAIGHT_FLUSH));
 }
