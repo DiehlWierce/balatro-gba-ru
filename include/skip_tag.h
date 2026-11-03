@@ -131,11 +131,11 @@ void shop_tag_free_joker(enum JokerRarity rarity);
  */
 void shop_tag_open_pack(enum PackType pack_type);
 
-// The Pack each Tag opens. The originals are the Mega packs: change these when they exist.
-#define SKIP_TAG_PACK_CHARM  PACK_TYPE_ARCANA
-#define SKIP_TAG_PACK_METEOR PACK_TYPE_CELESTIAL
-#define SKIP_TAG_PACK_ETHEREAL PACK_TYPE_SPECTRAL
-#define SKIP_TAG_PACK_STANDARD PACK_TYPE_STANDARD
+// The Pack each Tag opens. These are the Mega packs, as in the original.
+#define SKIP_TAG_PACK_CHARM  PACK_TYPE_MEGA_ARCANA
+#define SKIP_TAG_PACK_METEOR PACK_TYPE_MEGA_CELESTIAL
+#define SKIP_TAG_PACK_ETHEREAL PACK_TYPE_MEGA_SPECTRAL
+#define SKIP_TAG_PACK_STANDARD PACK_TYPE_MEGA_STANDARD
 
 /**
  * @brief Get the registry entry info for the given Skip Tag type

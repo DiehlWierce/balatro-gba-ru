@@ -4,6 +4,8 @@
  * @brief Consumable cards: Planets for now, see consumable.h.
  */
 #include "consumable.h"
+#include "blind_effects.h"
+#include "shop_economy.h"
 #include "deck_rules.h"
 
 #include "game.h"
@@ -757,6 +759,7 @@ static void tarot_use(enum TarotType tarot, FIXED x, FIXED y)
 
         hand_deselect_all_cards();
         sort_cards(); // Sorts again after rank and suit changes, and redraws the card sprites
+        blind_effects_refresh_debuffs(); // Club/Plant debuffs follow the new suits and ranks
         compute_hand_value_info();
     }
 
@@ -1430,10 +1433,9 @@ int consumable_object_get_buy_price(Item* item)
 int consumable_object_get_sell_price(Item* item)
 {
     GBAL_RETURN_IF_NULL(item, UNDEFINED);
-    int sell_price = consumable_object_get_buy_price(item) / 2;
-    if (sell_price < 1)
-        sell_price = 1; // Never worth nothing, even an Astronomer Planet
-    return sell_price + ((ConsumableObject*)item)->sell_bonus; // Gift Card
+    // Half of the discounted price, never below $1, plus the Gift Card bonus
+    return shop_economy_sell_price(consumable_object_get_buy_price(item), voucher_get_shop_discount_percent(),
+                                   ((ConsumableObject*)item)->sell_bonus);
 }
 
 const char* consumable_object_get_name(Item* item)
