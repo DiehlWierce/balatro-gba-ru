@@ -4621,7 +4621,7 @@ static int throwback_joker_desc(Joker* joker, Rect dest_rect)
 static int madness_joker_desc(Joker* joker, Rect dest_rect)
 {
     static const char desc_format[] =
-        TTE_RED_TAG "X0.5" TTE_BLACK_TAG " множ. за малый и большой " TTE_YELLOW_TAG "блайнд" TTE_BLACK_TAG ", но уничтожает случайного " TTE_YELLOW_TAG "джокера" TTE_BLACK_TAG "\n\n(Сейчас " TTE_RED_TAG XMULT_FMT TTE_BLACK_TAG " множ.)";
+        TTE_RED_TAG "X0.5" TTE_BLACK_TAG " множ. за блайнд, уничтожает " TTE_YELLOW_TAG "джокера" TTE_BLACK_TAG "\n(Сейчас " TTE_RED_TAG XMULT_FMT TTE_BLACK_TAG " множ.)";
     char desc[220];
     snprintf(desc, sizeof(desc), desc_format, XMULT_ARGS(joker_batch7_madness_percent(joker->persistent_state)));
     return print_desc(desc, dest_rect);
@@ -4630,7 +4630,7 @@ static int madness_joker_desc(Joker* joker, Rect dest_rect)
 static int campfire_joker_desc(Joker* joker, Rect dest_rect)
 {
     static const char desc_format[] =
-        TTE_RED_TAG "X0.25" TTE_BLACK_TAG " множ. за каждую " TTE_YELLOW_TAG "проданную карту" TTE_BLACK_TAG ", сбрасывается после босса\n\n(Сейчас " TTE_RED_TAG XMULT_FMT TTE_BLACK_TAG " множ.)";
+        TTE_RED_TAG "X0.25" TTE_BLACK_TAG " множ. за " TTE_YELLOW_TAG "проданную карту" TTE_BLACK_TAG ", сброс после босса\n(Сейчас " TTE_RED_TAG XMULT_FMT TTE_BLACK_TAG " множ.)";
     char desc[220];
     snprintf(desc, sizeof(desc), desc_format, XMULT_ARGS(joker_batch7_campfire_percent(joker->persistent_state)));
     return print_desc(desc, dest_rect);
@@ -4681,7 +4681,7 @@ static u32 campfire_joker_effect(
 static int riff_raff_joker_desc(Joker* joker, Rect dest_rect)
 {
     static const char desc[] =
-        TTE_BLACK_TAG "При выборе блайнда создаёт " TTE_YELLOW_TAG "2" TTE_BLACK_TAG " обычных " TTE_YELLOW_TAG "джокера" TTE_BLACK_TAG "\n(нужны свободные слоты)";
+        TTE_BLACK_TAG "Создаёт " TTE_YELLOW_TAG "2" TTE_BLACK_TAG " обычных " TTE_YELLOW_TAG "джокера" TTE_BLACK_TAG " при выборе блайнда";
     return print_desc(desc, dest_rect);
 }
 
