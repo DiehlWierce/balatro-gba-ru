@@ -375,6 +375,9 @@ static Item* shop_create_top_row_item(void)
         voucher_get_playing_card_shop_weight_x10(), // Magic Trick
         rng_get_u32(RNG_SEQ_SHOP_ITEM_TYPE)
     );
+#if defined(TEST_JOKER_ID0) || defined(TEST_JOKER_ID1) || defined(DEBUG_FORCE_BOSS) || defined(DEBUG_EDITIONS)
+    kind = SHOP_TOP_ROW_JOKER; // The debug builds (DEBUG_JOKER0/1, DEBUG_BOSS, DEBUG_EDITIONS) test Jokers: the top row holds Jokers
+#endif
 
     if (kind == SHOP_TOP_ROW_CARD)
     {

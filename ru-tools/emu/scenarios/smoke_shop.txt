@@ -1,4 +1,4 @@
-# Seed GBARU1: win the Small Blind (score forced), cash out, buy the first Shop Joker,
+# Seed GBARU1: win the Small Blind (score forced), cash out, buy the first Shop item (the weights of the Shop slots make it a Joker, Consumable or Pack),
 # leave the Shop and come back to the Blind Select screen.
 
 # Splash screen, main menu, run setup
@@ -36,7 +36,7 @@ press RIGHT
 wait 20
 hold B
 wait 90
-shot 05_joker_description
+shot 05_item_description
 release B
 wait 30
 press A
