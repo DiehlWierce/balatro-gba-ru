@@ -116,17 +116,21 @@ Sprite* sprite_new(u16 a0, u16 a1, u32 tid, u32 pb, s16 sprite_index)
 
         if (aff_index == MAX_AFFINES)
         {
-            free_sprites[sprite_index] = NULL;
-            POOL_FREE(Sprite, sprite);
-            return NULL;
+            // All 32 matrices are taken: show the sprite as a plain (non-affine) one, without
+            // scale and rotation, instead of losing it. `sprite->aff` stays NULL.
+            a0 &= ~(ATTR0_AFF | ATTR0_AFF_DBL);
+            sprite->obj = &obj_buffer[sprite_index];
+            obj_set_attr(sprite->obj, a0, a1, ATTR2_PALBANK(pb) | tid);
         }
+        else
+        {
+            a1 = a1 | ATTR1_AFF_ID(aff_index);
 
-        a1 = a1 | ATTR1_AFF_ID(aff_index);
-
-        sprite->obj = &obj_buffer[sprite_index];
-        sprite->aff = &obj_aff_buffer[aff_index];
-        obj_set_attr(sprite->obj, a0, a1, ATTR2_PALBANK(pb) | tid);
-        obj_aff_identity(&obj_aff_buffer[aff_index]);
+            sprite->obj = &obj_buffer[sprite_index];
+            sprite->aff = &obj_aff_buffer[aff_index];
+            obj_set_attr(sprite->obj, a0, a1, ATTR2_PALBANK(pb) | tid);
+            obj_aff_identity(&obj_aff_buffer[aff_index]);
+        }
     }
     else
     {
@@ -381,13 +385,16 @@ static inline IWRAM_CODE void update_sprite_position(SpriteObject* sprite_object
         sprite_object->rotation += sprite_object->vrotation;
     }
 
-    // Apply rotation and scale to the sprite
-    obj_aff_rotscale(
-        sprite_object->sprite->aff,
-        sprite_object->scale,
-        sprite_object->scale,
-        -sprite_object->vx + sprite_object->rotation
-    );
+    // Apply rotation and scale to the sprite (a sprite without a free matrix has none)
+    if (sprite_object->sprite->aff != NULL)
+    {
+        obj_aff_rotscale(
+            sprite_object->sprite->aff,
+            sprite_object->scale,
+            sprite_object->scale,
+            -sprite_object->vx + sprite_object->rotation
+        );
+    }
 }
 
 IWRAM_CODE void sprite_object_update(SpriteObject* sprite_object)

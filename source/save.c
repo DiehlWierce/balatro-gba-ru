@@ -31,6 +31,10 @@
 #define SAVE_SECTION_FLAG_GAME    (1 << 1)
 
 #define CHECK_MAGIC     0x4C414247 // Spells GBAL, used to determine if the save data is junk
+// Layout version of the save data. Options survive new ROM builds as long as it is unchanged;
+// bump it only when the layout of the header or of the options section changes.
+#define SAVE_FORMAT_VERSION 2
+
 #define CHECK_HASH_SIZE 7
 #define GIT_HASH_START  17 // starts after "GBALATRO-VERSION:" in the gbalatro_version var
 
@@ -44,15 +48,15 @@
  * word | Byte 0 | Byte 1 | Byte 2 | Byte 3 | name         | purpose
  * -----|--------|--------|--------|--------|--------------|------------------------------------------------------------------
  * 0    | 0x47   | 0x42   | 0x41   | 0x4C   | MAGIC        | Identify if proceeding data is valid and not junk, spells "GBAL"
- * 1    | Dirty  | H[0]   | H[1]   | H[2]   | GITHASH_LOW  | Dirty flag, followed by the first 3 bytes of shortened git hash H
- * 2    | H[3]   | H[4]   | H[5]   | H[6]   | GITHASH_HIGH | Last 4 bytes of shortened git hash H, with a dirty flag
+ * 1    | Format | H[0]   | H[1]   | H[2]   | GITHASH_LOW  | Format version (options stay valid across builds), then the first 3 bytes of shortened git hash H
+ * 2    | H[3]   | H[4]   | H[5]   | H[6]   | GITHASH_HIGH | Last 4 bytes of shortened git hash H (the run data is valid only for the same clean build)
  * 3    | SEC[0] | SEC[1] | SEC[2] | SEC[3] | VALID_SCTNS  | Identifies whether each section of the save data is valid or not
  */
 // clang-format on
 typedef struct SaveHeader
 {
     u32 magic;
-    bool dirty;
+    u8 format; // SAVE_FORMAT_VERSION
     char githash[CHECK_HASH_SIZE];
     u32 valid_sections;
 } SaveHeader;
@@ -62,7 +66,7 @@ typedef struct SaveHeader
  */
 static const SaveHeader SaveHeader_default = {
     .magic = CHECK_MAGIC,
-    .dirty = false,
+    .format = SAVE_FORMAT_VERSION,
     .githash = "fffffff",
     .valid_sections = SAVE_SECTION_FLAG_NONE
 };
@@ -193,11 +197,16 @@ static const SaveGame SaveGame_default = {
 /**
  * @brief Write raw binary data to SRAM
  *
+ * SRAM shares the cartridge bus with the ROM, so on real hardware this code must run from IWRAM
+ * (hence `IWRAM_CODE` and `noinline`, so that it is never inlined into a ROM function).
+ *
  * @param sram_base address written to in the SRAM
  * @param bytes pointer to the written data
  * @param size number of bytes written
  */
-static inline void write_sram(u32 sram_base, const u8* bytes, u32 size)
+IWRAM_CODE __attribute__((noinline, noclone, optimize("Os"))) static void write_sram(
+    u32 sram_base, const u8* bytes, u32 size
+)
 {
     if (sram_base + size > SRAM_SIZE)
         return;
@@ -213,7 +222,9 @@ static inline void write_sram(u32 sram_base, const u8* bytes, u32 size)
  *
  * @sa write_sram
  */
-static inline void read_sram(u32 sram_base, u8* bytes, u32 size)
+IWRAM_CODE __attribute__((noinline, noclone, optimize("Os"))) static void read_sram(
+    u32 sram_base, u8* bytes, u32 size
+)
 {
     if (sram_base + size > SRAM_SIZE)
         return;
@@ -260,13 +271,21 @@ static inline bool is_version_dirty(void)
  * @brief Reads whether the save data exists and is valid.
  *
  * @param header pointer to the SaveHeader struct to fill
- * @returns true if the save data is valid, false if not
+ * @returns true if the header is valid (magic and format version), false if not
  */
 static inline bool get_save_header(SaveHeader* header)
 {
     read_sram(HEADER_ADDRESS, (u8*)header, sizeof(*header));
-    return (header->magic == CHECK_MAGIC) && header->dirty == is_version_dirty() &&
-           check_hash(header->githash);
+    return (header->magic == CHECK_MAGIC) && header->format == SAVE_FORMAT_VERSION;
+}
+
+/**
+ * @brief The run data (jokers ids, RNG state) is only meaningful for the build that wrote it.
+ *         A dirty build cannot be identified by its hash, so it never matches.
+ */
+static inline bool is_game_section_current(const SaveHeader* header)
+{
+    return !is_version_dirty() && check_hash(header->githash);
 }
 
 /**
@@ -291,9 +310,15 @@ static inline void set_save_header(u32 section_flag)
         memcpy(&header, &SaveHeader_default, sizeof(SaveHeader_default));
     }
 
+    // The run data of another build is dropped, the options are kept
+    if (!is_game_section_current(&header))
+    {
+        header.valid_sections &= ~SAVE_SECTION_FLAG_GAME;
+    }
+
     header.valid_sections |= section_flag;
 
-    header.dirty = is_version_dirty();
+    header.format = SAVE_FORMAT_VERSION;
     memcpy(&(header.githash), gbalatro_version + GIT_HASH_START, CHECK_HASH_SIZE);
 
     write_sram(HEADER_ADDRESS, (const u8*)&header, sizeof(header));
@@ -335,7 +360,8 @@ void load_options(void)
 bool is_game_data_valid(void)
 {
     SaveHeader header;
-    return get_save_header(&header) && (header.valid_sections & SAVE_SECTION_FLAG_GAME);
+    return get_save_header(&header) && (header.valid_sections & SAVE_SECTION_FLAG_GAME) &&
+           is_game_section_current(&header);
 }
 
 void save_game(void)
@@ -379,7 +405,8 @@ void load_game(void)
 {
     SaveHeader header;
 
-    if (!get_save_header(&header) || !(header.valid_sections & SAVE_SECTION_FLAG_GAME))
+    if (!get_save_header(&header) || !(header.valid_sections & SAVE_SECTION_FLAG_GAME) ||
+        !is_game_section_current(&header))
         return;
 
     SaveGame game = SaveGame_default;

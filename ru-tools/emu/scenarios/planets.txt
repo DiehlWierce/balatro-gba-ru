@@ -1,5 +1,6 @@
-# Seed GBARU1: buy a Planet in the Shop, read its description, take it to the next round,
-# check the hand levels screen (SELECT), use the Planet and see the leveled-up hand score.
+# Seed GBARU1: buy a Planet in the Shop (the third Shop has Jupiter, it levels Flush), read its
+# description, take it to the next round, check the hand levels screen (SELECT), use the Planet:
+# the Flush preview becomes level 2 (50 x 6) while a High Card still scores 5 x 1.
 
 wait 460
 press START
@@ -23,7 +24,7 @@ wait 1100
 press A
 wait 200
 
-# Reroll 3 times (money forced): the third Shop has a Planet in its second slot
+# Reroll 3 times (money forced): the third Shop has a Planet (Jupiter) in its second slot
 poke32 {gv:money} 100
 press DOWN
 wait 20
@@ -79,24 +80,25 @@ press SELECT
 wait 20
 shot 08_back_to_round
 
-# Use the Planet (owned row is above the hand), then select one card: High Card
+# Use the Planet (owned row is above the hand): the hand name shows Flush at level 2 (50 x 6),
+# then select one card: High Card is not affected (5 x 1)
 press UP
 wait 20
 shot 09_planet_selected
 press A
 wait 60
-shot 10_planet_used
+shot 10_planet_used_flush_50x6
 press A
 wait 30
-shot 11_high_card_leveled
+shot 11_high_card_unchanged
 press SELECT
 wait 20
-shot 12_hand_levels_after
+shot 12_hand_levels_flush_level2
 press B
 wait 20
 shot 13_closed_selection_kept
 
-# Play the High Card and check the scoring starts from the leveled values
+# Play the High Card: it scores from its own, unchanged values (16 for an Ace)
 press L
 wait 300
 shot 14_scored

@@ -588,8 +588,34 @@ int tte_printf_justified_in_rect(
 
         // A single token wider than the rect never reached a space: break it mid-word,
         // otherwise `line_start` would never advance.
+        bool forced_break = false;
         if (token_start == line_start && token_start < raw_text_len)
         {
+            if (token_text_len > max_line_text_len && max_line_text_len > 0)
+            {
+                // Keep exactly `max_line_text_len` visible chars (formatting tags are free)
+                int raw = 0;
+                int visible = 0;
+                while (raw < token_len && visible < max_line_text_len)
+                {
+                    int pos = token_start + raw;
+                    if (raw_text[pos] == '#' && pos + 1 < raw_text_len && raw_text[pos + 1] == '{')
+                    {
+                        while (raw < token_len && raw_text[token_start + raw] != '}')
+                            raw++;
+                        if (raw < token_len)
+                            raw++;
+                    }
+                    else
+                    {
+                        raw++;
+                        visible++;
+                    }
+                }
+                token_len = raw;
+                token_text_len = visible;
+                forced_break = true;
+            }
             token_start += token_len > 0 ? token_len : 1;
         }
 
@@ -610,9 +636,16 @@ int tte_printf_justified_in_rect(
             }
 
             // Remove the overflowing token's visible length from this line
-            line_text_len = line_text_len - token_text_len - 1;
-            if (line_text_len < 0)
-                line_text_len = 0;
+            if (forced_break)
+            {
+                line_text_len = token_text_len;
+            }
+            else
+            {
+                line_text_len = line_text_len - token_text_len - 1;
+                if (line_text_len < 0)
+                    line_text_len = 0;
+            }
 
             // useful DEBUG
             // tte_printf("#{P:0,%d}line %d - %d", 40 + (dst_rect.top + line_y) * TILE_SIZE, line_y,

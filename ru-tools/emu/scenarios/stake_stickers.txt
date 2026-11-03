@@ -34,8 +34,11 @@ wait 60
 peek32 {gv:money}
 shot 01_bought_rental
 
-# Back to the Shop row, buy the second Joker (Perishable, $4)
+# After a purchase the cursor is on the owned row: DOWN lands on Reroll, UP on Next round,
+# RIGHT on the remaining Joker (Perishable, $5), buy it
 press DOWN
+wait 20
+press UP
 wait 20
 press RIGHT
 wait 20
@@ -44,20 +47,22 @@ wait 60
 peek32 {gv:money}
 shot 02_bought_perishable
 
-# Cursor on owned Jokers: go to the first one and try to sell it (L): refused
-press LEFT
+# UP from the (now empty) Shop row lands on the first owned Joker: its description shows
+# Eternal and Rental, then try to sell it (L): refused
+press UP
 wait 20
+hold B
+wait 90
+shot 03_eternal_rental_desc
+release B
+wait 30
 press L
 wait 60
 peek32 {gv:money}
-shot 03_sell_eternal_refused
+shot 03b_sell_eternal_refused
 
-# Next round: back to the Shop row, Next round button
+# Next round: DOWN from the owned row lands on the Next round button
 press DOWN
-wait 20
-press LEFT
-wait 20
-press UP
 wait 20
 press A
 wait 200

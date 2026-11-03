@@ -67,7 +67,7 @@ static bool hand_is_listed(enum HandType hand_type)
 static void print_screen(void)
 {
     tte_printf("#{P:%d,%d; cx:0x%X000}УРОВНИ РУК", 80, TITLE_Y, TTE_YELLOW_PB);
-    tte_printf("#{P:%d,%d; cx:0x%X000}РУКА      УР   ФИШ МНОЖ   СЫГР", 0, HEADER_Y, TTE_WHITE_PB);
+    tte_printf("#{P:%d,%d; cx:0x%X000}РУКА     УР   ФИШ МНОЖ  СЫГР", 0, HEADER_Y, TTE_WHITE_PB);
 
     int y = FIRST_Y;
     for (size_t i = 0; i < sizeof(LISTED_HANDS) / sizeof(LISTED_HANDS[0]); i++)
@@ -81,10 +81,11 @@ static void print_screen(void)
         if (hand_type == STRAIGHT_FLUSH)
             nb_played += g_game_vars.nb_played_hands[ROYAL_FLUSH - 1];
 
-        // 30 columns: name 8, level 4, chips 6 (blue), " x" and mult 7 (red), played 5
+        // 28 of 30 columns (the last one must not touch the screen edge): name 8, level 3,
+        // chips 6 (blue), " x" and mult 6 (red), played 5
         tte_printf(
-            "#{P:%d,%d; cx:0x%X000}%-8s#{cx:0x%X000}%4d#{cx:0x%X000}%6lu#{cx:0x%X000}"
-            " x%-5lu#{cx:0x%X000}%5lu",
+            "#{P:%d,%d; cx:0x%X000}%-8s#{cx:0x%X000}%3d#{cx:0x%X000}%6lu#{cx:0x%X000}"
+            " x%-4lu#{cx:0x%X000}%5lu",
             0,
             y,
             TTE_WHITE_PB,
@@ -101,7 +102,7 @@ static void print_screen(void)
         y += TILE_SIZE;
     }
 
-    tte_printf("#{P:%d,%d; cx:0x%X000}SELECT / B - назад", 48, HINT_Y, TTE_WHITE_PB);
+    tte_printf("#{P:%d,%d; cx:0x%X000}SELECT/B: назад", 60, HINT_Y, TTE_WHITE_PB);
 }
 
 static void open_screen(void)

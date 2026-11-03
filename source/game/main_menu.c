@@ -105,8 +105,10 @@ void main_menu_on_init(void)
     change_background(BG_MAIN_MENU, true);
     s_main_menu_ace = card_object_new(card_new(SPADES, ACE));
     card_object_set_sprite(s_main_menu_ace, 0);
-    // TODO: NULL-check sprite
-    s_main_menu_ace->sprite->obj->attr0 |= ATTR0_AFF_DBL;
+    if (s_main_menu_ace->sprite != NULL && s_main_menu_ace->sprite->aff != NULL)
+    {
+        s_main_menu_ace->sprite->obj->attr0 |= ATTR0_AFF_DBL;
+    }
     s_main_menu_ace->tscale = float2fx(0.8f);
     sprite_object_position((SpriteObject*)s_main_menu_ace, MAIN_MENU_ACE_T_X, MAIN_MENU_ACE_T_Y);
 
