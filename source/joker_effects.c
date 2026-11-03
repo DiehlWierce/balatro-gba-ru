@@ -4,7 +4,9 @@
 #include "hand.h"
 #include "hand_levels.h"
 #include "joker.h"
+#include "joker_batch4.h"
 #include "joker_cards.h"
+#include "consumable.h"
 #include "list.h"
 #include "pool.h"
 #include "random.h"
@@ -136,6 +138,21 @@ DECLARE_JOKER_DESC_FUNC(certificate_joker_desc)
 DECLARE_JOKER_DESC_FUNC(space_joker_desc)
 DECLARE_JOKER_DESC_FUNC(hiker_joker_desc)
 DECLARE_JOKER_DESC_FUNC(burglar_joker_desc)
+DECLARE_JOKER_DESC_FUNC(bloodstone_joker_desc)
+DECLARE_JOKER_DESC_FUNC(flower_pot_joker_desc)
+DECLARE_JOKER_DESC_FUNC(seeing_double_joker_desc)
+DECLARE_JOKER_DESC_FUNC(idol_joker_desc)
+DECLARE_JOKER_DESC_FUNC(ancient_joker_desc)
+DECLARE_JOKER_DESC_FUNC(baseball_card_joker_desc)
+DECLARE_JOKER_DESC_FUNC(erosion_joker_desc)
+DECLARE_JOKER_DESC_FUNC(drivers_license_joker_desc)
+DECLARE_JOKER_DESC_FUNC(card_sharp_joker_desc)
+DECLARE_JOKER_DESC_FUNC(superposition_joker_desc)
+DECLARE_JOKER_DESC_FUNC(eight_ball_joker_desc)
+DECLARE_JOKER_DESC_FUNC(to_do_list_joker_desc)
+DECLARE_JOKER_DESC_FUNC(green_joker_desc)
+DECLARE_JOKER_DESC_FUNC(faceless_joker_desc)
+DECLARE_JOKER_DESC_FUNC(hit_the_road_joker_desc)
 
 // Joker Effect functions
 
@@ -222,6 +239,21 @@ DECLARE_JOKER_EFFECT_FUNC(fortune_teller_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(stone_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(space_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(hiker_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(bloodstone_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(flower_pot_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(seeing_double_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(idol_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(ancient_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(baseball_card_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(erosion_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(drivers_license_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(card_sharp_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(superposition_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(eight_ball_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(to_do_list_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(green_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(faceless_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(hit_the_road_joker_effect)
 
 /* The index of a joker in the registry matches its ID.
  *
@@ -348,6 +380,22 @@ const JokerInfo joker_registry[] =
     { "Космический Джокер", UNCOMMON_JOKER, 5, false, space_joker_desc, space_joker_effect }, // 91
     { "Турист", UNCOMMON_JOKER, 5, false, hiker_joker_desc, hiker_joker_effect }, // 92
     { "Взломщик", UNCOMMON_JOKER, 6, false, burglar_joker_desc, joker_effect_noop }, // 93
+
+    { "Кровавик", RARE_JOKER, 7, false, bloodstone_joker_desc, bloodstone_joker_effect }, // 94
+    { "Цветочный горшок", UNCOMMON_JOKER, 6, false, flower_pot_joker_desc, flower_pot_joker_effect }, // 95
+    { "Двойное зрение", UNCOMMON_JOKER, 6, false, seeing_double_joker_desc, seeing_double_joker_effect }, // 96
+    { "Идол", UNCOMMON_JOKER, 6, false, idol_joker_desc, idol_joker_effect }, // 97
+    { "Древний Джокер", RARE_JOKER, 8, false, ancient_joker_desc, ancient_joker_effect }, // 98
+    { "Бейсбольная карта", RARE_JOKER, 8, false, baseball_card_joker_desc, baseball_card_joker_effect }, // 99
+    { "Эрозия", UNCOMMON_JOKER, 6, false, erosion_joker_desc, erosion_joker_effect }, // 100
+    { "Права водителя", RARE_JOKER, 7, false, drivers_license_joker_desc, drivers_license_joker_effect }, // 101
+    { "Шулер", UNCOMMON_JOKER, 6, false, card_sharp_joker_desc, card_sharp_joker_effect }, // 102
+    { "Суперпозиция", COMMON_JOKER, 4, false, superposition_joker_desc, superposition_joker_effect }, // 103
+    { "Шар восьмёрок", COMMON_JOKER, 5, false, eight_ball_joker_desc, eight_ball_joker_effect }, // 104
+    { "Список дел", COMMON_JOKER, 4, false, to_do_list_joker_desc, to_do_list_joker_effect }, // 105
+    { "Зелёный Джокер", COMMON_JOKER, 4, false, green_joker_desc, green_joker_effect }, // 106
+    { "Безликий Джокер", COMMON_JOKER, 4, false, faceless_joker_desc, faceless_joker_effect }, // 107
+    { "В путь-дорогу", RARE_JOKER, 8, false, hit_the_road_joker_desc, hit_the_road_joker_effect }, // 108
 
     // The following jokers don't have sprites yet,
     // uncomment them when their sprites are added.
@@ -3186,6 +3234,533 @@ static u32 hiker_joker_effect(
     *joker_effect = &s_shared_joker_effect;
     (*joker_effect)->message = "+5 фиш.";
     return JOKER_EFFECT_FLAG_MESSAGE;
+}
+
+/*******************************************************************************
+ * A8 batch 4 (ID 94-108)
+ ******************************************************************************/
+
+static const char* const SUIT_NAMES_NOM[NUM_SUITS] = {"Бубны", "Трефы", "Червы", "Пики"};
+static const char* const SUIT_TAGS[NUM_SUITS] = {
+    TTE_YELLOW_TAG, TTE_DARK_GREEN_TAG, TTE_RED_TAG, TTE_DARK_BLUE_TAG
+};
+static const char* const SUIT_NAMES_GEN[NUM_SUITS] = {"Бубен", "Треф", "Червей", "Пик"};
+static const char* const RANK_NAMES[NUM_RANKS] = {
+    "2", "3", "4", "5", "6", "7", "8", "9", "10", "Валет", "Дама", "Король", "Туз"
+};
+
+// The cards that score in the hand being played (selected and not debuffed)
+static int batch4_scoring_cards(const Card** out)
+{
+    CardObject** played = get_played_array();
+    int count = 0;
+    for (int i = 0; i <= get_played_top(); i++)
+    {
+        if (played[i] == NULL || !card_object_is_selected(played[i]) || played[i]->card->debuffed)
+            continue;
+        out[count++] = played[i]->card;
+    }
+    return count;
+}
+
+// Cards in the whole deck: every card has exactly one enhancement value
+static int batch4_deck_cards(void)
+{
+    int total = 0;
+    for (int e = 0; e < CARD_ENHANCEMENT_MAX; e++)
+        total += game_count_deck_enhancement(e);
+    return total;
+}
+
+static int batch4_enhanced_cards(void)
+{
+    return batch4_deck_cards() - game_count_deck_enhancement(CARD_ENHANCEMENT_NONE);
+}
+
+static int batch4_uncommon_others(const Joker* joker)
+{
+    int count = 0;
+    ListItr itr = list_itr_create(get_jokers_list());
+    JokerObject* other;
+    while ((other = list_itr_next(&itr)))
+    {
+        if (other->joker != joker && other->joker->rarity == UNCOMMON_JOKER)
+            count++;
+    }
+    return count;
+}
+
+static u32 batch4_xmult(u32 xmult, JokerEffect** joker_effect)
+{
+    *joker_effect = &s_shared_joker_effect;
+    (*joker_effect)->xmult = xmult;
+    return JOKER_EFFECT_FLAG_XMULT;
+}
+
+static u32 batch4_xmult_fx_150(JokerEffect** joker_effect)
+{
+    *joker_effect = &s_shared_joker_effect;
+    (*joker_effect)->xmult_fx = FIX_ONE * 3 / 2;
+    return JOKER_EFFECT_FLAG_XMULT_FX;
+}
+
+static u32 batch4_message(const char* message, JokerEffect** joker_effect)
+{
+    *joker_effect = &s_shared_joker_effect;
+    (*joker_effect)->message = (char*)message;
+    return JOKER_EFFECT_FLAG_MESSAGE;
+}
+
+static void batch4_tarot_spawn(enum RngSequence key, bool* created)
+{
+    *created = consumable_create_random_tarot(key, int2fx(120), int2fx(60));
+}
+
+static int bloodstone_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_GREEN_TAG "1 из 2" TTE_BLACK_TAG ", что сыгранная карта масти " TTE_RED_TAG "Червы" TTE_BLACK_TAG " даст " TTE_RED_TAG "X1.5" TTE_BLACK_TAG " множ.";
+    return print_desc(desc, dest_rect);
+}
+
+static int flower_pot_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_RED_TAG "X3" TTE_BLACK_TAG " множ., если в сыгранной руке есть карты " TTE_YELLOW_TAG "всех 4 мастей";
+    return print_desc(desc, dest_rect);
+}
+
+static int seeing_double_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_RED_TAG "X2" TTE_BLACK_TAG " множ., если сыграны карта масти " TTE_DARK_GREEN_TAG "Трефы" TTE_BLACK_TAG " и карта другой масти";
+    return print_desc(desc, dest_rect);
+}
+
+static int idol_joker_desc(Joker* joker, Rect dest_rect)
+{
+    int rank = joker_batch4_idol_rank(joker->persistent_state);
+    int suit = joker_batch4_idol_suit(joker->persistent_state);
+    char desc[200];
+    snprintf(
+        desc,
+        sizeof(desc),
+        TTE_BLACK_TAG "Каждая сыгранная карта " TTE_YELLOW_TAG "%s %s" TTE_BLACK_TAG " даёт " TTE_RED_TAG "X2" TTE_BLACK_TAG " множ.\nМеняется каждый раунд",
+        RANK_NAMES[rank],
+        SUIT_NAMES_GEN[suit]
+    );
+    return print_desc(desc, dest_rect);
+}
+
+static int ancient_joker_desc(Joker* joker, Rect dest_rect)
+{
+    int suit = joker->persistent_state % NUM_SUITS;
+    char desc[200];
+    snprintf(
+        desc,
+        sizeof(desc),
+        TTE_BLACK_TAG "Сыгранные карты масти %s%s" TTE_BLACK_TAG " дают " TTE_RED_TAG "X1.5" TTE_BLACK_TAG " множ.\nМасть меняется каждый раунд",
+        SUIT_TAGS[suit],
+        SUIT_NAMES_NOM[suit]
+    );
+    return print_desc(desc, dest_rect);
+}
+
+static int baseball_card_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc_format[] =
+        TTE_RED_TAG "X1.5" TTE_BLACK_TAG " множ. за каждого другого " TTE_YELLOW_TAG "Необычного" TTE_BLACK_TAG " Джокера\n\n(Сейчас " TTE_RED_TAG XMULT_FMT TTE_BLACK_TAG " множ.)";
+    char desc[200];
+    int percent = joker_batch4_baseball_percent(batch4_uncommon_others(joker));
+    snprintf(desc, sizeof(desc), desc_format, XMULT_ARGS(percent));
+    return print_desc(desc, dest_rect);
+}
+
+static int erosion_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc_format[] =
+        TTE_RED_TAG "+4" TTE_BLACK_TAG " множ. за каждую карту, которой не хватает до " TTE_YELLOW_TAG "52" TTE_BLACK_TAG " в колоде\n\n(Сейчас " TTE_RED_TAG "+%d" TTE_BLACK_TAG " множ.)";
+    char desc[200];
+    snprintf(desc, sizeof(desc), desc_format, joker_batch4_erosion_mult(batch4_deck_cards()));
+    return print_desc(desc, dest_rect);
+}
+
+static int drivers_license_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc_format[] =
+        TTE_RED_TAG "X3" TTE_BLACK_TAG " множ., если в колоде не меньше " TTE_YELLOW_TAG "16" TTE_BLACK_TAG " улучшенных карт\n\n(Сейчас " TTE_YELLOW_TAG "%d" TTE_BLACK_TAG ")";
+    char desc[200];
+    snprintf(desc, sizeof(desc), desc_format, batch4_enhanced_cards());
+    return print_desc(desc, dest_rect);
+}
+
+static int card_sharp_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_RED_TAG "X3" TTE_BLACK_TAG " множ., если эта " TTE_YELLOW_TAG "комбинация" TTE_BLACK_TAG " уже была сыграна в этом раунде";
+    return print_desc(desc, dest_rect);
+}
+
+static int superposition_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_BLACK_TAG "Создаёт " TTE_PURPLE_TAG "Таро" TTE_BLACK_TAG ", если в руке есть " TTE_YELLOW_TAG "Туз" TTE_BLACK_TAG " и " TTE_YELLOW_TAG "Стрит" TTE_BLACK_TAG "\n(нужен свободный слот)";
+    return print_desc(desc, dest_rect);
+}
+
+static int eight_ball_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_GREEN_TAG "1 из 4" TTE_BLACK_TAG ", что сыгранная " TTE_YELLOW_TAG "8" TTE_BLACK_TAG " создаст " TTE_PURPLE_TAG "Таро" TTE_BLACK_TAG "\n(нужен свободный слот)";
+    return print_desc(desc, dest_rect);
+}
+
+static int to_do_list_joker_desc(Joker* joker, Rect dest_rect)
+{
+    char desc[200];
+    snprintf(
+        desc,
+        sizeof(desc),
+        TTE_YELLOW_TAG "$4" TTE_BLACK_TAG ", если сыграна комбинация " TTE_YELLOW_TAG "%s" TTE_BLACK_TAG "\nМеняется каждый раунд",
+        get_hand_type_full_name(joker->persistent_state)
+    );
+    return print_desc(desc, dest_rect);
+}
+
+static int green_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc_format[] =
+        TTE_RED_TAG "+1" TTE_BLACK_TAG " множ. за каждую руку, " TTE_RED_TAG "-1" TTE_BLACK_TAG " за каждый сброс\n\n(Сейчас " TTE_RED_TAG "+%ld" TTE_BLACK_TAG " множ.)";
+    char desc[200];
+    snprintf(desc, sizeof(desc), desc_format, joker->persistent_state);
+    return print_desc(desc, dest_rect);
+}
+
+static int faceless_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_YELLOW_TAG "$5" TTE_BLACK_TAG ", если в одном сбросе " TTE_YELLOW_TAG "3" TTE_BLACK_TAG " или больше " TTE_YELLOW_TAG "картинок";
+    return print_desc(desc, dest_rect);
+}
+
+static int hit_the_road_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc_format[] =
+        TTE_RED_TAG "X0.5" TTE_BLACK_TAG " множ. за каждого сброшенного " TTE_YELLOW_TAG "Валета" TTE_BLACK_TAG " в этом раунде\n\n(Сейчас " TTE_RED_TAG XMULT_FMT TTE_BLACK_TAG " множ.)";
+    char desc[200];
+    int percent = joker_batch4_hit_the_road_percent(joker->persistent_state);
+    snprintf(desc, sizeof(desc), desc_format, XMULT_ARGS(percent));
+    return print_desc(desc, dest_rect);
+}
+
+static u32 bloodstone_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    SCORE_ON_EVENT_ONLY_WITH_CARD(scored_card, JOKER_EVENT_ON_CARD_SCORED, joker_event)
+
+    if (!card_has_suit(scored_card, HEARTS) ||
+        !joker_batch4_one_in(rng_get_u32(RNG_SEQ_JOKER_BLOODSTONE), BLOODSTONE_CHANCE))
+        return JOKER_EFFECT_FLAG_NONE;
+
+    return batch4_xmult_fx_150(joker_effect);
+}
+
+static u32 flower_pot_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    SCORE_ON_EVENT_ONLY(JOKER_EVENT_INDEPENDENT, joker_event)
+
+    const Card* cards[MAX_SELECTION_SIZE];
+    int count = batch4_scoring_cards(cards);
+    if (!joker_batch4_all_suits(cards, count))
+        return JOKER_EFFECT_FLAG_NONE;
+
+    return batch4_xmult(FLOWER_POT_XMULT, joker_effect);
+}
+
+static u32 seeing_double_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    SCORE_ON_EVENT_ONLY(JOKER_EVENT_INDEPENDENT, joker_event)
+
+    const Card* cards[MAX_SELECTION_SIZE];
+    int count = batch4_scoring_cards(cards);
+    if (!joker_batch4_club_and_other(cards, count))
+        return JOKER_EFFECT_FLAG_NONE;
+
+    return batch4_xmult(SEEING_DOUBLE_XMULT, joker_effect);
+}
+
+// The Idol: persistent_state holds the card (rank and suit), a new one is picked at round end
+static u32 idol_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    switch (joker_event)
+    {
+        case JOKER_EVENT_ON_JOKER_CREATED:
+        case JOKER_EVENT_ON_ROUND_END:
+            joker->persistent_state = joker_batch4_idol_pack(
+                rng_get_u32(RNG_SEQ_JOKER_IDOL) % NUM_RANKS,
+                rng_get_u32(RNG_SEQ_JOKER_IDOL) % NUM_SUITS
+            );
+            return JOKER_EFFECT_FLAG_NONE;
+
+        case JOKER_EVENT_ON_CARD_SCORED:
+            if (scored_card != NULL &&
+                joker_batch4_idol_match(
+                    scored_card,
+                    joker_batch4_idol_rank(joker->persistent_state),
+                    joker_batch4_idol_suit(joker->persistent_state)
+                ))
+                return batch4_xmult(IDOL_XMULT, joker_effect);
+            return JOKER_EFFECT_FLAG_NONE;
+
+        default:
+            return JOKER_EFFECT_FLAG_NONE;
+    }
+}
+
+static u32 ancient_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    switch (joker_event)
+    {
+        case JOKER_EVENT_ON_JOKER_CREATED:
+        case JOKER_EVENT_ON_ROUND_END:
+            joker->persistent_state = rng_get_u32(RNG_SEQ_JOKER_ANCIENT) % NUM_SUITS;
+            return JOKER_EFFECT_FLAG_NONE;
+
+        case JOKER_EVENT_ON_CARD_SCORED:
+            if (scored_card != NULL && card_has_suit(scored_card, joker->persistent_state % NUM_SUITS))
+                return batch4_xmult_fx_150(joker_effect);
+            return JOKER_EFFECT_FLAG_NONE;
+
+        default:
+            return JOKER_EFFECT_FLAG_NONE;
+    }
+}
+
+static u32 baseball_card_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    SCORE_ON_EVENT_ONLY(JOKER_EVENT_INDEPENDENT, joker_event)
+
+    return joker_percent_xmult_effect(
+        joker_batch4_baseball_percent(batch4_uncommon_others(joker)),
+        joker_effect
+    );
+}
+
+static u32 erosion_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    SCORE_ON_EVENT_ONLY(JOKER_EVENT_INDEPENDENT, joker_event)
+
+    int mult = joker_batch4_erosion_mult(batch4_deck_cards());
+    if (mult <= 0)
+        return JOKER_EFFECT_FLAG_NONE;
+
+    *joker_effect = &s_shared_joker_effect;
+    (*joker_effect)->mult = mult;
+    return JOKER_EFFECT_FLAG_MULT;
+}
+
+static u32 drivers_license_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    SCORE_ON_EVENT_ONLY(JOKER_EVENT_INDEPENDENT, joker_event)
+
+    if (!joker_batch4_drivers_license_active(batch4_enhanced_cards()))
+        return JOKER_EFFECT_FLAG_NONE;
+
+    return batch4_xmult(DRIVERS_LICENSE_XMULT, joker_effect);
+}
+
+// Card Sharp: persistent_state is a bit mask of the hands played this round, updated once the
+// played hand has scored so that a Blueprint copying it sees the same mask
+static u32 card_sharp_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    switch (joker_event)
+    {
+        case JOKER_EVENT_ON_ROUND_END:
+            joker->persistent_state = 0;
+            return JOKER_EFFECT_FLAG_NONE;
+
+        case JOKER_EVENT_INDEPENDENT:
+            if (joker_batch4_card_sharp_seen(joker->persistent_state, get_hand_type()))
+                return batch4_xmult(CARD_SHARP_XMULT, joker_effect);
+            return JOKER_EFFECT_FLAG_NONE;
+
+        case JOKER_EVENT_ON_HAND_SCORED_END:
+            if (get_hand_type() != NONE)
+                joker->persistent_state |= joker_batch4_hand_bit(get_hand_type());
+            return JOKER_EFFECT_FLAG_NONE;
+
+        default:
+            return JOKER_EFFECT_FLAG_NONE;
+    }
+}
+
+static u32 superposition_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    SCORE_ON_EVENT_ONLY(JOKER_EVENT_ON_HAND_PLAYED, joker_event)
+
+    const Card* cards[MAX_SELECTION_SIZE];
+    int count = batch4_scoring_cards(cards);
+    if (!joker_batch4_superposition(get_contained_hands()->STRAIGHT, cards, count))
+        return JOKER_EFFECT_FLAG_NONE;
+
+    bool created;
+    batch4_tarot_spawn(RNG_SEQ_JOKER_SUPERPOSITION_TAROT, &created);
+    return created ? batch4_message("Таро!", joker_effect) : JOKER_EFFECT_FLAG_NONE;
+}
+
+static u32 eight_ball_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    SCORE_ON_EVENT_ONLY_WITH_CARD(scored_card, JOKER_EVENT_ON_CARD_SCORED, joker_event)
+
+    if (!card_has_rank(scored_card) || scored_card->rank != EIGHT ||
+        !joker_batch4_one_in(rng_get_u32(RNG_SEQ_JOKER_EIGHT_BALL), EIGHT_BALL_CHANCE))
+        return JOKER_EFFECT_FLAG_NONE;
+
+    bool created;
+    batch4_tarot_spawn(RNG_SEQ_JOKER_EIGHT_BALL_TAROT, &created);
+    return created ? batch4_message("Таро!", joker_effect) : JOKER_EFFECT_FLAG_NONE;
+}
+
+static u32 to_do_list_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    switch (joker_event)
+    {
+        case JOKER_EVENT_ON_JOKER_CREATED:
+        case JOKER_EVENT_ON_ROUND_END:
+            joker->persistent_state = joker_batch4_todo_target(rng_get_u32(RNG_SEQ_JOKER_TO_DO_LIST));
+            return JOKER_EFFECT_FLAG_NONE;
+
+        case JOKER_EVENT_ON_HAND_PLAYED:
+            if (!joker_batch4_todo_hit(joker->persistent_state, get_hand_type()))
+                return JOKER_EFFECT_FLAG_NONE;
+            *joker_effect = &s_shared_joker_effect;
+            (*joker_effect)->money = TO_DO_LIST_MONEY;
+            return JOKER_EFFECT_FLAG_MONEY;
+
+        default:
+            return JOKER_EFFECT_FLAG_NONE;
+    }
+}
+
+// Green Joker: persistent_state is the mult, discards are handled in joker_on_cards_discarded()
+static u32 green_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    switch (joker_event)
+    {
+        case JOKER_EVENT_ON_HAND_PLAYED:
+            joker->persistent_state = joker_batch4_green_hand(joker->persistent_state);
+            return JOKER_EFFECT_FLAG_NONE;
+
+        case JOKER_EVENT_INDEPENDENT:
+            if (joker->persistent_state <= 0)
+                return JOKER_EFFECT_FLAG_NONE;
+            *joker_effect = &s_shared_joker_effect;
+            (*joker_effect)->mult = joker->persistent_state;
+            return JOKER_EFFECT_FLAG_MULT;
+
+        default:
+            return JOKER_EFFECT_FLAG_NONE;
+    }
+}
+
+// Faceless Joker: everything happens in joker_on_cards_discarded()
+static u32 faceless_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    return JOKER_EFFECT_FLAG_NONE;
+}
+
+// Hit the Road: persistent_state counts the Jacks discarded this round
+static u32 hit_the_road_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    switch (joker_event)
+    {
+        case JOKER_EVENT_ON_ROUND_END:
+            joker->persistent_state = 0;
+            return JOKER_EFFECT_FLAG_NONE;
+
+        case JOKER_EVENT_INDEPENDENT:
+            return joker_percent_xmult_effect(
+                joker_batch4_hit_the_road_percent(joker->persistent_state),
+                joker_effect
+            );
+
+        default:
+            return JOKER_EFFECT_FLAG_NONE;
+    }
 }
 
 #pragma endregion

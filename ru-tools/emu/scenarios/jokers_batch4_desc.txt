@@ -1,0 +1,89 @@
+# A8 batch 4 (ID 94-108): descriptions of two Jokers in the Shop, needs: make DEBUG_JOKER0=<id> DEBUG_JOKER1=<id> (touch source/joker.c first).
+# Seed GBARU1: win the Small Blind (score forced), in the Shop hold B on both Jokers, buy both,
+# then play the Big Blind: select 5 cards, play one hand and look at the scoring.
+
+wait 460
+press START
+wait 60
+press A
+wait 60
+pokestr {sym:s_seed_str} GBARU1
+poke8 {sym:use_seed} 1
+press DOWN
+wait 10
+press A
+wait 120
+press A
+wait 180
+poke32 {gv:score} 100000
+press A
+press L
+wait 1100
+press A
+wait 200
+poke32 {gv:money} 500
+shot 00_shop
+
+press RIGHT
+wait 20
+hold B
+wait 90
+shot 01_desc_first
+release B
+wait 20
+press A
+wait 60
+press RIGHT
+wait 20
+hold B
+wait 90
+shot 02_desc_second
+release B
+wait 20
+press A
+wait 60
+shot 03_bought
+
+press DOWN
+wait 20
+press LEFT
+wait 20
+press UP
+wait 20
+press A
+wait 200
+press RIGHT
+wait 20
+press A
+wait 200
+shot 04_round
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press L
+wait 600
+shot 05_scoring
+wait 400
+shot 06_scored
+
+# Second hand of the same kind (Card Sharp X3, Green Joker +1 mult more)
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press L
+wait 600
+shot 07_second_scoring
+wait 400
+shot 08_second_scored

@@ -9,6 +9,7 @@
 #include "game_variables.h"
 #include "graphic_utils.h"
 #include "item.h"
+#include "joker_batch4.h"
 #include "joker_cards.h"
 #include "layout.h"
 #include "mgba_logger.h"
@@ -86,6 +87,7 @@ static const int JOKER_ID_TO_SPRITE_MAP[] = {
     18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
     29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43,
     44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58,
+    59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73,
 };
 
 // Map of Spritesheet idx -> first Joker ID in sheet
@@ -96,7 +98,8 @@ static const int SPRITESHEET_IDX_TO_STARTING_JOKER_ID[] = {
      0, 18, 20, 22, 27, 32, 36, 40, 42, 44,
     45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
     64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78,
-    79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93
+    79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93,
+    94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108
 };
 
 // Lookup table of Joker Rarity strings. Used to display at the bottom of the description screen.
@@ -889,6 +892,13 @@ void joker_economy_on_round_end(bool boss_defeated)
 
         if (joker->id == ROCKET_JOKER_ID)
             joker->persistent_state = joker_economy_rocket_next(joker->persistent_state, boss_defeated);
+
+        // Batch 4: new targets (Idol, Ancient Joker, To Do List) and per-round counters
+        if (joker->id >= BLOODSTONE_JOKER_ID && joker->id <= HIT_THE_ROAD_JOKER_ID)
+        {
+            JokerEffect* round_end_effect = NULL;
+            joker_get_score_effect(joker, NULL, JOKER_EVENT_ON_ROUND_END, &round_end_effect);
+        }
     }
 }
 
@@ -1012,4 +1022,42 @@ void joker_on_blind_selected(void)
 void joker_on_deck_shuffled(void)
 {
     joker_for_each_active(joker_hook_deck_shuffled);
+}
+
+void joker_on_cards_discarded(int nb_cards, int nb_face_cards, int nb_jacks)
+{
+    if (nb_cards <= 0)
+        return;
+
+    ListItr itr = list_itr_create(get_jokers_list());
+    JokerObject* joker_object;
+    while ((joker_object = list_itr_next(&itr)))
+    {
+        Joker* joker = joker_object->joker;
+        if (joker_is_perished(joker) || blind_effects_is_joker_disabled(joker_object))
+            continue;
+
+        switch (joker->id)
+        {
+            case GREEN_JOKER_ID:
+                joker->persistent_state = joker_batch4_green_discard(joker->persistent_state);
+                break;
+            case FACELESS_JOKER_ID:
+            {
+                int money = joker_batch4_faceless_money(nb_face_cards);
+                if (money > 0)
+                {
+                    g_game_vars.money += money;
+                    display_money();
+                    joker_object_shake(joker_object, UNDEFINED);
+                }
+                break;
+            }
+            case HIT_THE_ROAD_JOKER_ID:
+                joker->persistent_state += nb_jacks;
+                break;
+            default:
+                break;
+        }
+    }
 }

@@ -66,6 +66,15 @@ enum RngSequence
     RNG_SEQ_JOKER_SPACE,          // 1 in 4 chance to level up the played hand
     RNG_SEQ_JOKER_CERTIFICATE,    // Rank, suit and seal of the card created by Certificate
 
+    // Jokers of A8 batch 4 (ID 94-108), each with its own sequence
+    RNG_SEQ_JOKER_BLOODSTONE,     // 1 in 2 chance of X1.5 for a scored Heart
+    RNG_SEQ_JOKER_EIGHT_BALL,     // 1 in 4 chance for a scored 8
+    RNG_SEQ_JOKER_EIGHT_BALL_TAROT,    // Which Tarot the 8 Ball creates
+    RNG_SEQ_JOKER_SUPERPOSITION_TAROT, // Which Tarot Superposition creates
+    RNG_SEQ_JOKER_IDOL,           // Rank and suit of The Idol
+    RNG_SEQ_JOKER_ANCIENT,        // Suit of the Ancient Joker
+    RNG_SEQ_JOKER_TO_DO_LIST,     // Hand type of the To Do List
+
     // Editions
     RNG_SEQ_JOKER_EDITION, // Edition of the Jokers rolled in the Shop
     RNG_SEQ_PACK_EDITION,  // Edition of the cards of a Standard Pack
