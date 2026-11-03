@@ -26,9 +26,11 @@
 #define RED_CARD_JOKER_ID   130
 #define LUCHADOR_JOKER_ID   131
 #define MR_BONES_JOKER_ID   132
+#define CHAOS_CLOWN_JOKER_ID 133
+#define ASTRONOMER_JOKER_ID 134
 
 #define FIRST_BATCH6_JOKER_ID CANIO_JOKER_ID
-#define LAST_BATCH6_JOKER_ID  MR_BONES_JOKER_ID
+#define LAST_BATCH6_JOKER_ID  ASTRONOMER_JOKER_ID
 
 #define FLASH_CARD_MULT_PER_REROLL 2
 #define RED_CARD_MULT_PER_SKIP     3
@@ -144,6 +146,22 @@ static inline bool joker_batch6_mr_bones_saves(uint32_t score, uint32_t requirem
 {
     return requirement > 0 &&
            (uint64_t)score * MR_BONES_DENOMINATOR >= (uint64_t)requirement * MR_BONES_NUMERATOR;
+}
+
+/**
+ * @brief Chaos the Clown: whether the next reroll is free (owned, free reroll of this Shop unused).
+ */
+static inline bool joker_batch6_chaos_free_reroll(bool owned, bool used)
+{
+    return owned && !used;
+}
+
+/**
+ * @brief Astronomer: Planet cards and Celestial Packs are free.
+ */
+static inline int joker_batch6_astronomer_price(int price, bool owned)
+{
+    return owned ? 0 : price;
 }
 
 #endif // JOKER_BATCH6_H

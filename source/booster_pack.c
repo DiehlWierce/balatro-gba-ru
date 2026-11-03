@@ -11,6 +11,7 @@
 #include "card.h"
 #include "consumable.h"
 #include "game.h"
+#include "joker_batch6.h"
 #include "game_variables.h"
 #include "graphic_utils.h"
 #include "item.h"
@@ -432,6 +433,8 @@ int booster_pack_get_buy_price(Item* item)
     GBAL_RETURN_IF_NULL(item, UNDEFINED);
     const PackInfo* info = booster_pack_get_info(((BoosterPackObject*)item)->pack_type);
     GBAL_RETURN_IF_NULL(info, UNDEFINED);
+    if (((BoosterPackObject*)item)->pack_type == PACK_TYPE_CELESTIAL)
+        return joker_batch6_astronomer_price(info->price, is_joker_owned(ASTRONOMER_JOKER_ID));
     return info->price;
 }
 

@@ -135,7 +135,32 @@ def mr_bones():
     return im
 
 
-JOKERS = [canio, triboulet, yorick, chicot, perkeo, flash_card, red_card, luchador, mr_bones]
+def chaos_clown():
+    im, d = card((0xE7, 0xC0, 0x4A))
+    d.ellipse((9, 9, 23, 23), fill=WHITE, outline=INK)
+    d.polygon([(9, 12), (5, 4), (13, 9)], fill=RED, outline=INK)
+    d.polygon([(23, 12), (27, 4), (19, 9)], fill=BLUE, outline=INK)
+    d.rectangle((12, 13, 14, 15), fill=INK)
+    d.rectangle((18, 13, 20, 15), fill=INK)
+    d.ellipse((14, 16, 18, 20), fill=RED, outline=INK)
+    d.arc((12, 18, 20, 23), 0, 180, fill=INK)
+    d.polygon([(16, 25), (13, 29), (19, 29)], fill=GOLD, outline=INK)
+    return im
+
+
+def astronomer():
+    im, d = card((0x1E, 0x2A, 0x5A))
+    d.ellipse((10, 10, 22, 22), fill=(0xC8, 0x8A, 0x4A), outline=INK)
+    d.ellipse((4, 14, 28, 18), outline=GOLD)
+    d.arc((4, 14, 28, 18), 0, 180, fill=GOLD_D)
+    d.ellipse((12, 12, 15, 15), fill=(0xE8, 0xB8, 0x80))
+    for x, y in ((6, 6), (25, 5), (27, 24), (6, 26), (16, 4)):
+        d.line((x - 1, y, x + 1, y), fill=WHITE)
+        d.line((x, y - 1, x, y + 1), fill=WHITE)
+    return im
+
+
+JOKERS = [canio, triboulet, yorick, chicot, perkeo, flash_card, red_card, luchador, mr_bones, chaos_clown, astronomer]
 FIRST_SHEET = 89
 
 

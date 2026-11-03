@@ -177,6 +177,8 @@ DECLARE_JOKER_DESC_FUNC(flash_card_joker_desc)
 DECLARE_JOKER_DESC_FUNC(red_card_joker_desc)
 DECLARE_JOKER_DESC_FUNC(luchador_joker_desc)
 DECLARE_JOKER_DESC_FUNC(mr_bones_joker_desc)
+DECLARE_JOKER_DESC_FUNC(chaos_clown_joker_desc)
+DECLARE_JOKER_DESC_FUNC(astronomer_joker_desc)
 
 // Joker Effect functions
 
@@ -302,6 +304,8 @@ DECLARE_JOKER_EFFECT_FUNC(flash_card_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(red_card_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(luchador_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(mr_bones_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(chaos_clown_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(astronomer_joker_effect)
 
 /* The index of a joker in the registry matches its ID.
  *
@@ -473,6 +477,8 @@ const JokerInfo joker_registry[] =
     { "Красная карта", COMMON_JOKER, 5, false, red_card_joker_desc, red_card_joker_effect }, // 130
     { "Лучадор", UNCOMMON_JOKER, 5, false, luchador_joker_desc, luchador_joker_effect }, // 131
     { "Мистер Кости", UNCOMMON_JOKER, 5, false, mr_bones_joker_desc, mr_bones_joker_effect }, // 132
+    { "Хаос Клоун", COMMON_JOKER, 4, false, chaos_clown_joker_desc, chaos_clown_joker_effect }, // 133
+    { "Астроном", UNCOMMON_JOKER, 8, false, astronomer_joker_desc, astronomer_joker_effect }, // 134
 
     // The following jokers don't have sprites yet,
     // uncomment them when their sprites are added.
@@ -4528,6 +4534,42 @@ static u32 luchador_joker_effect(
 
 // Mr. Bones: works when the round is lost (joker_mr_bones_saves() in joker.c)
 static u32 mr_bones_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    return JOKER_EFFECT_FLAG_NONE;
+}
+
+static int chaos_clown_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_BLACK_TAG "Один " TTE_YELLOW_TAG "бесплатный реролл" TTE_BLACK_TAG " в каждой лавке";
+    return print_desc(desc, dest_rect);
+}
+
+static int astronomer_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_BLACK_TAG "Все " TTE_YELLOW_TAG "Планеты" TTE_BLACK_TAG " и " TTE_YELLOW_TAG "Небесные бустеры" TTE_BLACK_TAG " в лавке бесплатны";
+    return print_desc(desc, dest_rect);
+}
+
+// Chaos the Clown: works in the Shop (shop.c)
+static u32 chaos_clown_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    return JOKER_EFFECT_FLAG_NONE;
+}
+
+// Astronomer: works through the prices (consumable.c, booster_pack.c)
+static u32 astronomer_joker_effect(
     Joker* joker,
     Card* scored_card,
     enum JokerEvent joker_event,

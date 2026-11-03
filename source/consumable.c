@@ -1186,7 +1186,7 @@ int consumable_object_get_buy_price(Item* item)
         case CONSUMABLE_TYPE_SPECTRAL:
             return SPECTRAL_BUY_PRICE;
         default:
-            return PLANET_BUY_PRICE;
+            return joker_batch6_astronomer_price(PLANET_BUY_PRICE, is_joker_owned(ASTRONOMER_JOKER_ID));
     }
 }
 

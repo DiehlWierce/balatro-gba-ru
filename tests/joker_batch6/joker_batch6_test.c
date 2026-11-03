@@ -55,6 +55,9 @@ static void test_ordinary(void)
     assert(!joker_batch6_mr_bones_saves(24, 100));
     assert(joker_batch6_mr_bones_saves(100, 100));
     assert(!joker_batch6_mr_bones_saves(10, 0));
+    assert(joker_batch6_chaos_free_reroll(true, false));
+    assert(!joker_batch6_chaos_free_reroll(true, true) && !joker_batch6_chaos_free_reroll(false, false));
+    assert(joker_batch6_astronomer_price(3, true) == 0 && joker_batch6_astronomer_price(3, false) == 3);
     assert(joker_batch6_mr_bones_saves(0x40000000u, 0xFFFFFFFFu)); // no overflow
 }
 
