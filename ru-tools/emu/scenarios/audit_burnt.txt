@@ -1,0 +1,100 @@
+# Burnt Joker (ID 141) audit: the first discard of the round must level up the discarded hand by 1.
+# Needs: make DEBUG_JOKER0=141 (touch source/joker.c first). Seed GBARU1: win the Small Blind
+# (score forced), buy the Shop Joker with $500, Big Blind: check hand levels (SELECT), select the
+# 5 leftmost cards, press DISCARD (bottom row: DOWN, then RIGHT x3), check hand levels again.
+
+wait 460
+press START
+wait 60
+press A
+wait 60
+pokestr {sym:s_seed_str} GBARU1
+poke8 {sym:use_seed} 1
+press DOWN
+wait 10
+press A
+wait 120
+press A
+wait 180
+poke32 {gv:score} 100000
+press A
+press L
+wait 1100
+press A
+wait 200
+poke32 {gv:money} 500
+shot 00_shop
+
+# Buy the Burnt Joker (first Shop slot)
+press RIGHT
+wait 20
+hold B
+wait 90
+shot 01_desc
+release B
+wait 20
+press A
+wait 60
+shot 02_bought
+
+# Next round, Big Blind (same route as jokers_pair.txt)
+press DOWN
+wait 20
+press LEFT
+wait 20
+press UP
+wait 20
+press A
+wait 200
+press RIGHT
+wait 20
+press A
+wait 200
+shot 03_round
+peek32 {gv:discards}
+
+# Hand levels before the discard
+press SELECT
+wait 20
+shot 04_levels_before
+peek32 {gv:hand_levels}
+press SELECT
+wait 20
+
+# Select the 5 leftmost cards
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+press RIGHT
+press A
+wait 10
+shot 05_selected
+
+# Discard button: DOWN to the button row, RIGHT x3 (Play, Sort rank, Sort suit, Discard), A
+press DOWN
+wait 20
+shot 06_button_row
+press RIGHT
+wait 15
+press RIGHT
+wait 15
+press RIGHT
+wait 20
+shot 07_discard_focus
+press A
+wait 200
+shot 08_after_discard
+peek32 {gv:discards}
+
+# Hand levels after the first discard
+press SELECT
+wait 20
+shot 09_levels_after
+peek32 {gv:hand_levels}
+press SELECT
+wait 20
+shot 10_back_to_round
