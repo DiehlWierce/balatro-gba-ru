@@ -75,7 +75,9 @@ enum JokerEvent
 #define JOKER_EFFECT_FLAG_MESSAGE   (1 << 6)
 #define JOKER_EFFECT_FLAG_XMULT_FX  (1 << 7) // Mult times xmult_fx (24.8 fixed point, e.g. X1.5)
 
-#define MAX_JOKER_OBJECTS 32 // The maximum number of joker objects that can be created at once
+// The maximum number of joker objects that can be created at once: the VRAM tiles, the OAM slots
+// and the JokerObject pool all have MAX_ACTIVE_JOKERS (game/common_ui.h) entries
+#define MAX_JOKER_OBJECTS 12
 
 // Jokers in the game
 #define STENCIL_JOKER_ID      15
@@ -213,6 +215,23 @@ void joker_on_card_destroyed(Card* card);
  * @brief The player leaves the Shop: Perkeo copies a random consumable.
  */
 void joker_on_shop_exit(void);
+
+/**
+ * @brief The Joker a Blueprint or a Brainstorm copies right now.
+ * @return NULL if there is nothing to copy (end of the row, loop of Brainstorms) or the target is
+ *         disabled by the Boss
+ */
+Joker* joker_get_copy_target(const Joker* joker);
+
+/**
+ * @brief Number of cards in the Deck when the run started (Erosion counts from it)
+ */
+int joker_deck_start_size(void);
+
+/**
+ * @brief nb_played_hands of the run as they were when the round started (Card Sharp)
+ */
+const u32* joker_round_start_hands(void);
 
 /**
  * @brief Whether the current Boss is disabled: an owned Chicot, or a Luchador sold during the Boss.

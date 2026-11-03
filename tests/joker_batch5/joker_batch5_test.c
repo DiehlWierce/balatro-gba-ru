@@ -41,7 +41,10 @@ static void test_food(void)
     assert(joker_batch5_popcorn_next(POPCORN_START_MULT) == 16);
     assert(joker_batch5_popcorn_next(4) == 0); // eaten up at 0
     assert(joker_batch5_ramen_discard(RAMEN_START_PERCENT, 5) == 195);
-    assert(!joker_batch5_ramen_gone(100) && joker_batch5_ramen_gone(99));
+    assert(!joker_batch5_ramen_gone(101) && joker_batch5_ramen_gone(100) && joker_batch5_ramen_gone(99));
+    assert(joker_batch5_can_roll(GROS_MICHEL_JOKER_ID, false) && !joker_batch5_can_roll(CAVENDISH_JOKER_ID, false));
+    assert(!joker_batch5_can_roll(GROS_MICHEL_JOKER_ID, true) && joker_batch5_can_roll(CAVENDISH_JOKER_ID, true));
+    assert(joker_batch5_can_roll(RAMEN_JOKER_ID, false) && joker_batch5_can_roll(RAMEN_JOKER_ID, true));
     assert(joker_batch5_ramen_discard(100, 1) == 99 && joker_batch5_ramen_gone(99));
     assert(joker_batch5_ramen_discard(150, 0) == 150 && joker_batch5_ramen_discard(150, -2) == 150);
     assert(joker_batch5_turtle_bean_next(TURTLE_BEAN_START) == 4);

@@ -63,9 +63,16 @@ static void test_counts(void)
     assert(joker_batch4_baseball_percent(1) == 150);
     assert(joker_batch4_baseball_percent(2) == 225);
     assert(joker_batch4_baseball_percent(3) == 338);
-    assert(joker_batch4_erosion_mult(52) == 0 && joker_batch4_erosion_mult(60) == 0);
-    assert(joker_batch4_erosion_mult(50) == 8);
-    assert(joker_batch4_erosion_mult(0) == 208);
+    assert(joker_batch4_erosion_mult(52, 52) == 0 && joker_batch4_erosion_mult(60, 52) == 0);
+    assert(joker_batch4_erosion_mult(50, 52) == 8);
+    assert(joker_batch4_erosion_mult(0, 52) == 208);
+    // Starting size of the Deck: 40 cards of the Abandoned Deck are not "missing"
+    assert(joker_batch4_erosion_mult(40, 40) == 0 && joker_batch4_erosion_mult(38, 40) == 8);
+    assert(joker_batch4_erosion_mult(53, 40) == 0 && joker_batch4_erosion_mult(30, 0) == 88);
+    // Every Uncommon Joker counts (Negative ones too), the result saturates
+    assert(joker_batch4_baseball_percent(8) == 2570 && joker_batch4_baseball_percent(9) == 3855);
+    assert(joker_batch4_baseball_percent(12) > joker_batch4_baseball_percent(11));
+    assert(joker_batch4_baseball_percent(255) == BASEBALL_PERCENT_MAX);
     assert(!joker_batch4_drivers_license_active(15) && joker_batch4_drivers_license_active(16));
     assert(joker_batch4_faceless_money(2) == 0 && joker_batch4_faceless_money(3) == 5);
     assert(joker_batch4_faceless_money(5) == 5);
@@ -83,8 +90,33 @@ static void test_hands(void)
     mask |= joker_batch4_hand_bit(10); // Royal Flush
     assert(joker_batch4_card_sharp_seen(mask, 9)); // counts as Straight Flush
 
-    assert(joker_batch4_todo_target(0) == 1 && joker_batch4_todo_target(8) == 9);
-    assert(joker_batch4_todo_target(9) == 1);
+    uint32_t played[HAND_TYPE_MAX] = {0};
+    assert(joker_batch4_todo_target(0, 0, played) == 1 && joker_batch4_todo_target(8, 0, played) == 9);
+    assert(joker_batch4_todo_target(9, 0, played) == 1); // secret hands not played yet: 9 targets
+    // The target never repeats the current one
+    for (uint32_t roll = 0; roll < 40; roll++)
+        assert(joker_batch4_todo_target(roll, 3, played) != 3);
+    // A played secret hand can be asked for, an unplayed one never
+    played[FLUSH_HOUSE - 1] = 1;
+    bool seen_secret = false;
+    for (uint32_t roll = 0; roll < 40; roll++)
+    {
+        int target = joker_batch4_todo_target(roll, 0, played);
+        assert(target != FIVE_OF_A_KIND && target != FLUSH_FIVE && target != ROYAL_FLUSH);
+        seen_secret |= target == FLUSH_HOUSE;
+    }
+    assert(seen_secret);
+    // Card Sharp: a hand played earlier in the round (the current one is counted already)
+    uint32_t now[HAND_TYPE_MAX] = {0}, start[HAND_TYPE_MAX] = {0};
+    now[PAIR - 1] = 1;
+    assert(!joker_batch4_played_earlier_in_round(now, start, PAIR)); // only the current hand
+    now[PAIR - 1] = 2;
+    assert(joker_batch4_played_earlier_in_round(now, start, PAIR));
+    start[PAIR - 1] = 2; // two Pairs were played before this round
+    assert(!joker_batch4_played_earlier_in_round(now, start, PAIR));
+    now[ROYAL_FLUSH - 1] = 1;
+    now[STRAIGHT_FLUSH - 1] = 1;
+    assert(joker_batch4_played_earlier_in_round(now, start, STRAIGHT_FLUSH)); // Royal = Straight Flush
     assert(joker_batch4_todo_hit(2, 2) && !joker_batch4_todo_hit(2, 3));
     assert(joker_batch4_todo_hit(9, 10)); // Royal Flush pays for Straight Flush
 
