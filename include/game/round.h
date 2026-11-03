@@ -64,6 +64,11 @@ int round_get_hands_played(void);
 int round_get_discards_used(void);
 
 /**
+ * @brief True if Mr. Bones saved the current round: the Blind itself pays no reward
+ */
+bool round_saved_by_bones(void);
+
+/**
  * @brief Sixth Sense: the scoring cards of the hand being played leave the deck when it ends
  */
 void round_destroy_played_cards(void);

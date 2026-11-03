@@ -3,6 +3,7 @@
 #include "affine_background.h"
 #include "affine_background_gfx.h"
 #include "game.h"
+#include "game/round.h"
 #include "game_variables.h"
 #include "joker.h"
 #include "layout.h"
@@ -155,6 +156,12 @@ static u32 s_current_reward_start_time = TM_DISPLAY_REWARDS_CONT_WAIT;
 static int s_reward_y_offset = 1;
 
 static int s_blind_reward = 0;
+
+// Mr. Bones saves the round but the Blind pays nothing
+static int round_end_blind_reward(void)
+{
+    return round_saved_by_bones() ? 0 : blind_get_reward(g_game_vars.current_blind);
+}
 static int s_cashout = 0;
 
 static int calculate_interest_reward(void);
@@ -212,7 +219,7 @@ static void round_end_start(void)
         s_current_reward_start_time = TM_DISPLAY_REWARDS_CONT_WAIT;
         s_reward_y_offset = 1;
 
-        s_blind_reward = blind_get_reward(g_game_vars.current_blind);
+        s_blind_reward = round_end_blind_reward();
         s_reward_data[REWARD_TYPE_HAND].multiplier = g_game_vars.money_per_hand;
         s_reward_data[REWARD_TYPE_HAND].count =
             g_game_vars.money_per_hand > 0 ? g_game_vars.hands : 0;
@@ -236,7 +243,7 @@ static void round_end_start(void)
             joker_bonus.satellite * joker_batch7_satellite_money(g_game_vars.planets_used_mask);
         s_reward_data[REWARD_TYPE_RENTAL].count = stake_get_rental_jokers_count();
 
-        s_cashout = blind_get_reward(g_game_vars.current_blind);
+        s_cashout = round_end_blind_reward();
         for (enum RewardType i = 0; i < REWARD_TYPE_MAX; i++)
         {
             s_reward_data[i].remaining = s_reward_data[i].count;
@@ -346,7 +353,7 @@ static void round_end_update_blind_reward(void)
             ROUND_END_BLIND_REWARD_RECT.left,
             ROUND_END_BLIND_REWARD_RECT.top,
             TTE_YELLOW_PB,
-            blind_get_reward(g_game_vars.current_blind) - s_blind_reward
+            round_end_blind_reward() - s_blind_reward
         );
     }
     else if (g_game_vars.timer > FRAMES(20))

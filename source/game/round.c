@@ -863,6 +863,8 @@ static inline void round_process_hand_select_input(void)
     selection_grid_process_input(&game_round_selection_grid);
 }
 
+static bool s_saved_by_bones = false; // The round was saved by Mr. Bones: the Blind pays no reward
+
 /**
  * @brief Mr. Bones: a lost round with at least 25% of the requirement counts as won. Safe to call
  *         twice: once the score is raised to the requirement it does nothing.
@@ -872,7 +874,15 @@ static void round_apply_mr_bones(void)
     u32 requirement = blind_get_requirement(g_game_vars.current_blind, g_game_vars.ante);
     if (g_game_vars.hands == 0 && g_game_vars.score < requirement &&
         joker_mr_bones_saves(g_game_vars.score, requirement))
+    {
         g_game_vars.score = requirement;
+        s_saved_by_bones = true;
+    }
+}
+
+bool round_saved_by_bones(void)
+{
+    return s_saved_by_bones;
 }
 
 /**
@@ -2705,6 +2715,7 @@ void round_on_init(void)
 
     blind_effects_trigger(BLIND_EVENT_ON_BLIND_SELECTED, NULL);
 
+    s_saved_by_bones = false;
     joker_on_blind_selected(); // Burglar, Cartomancer, Marble Joker
 
     deck_shuffle(); // Shuffle the deck at the start of the round
