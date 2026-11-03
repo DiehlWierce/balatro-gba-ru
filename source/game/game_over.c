@@ -137,6 +137,19 @@ static bool s_continue_run = false;
 /// The win after ante 8: the first button goes on into Endless mode instead of a new run
 static bool s_can_continue = false;
 
+// Destroys the deck and the Skip Tags of the run that just ended
+static void destroy_run_cards(void)
+{
+    Card* card = NULL;
+    while (get_deck_top() >= 0)
+    {
+        card = deck_pop();
+        card_destroy(&card);
+    }
+
+    remove_all_skip_tags();
+}
+
 static void game_over_common_init(enum EndCondition init_condition, bool can_continue)
 {
     s_end_condition = init_condition;
@@ -158,16 +171,7 @@ static void game_over_common_init(enum EndCondition init_condition, bool can_con
     // Destroy any preexisting cards in the deck, which will be present if we restart a run.
     // Endless mode keeps the whole run (deck, Skip Tags), only the sprites are hidden.
     if (!s_can_continue)
-    {
-        Card* card = NULL;
-        while (get_deck_top() >= 0)
-        {
-            card = deck_pop();
-            card_destroy(&card);
-        }
-
-        remove_all_skip_tags();
-    }
+        destroy_run_cards();
 
     // Clears the round end menu
     toggle_windows(false, false);
@@ -332,6 +336,9 @@ void game_over_on_exit(void)
 
     if (s_continue_run)
         return; // Endless mode goes on with the same run and seed
+
+    // A won run kept its deck and Skip Tags for Endless mode, leaving now discards them
+    destroy_run_cards();
 
     u32 previous_seed = g_game_vars.rng_info.seed;
 

@@ -1076,7 +1076,7 @@ static inline void select_four_of_a_kind_cards_in_played_hand(void)
     {
         int unmatched_index = -1;
 
-        for (int i = 0; i <= played_size; i++)
+        for (int i = 0; i < played_size; i++)
         {
             if (!cards_same_rank(
                     s_played_hand[i]->card,
@@ -1092,7 +1092,7 @@ static inline void select_four_of_a_kind_cards_in_played_hand(void)
             }
         }
 
-        for (int i = 0; i <= played_size; i++)
+        for (int i = 0; i < played_size; i++)
         {
             if (i != unmatched_index)
             {
@@ -1102,7 +1102,7 @@ static inline void select_four_of_a_kind_cards_in_played_hand(void)
     }
     else // If there are only 4 cards selected we know they match
     {
-        for (int i = 0; i <= played_size; i++)
+        for (int i = 0; i < played_size; i++)
         {
             card_object_set_selected(s_played_hand[i], true);
         }
@@ -1782,7 +1782,12 @@ static bool joker_object_score(
 
     JokerEffect* joker_effect = NULL;
     u32 effect_flags_ret =
-        joker_get_score_effect(joker_object->joker, card_object->card, joker_event, &joker_effect);
+        joker_get_score_effect(
+            joker_object->joker,
+            card_object != NULL ? card_object->card : NULL,
+            joker_event,
+            &joker_effect
+        );
 
     // Foil, Holographic and Polychrome score once per hand, with the independent effect of the
     // Joker. A perished Joker is disabled, so is its edition.

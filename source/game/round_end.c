@@ -244,7 +244,7 @@ static void round_end_start(void)
         }
 
         // Rentals can't take more than the player has, so the money never goes negative
-        if (g_game_vars.money + s_cashout < 0)
+        if (s_cashout < 0 && g_game_vars.money + s_cashout < 0)
             s_cashout = -g_game_vars.money;
     }
 }
