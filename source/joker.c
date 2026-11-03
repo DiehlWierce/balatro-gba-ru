@@ -1297,7 +1297,9 @@ bool joker_mr_bones_saves(u32 score, u32 requirement)
         if (joker->id != MR_BONES_JOKER_ID || joker_is_perished(joker) ||
             blind_effects_is_joker_disabled(joker_object))
             continue;
-        joker_object_expire(joker_object);
+        // An Eternal Mr. Bones can't be consumed, so it can't save the run either
+        if (!joker_object_expire(joker_object))
+            continue;
         return true;
     }
     return false;

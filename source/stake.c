@@ -8,6 +8,7 @@
 #include "game.h"
 #include "game_variables.h"
 #include "joker.h"
+#include "joker_batch6.h"
 #include "list.h"
 #include "random.h"
 
@@ -81,7 +82,8 @@ void stake_roll_joker_stickers(struct Joker* joker)
 
     // One roll for Eternal or Perishable (they can't be combined), one roll for Rental
     u32 roll = rng_get_u32(RNG_SEQ_STAKE_STICKERS) % 100;
-    if (roll < STAKE_STICKER_CHANCE && joker->id != SELTZER_JOKER_ID)
+    if (roll < STAKE_STICKER_CHANCE && joker->id != SELTZER_JOKER_ID &&
+        joker->id != MR_BONES_JOKER_ID)
     {
         joker->stickers |= JOKER_STICKER_ETERNAL;
     }

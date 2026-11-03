@@ -86,6 +86,7 @@ SkipTag* skip_tag_new(enum SkipTagTypes tag_type)
     GBAL_RETURN_IF_NULL(tag, NULL);
 
     tag->type = tag_type;
+    tag->layer = 0;
     sprite_object_init((SpriteObject*)tag);
 
     return tag;
@@ -103,6 +104,7 @@ void skip_tag_set_sprite(SkipTag* tag, s16 layer)
         pb_init = true;
     }
 
+    tag->layer = layer;
     int tile_index = sprite_get_tid(SKIP_TAG_SPRITE, layer);
     memcpy32(
         &tile_mem[TILE_MEM_OBJ_CHARBLOCK0_IDX][tile_index],
@@ -227,6 +229,25 @@ int skip_tag_count(enum SkipTagTypes tag_type)
     return count;
 }
 
+// Lowest owned-tag layer not used by a tag we already own. It can't come from the number of tags,
+// as removing a tag from the middle leaves the layers of the others untouched.
+static s16 get_free_owned_skip_tag_layer(void)
+{
+    for (s16 layer = OWNED_SKIP_TAG_STARTING_LAYER;; layer++)
+    {
+        bool used = false;
+        ListItr itr = list_itr_create(&s_owned_skip_tags);
+        SkipTag* owned;
+        while ((owned = list_itr_next(&itr)))
+        {
+            used |= owned->layer == layer;
+        }
+
+        if (!used)
+            return layer;
+    }
+}
+
 void add_skip_tag(SkipTag** blind_tag)
 {
     GBAL_RETURN_IF_NULL(blind_tag, RET_NONE);
@@ -244,6 +265,7 @@ void add_skip_tag(SkipTag** blind_tag)
         return;
     }
 
+    s16 new_layer = get_free_owned_skip_tag_layer();
     list_push_back(&s_owned_skip_tags, *blind_tag);
     nb_owned_tags++;
 
@@ -267,7 +289,7 @@ void add_skip_tag(SkipTag** blind_tag)
     }
 
     // Create new sprite at the old position to avoid flickering
-    skip_tag_set_sprite(*blind_tag, OWNED_SKIP_TAG_STARTING_LAYER + nb_owned_tags - 1);
+    skip_tag_set_sprite(*blind_tag, new_layer);
     sprite_object_position((SpriteObject*)(*blind_tag), new_tag_pos.x, new_tag_pos.y);
     sprite_object_bounce((SpriteObject*)(*blind_tag), SKIP_TAG_GET_BOUNCE_STRENGTH);
     sprite_object_sway((SpriteObject*)(*blind_tag));
@@ -428,7 +450,7 @@ static void skip_tag_trigger_for_event(void)
 
     // Set tiles to the "activated" ones, each with colors that correspond to their tag type
     s_consumed_tag->type += MAX_SKIP_TAG_TYPES;
-    skip_tag_set_sprite(s_consumed_tag, OWNED_SKIP_TAG_STARTING_LAYER + s_consumed_tag_idx);
+    skip_tag_set_sprite(s_consumed_tag, s_consumed_tag->layer);
     sprite_object_position((SpriteObject*)s_consumed_tag, tag_pos.x, tag_pos.y);
 
     // Reset rotation so that the sprite isn't too distorted when bouncing if

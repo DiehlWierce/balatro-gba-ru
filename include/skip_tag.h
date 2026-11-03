@@ -71,6 +71,7 @@ typedef struct SkipTag
 {
     SpriteObject;
     enum SkipTagTypes type;
+    s16 layer; // Sprite layer given to the last @ref skip_tag_set_sprite
 
 } SkipTag;
 

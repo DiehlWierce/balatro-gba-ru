@@ -455,7 +455,7 @@ const JokerInfo joker_registry[] =
     { "Турист", UNCOMMON_JOKER, 5, false, hiker_joker_desc, hiker_joker_effect }, // 92
     { "Взломщик", UNCOMMON_JOKER, 6, false, burglar_joker_desc, joker_effect_noop }, // 93
 
-    { "Кровавик", RARE_JOKER, 7, false, bloodstone_joker_desc, bloodstone_joker_effect }, // 94
+    { "Кровавик", UNCOMMON_JOKER, 7, false, bloodstone_joker_desc, bloodstone_joker_effect }, // 94
     { "Цветочный горшок", UNCOMMON_JOKER, 6, false, flower_pot_joker_desc, flower_pot_joker_effect }, // 95
     { "Двойное зрение", UNCOMMON_JOKER, 6, false, seeing_double_joker_desc, seeing_double_joker_effect }, // 96
     { "Идол", UNCOMMON_JOKER, 6, false, idol_joker_desc, idol_joker_effect }, // 97
@@ -503,7 +503,7 @@ const JokerInfo joker_registry[] =
     { "Астроном", UNCOMMON_JOKER, 8, false, astronomer_joker_desc, astronomer_joker_effect }, // 134
     { "Ретро", UNCOMMON_JOKER, 6, false, throwback_joker_desc, throwback_joker_effect }, // 135
     { "Безумие", UNCOMMON_JOKER, 7, false, madness_joker_desc, madness_joker_effect }, // 136
-    { "Костёр", RARE_JOKER, 9, false, campfire_joker_desc, campfire_joker_effect }, // 137
+    { "Костёр", UNCOMMON_JOKER, 9, false, campfire_joker_desc, campfire_joker_effect }, // 137
     { "Riff-Raff", COMMON_JOKER, 6, false, riff_raff_joker_desc, riff_raff_joker_effect }, // 138
     { "Спутник", UNCOMMON_JOKER, 6, false, satellite_joker_desc, satellite_joker_effect }, // 139
     { "Голограмма", UNCOMMON_JOKER, 7, false, hologram_joker_desc, hologram_joker_effect }, // 140
