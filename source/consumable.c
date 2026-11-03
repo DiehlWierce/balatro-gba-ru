@@ -781,6 +781,13 @@ static void spectral_create_joker(enum JokerRarity rarity, enum RngSequence key,
     item_acquire(item);
 }
 
+bool consumable_create_joker(int rarity, enum RngSequence key, FIXED x, FIXED y)
+{
+    int before = list_get_len(get_jokers_list());
+    spectral_create_joker(rarity, key, x, y);
+    return list_get_len(get_jokers_list()) > before;
+}
+
 /**
  * @brief Ankh: copies a random Joker and destroys the others (Eternal Jokers stay).
  */
@@ -1117,6 +1124,8 @@ bool consumable_object_use(ConsumableObject* consumable_object)
             tarot_use(consumable_object->id, consumable_object->x, consumable_object->y);
         else
             planet_use(consumable_object->id);
+        if (!is_tarot(consumable_object))
+            joker_on_planet_used(consumable_object->id);
         joker_on_consumable_used(is_tarot(consumable_object));
     }
 

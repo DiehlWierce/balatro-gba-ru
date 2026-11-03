@@ -98,6 +98,7 @@ typedef struct
     u32 nb_skipped_rounds;
     u32 nb_unused_discards;
     u32 tarots_used; // Tarots used in the run (Fortune Teller)
+    u32 planets_used_mask; // Bit per Planet type used in the run (Satellite)
 
     // Blind variables
 

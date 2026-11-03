@@ -232,6 +232,8 @@ static void round_end_start(void)
         // Cloud 9 pays for every 9 in the full deck, the cards are counted once per Joker
         s_reward_data[REWARD_TYPE_JOKERS].count +=
             joker_bonus.cloud_nine * joker_batch5_cloud_nine_money(game_count_deck_rank(NINE));
+        s_reward_data[REWARD_TYPE_JOKERS].count +=
+            joker_bonus.satellite * joker_batch7_satellite_money(g_game_vars.planets_used_mask);
         s_reward_data[REWARD_TYPE_RENTAL].count = stake_get_rental_jokers_count();
 
         s_cashout = blind_get_reward(g_game_vars.current_blind);

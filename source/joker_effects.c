@@ -182,6 +182,8 @@ DECLARE_JOKER_DESC_FUNC(astronomer_joker_desc)
 DECLARE_JOKER_DESC_FUNC(throwback_joker_desc)
 DECLARE_JOKER_DESC_FUNC(madness_joker_desc)
 DECLARE_JOKER_DESC_FUNC(campfire_joker_desc)
+DECLARE_JOKER_DESC_FUNC(riff_raff_joker_desc)
+DECLARE_JOKER_DESC_FUNC(satellite_joker_desc)
 
 // Joker Effect functions
 
@@ -312,6 +314,8 @@ DECLARE_JOKER_EFFECT_FUNC(astronomer_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(throwback_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(madness_joker_effect)
 DECLARE_JOKER_EFFECT_FUNC(campfire_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(riff_raff_joker_effect)
+DECLARE_JOKER_EFFECT_FUNC(satellite_joker_effect)
 
 /* The index of a joker in the registry matches its ID.
  *
@@ -488,6 +492,8 @@ const JokerInfo joker_registry[] =
     { "Ретро", UNCOMMON_JOKER, 6, false, throwback_joker_desc, throwback_joker_effect }, // 135
     { "Безумие", UNCOMMON_JOKER, 7, false, madness_joker_desc, madness_joker_effect }, // 136
     { "Костёр", RARE_JOKER, 9, false, campfire_joker_desc, campfire_joker_effect }, // 137
+    { "Riff-Raff", COMMON_JOKER, 6, false, riff_raff_joker_desc, riff_raff_joker_effect }, // 138
+    { "Спутник", UNCOMMON_JOKER, 6, false, satellite_joker_desc, satellite_joker_effect }, // 139
 
     // The following jokers don't have sprites yet,
     // uncomment them when their sprites are added.
@@ -4666,4 +4672,42 @@ static u32 campfire_joker_effect(
     SCORE_ON_EVENT_ONLY(JOKER_EVENT_INDEPENDENT, joker_event)
 
     return joker_percent_xmult_effect(joker_batch7_campfire_percent(joker->persistent_state), joker_effect);
+}
+
+static int riff_raff_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc[] =
+        TTE_BLACK_TAG "При выборе блайнда создаёт " TTE_YELLOW_TAG "2" TTE_BLACK_TAG " обычных " TTE_YELLOW_TAG "джокера" TTE_BLACK_TAG "\n(нужны свободные слоты)";
+    return print_desc(desc, dest_rect);
+}
+
+static int satellite_joker_desc(Joker* joker, Rect dest_rect)
+{
+    static const char desc_format[] =
+        TTE_YELLOW_TAG "$1" TTE_BLACK_TAG " в конце раунда за каждую разную " TTE_YELLOW_TAG "Планету" TTE_BLACK_TAG ", использованную в забеге\n\n(Сейчас " TTE_YELLOW_TAG "$%d" TTE_BLACK_TAG ")";
+    char desc[200];
+    snprintf(desc, sizeof(desc), desc_format, joker_batch7_satellite_money(g_game_vars.planets_used_mask));
+    return print_desc(desc, dest_rect);
+}
+
+// Riff-Raff: creates Jokers in joker_on_blind_selected() (joker.c)
+static u32 riff_raff_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    return JOKER_EFFECT_FLAG_NONE;
+}
+
+// Satellite: pays at the end of the round (JokerRunBonus.satellite, round_end.c)
+static u32 satellite_joker_effect(
+    Joker* joker,
+    Card* scored_card,
+    enum JokerEvent joker_event,
+    JokerEffect** joker_effect
+)
+{
+    return JOKER_EFFECT_FLAG_NONE;
 }

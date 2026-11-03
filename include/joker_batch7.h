@@ -17,7 +17,13 @@
 #define CAMPFIRE_JOKER_ID  137
 
 #define FIRST_BATCH7_JOKER_ID THROWBACK_JOKER_ID
-#define LAST_BATCH7_JOKER_ID  CAMPFIRE_JOKER_ID
+#define RIFF_RAFF_NB_JOKERS   2
+#define SATELLITE_MONEY       1
+#define NB_PLANET_TYPES       12
+#define RIFF_RAFF_JOKER_ID 138
+#define SATELLITE_JOKER_ID 139
+
+#define LAST_BATCH7_JOKER_ID  SATELLITE_JOKER_ID
 
 #define THROWBACK_PERCENT_PER_SKIP 25
 #define MADNESS_PERCENT_PER_BLIND  50
@@ -79,6 +85,37 @@ static inline int joker_batch7_campfire_percent(int sold)
 static inline int joker_batch7_campfire_after_round(int sold, bool boss_defeated)
 {
     return boss_defeated ? 0 : sold;
+}
+
+/**
+ * @brief Riff-Raff: how many Common Jokers it creates when a Blind is selected (as many as fit).
+ */
+static inline int joker_batch7_riff_raff_count(int free_slots)
+{
+    if (free_slots <= 0)
+        return 0;
+    return free_slots < RIFF_RAFF_NB_JOKERS ? free_slots : RIFF_RAFF_NB_JOKERS;
+}
+
+/**
+ * @brief Satellite: marks a Planet (index in the Planet order) as used this run.
+ */
+static inline uint32_t joker_batch7_planet_mask_add(uint32_t mask, int planet)
+{
+    if (planet < 0 || planet >= NB_PLANET_TYPES)
+        return mask;
+    return mask | (1u << planet);
+}
+
+/**
+ * @brief Satellite: $1 at the end of the round for each different Planet used this run.
+ */
+static inline int joker_batch7_satellite_money(uint32_t mask)
+{
+    int n = 0;
+    for (int i = 0; i < NB_PLANET_TYPES; i++)
+        n += (mask >> i) & 1u;
+    return n * SATELLITE_MONEY;
 }
 
 #endif // JOKER_BATCH7_H

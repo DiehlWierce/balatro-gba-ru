@@ -56,7 +56,35 @@ def campfire():
     return im
 
 
-JOKERS = [throwback, madness, campfire]
+def riff_raff():
+    im, d = card((0x6A, 0x7A, 0x8A))
+    d.rectangle((8, 14, 24, 25), fill=GREY_L, outline=INK)
+    d.polygon([(8, 14), (16, 8), (24, 14)], fill=RED, outline=INK)
+    d.rectangle((14, 19, 18, 25), fill=BROWN, outline=INK)
+    d.rectangle((10, 16, 12, 18), fill=BLUE)
+    d.rectangle((20, 16, 22, 18), fill=BLUE)
+    for x, y in ((5, 8), (26, 8), (4, 24), (28, 24)):
+        d.rectangle((x - 1, y - 1, x + 1, y + 1), fill=GOLD, outline=INK)
+    return im
+
+
+def satellite():
+    im, d = card((0x14, 0x1E, 0x4E))
+    d.rectangle((13, 12, 19, 20), fill=GREY_L, outline=INK)
+    d.rectangle((3, 14, 11, 18), fill=BLUE, outline=INK)
+    d.rectangle((21, 14, 29, 18), fill=BLUE, outline=INK)
+    d.line((7, 14, 7, 18), fill=WHITE)
+    d.line((25, 14, 25, 18), fill=WHITE)
+    d.line((16, 12, 16, 7), fill=INK)
+    d.ellipse((14, 4, 18, 8), fill=GOLD, outline=INK)
+    d.ellipse((14, 14, 18, 18), fill=GOLD_D)
+    for x, y in ((6, 6), (26, 7), (7, 26), (25, 25)):
+        d.line((x - 1, y, x + 1, y), fill=WHITE)
+        d.line((x, y - 1, x, y + 1), fill=WHITE)
+    return im
+
+
+JOKERS = [throwback, madness, campfire, riff_raff, satellite]
 FIRST_SHEET = 100
 
 

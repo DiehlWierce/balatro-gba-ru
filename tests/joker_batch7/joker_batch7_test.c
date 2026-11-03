@@ -28,10 +28,32 @@ static void test_madness_campfire(void)
     assert(joker_batch7_campfire_after_round(5, true) == 0);
 }
 
+static void test_riff_raff_satellite(void)
+{
+    assert(joker_batch7_riff_raff_count(0) == 0);
+    assert(joker_batch7_riff_raff_count(-1) == 0);
+    assert(joker_batch7_riff_raff_count(1) == 1);
+    assert(joker_batch7_riff_raff_count(4) == 2);
+
+    uint32_t mask = 0;
+    assert(joker_batch7_satellite_money(mask) == 0);
+    mask = joker_batch7_planet_mask_add(mask, 0);
+    mask = joker_batch7_planet_mask_add(mask, 0);
+    mask = joker_batch7_planet_mask_add(mask, 5);
+    assert(joker_batch7_satellite_money(mask) == 2);
+    mask = joker_batch7_planet_mask_add(mask, 12);
+    mask = joker_batch7_planet_mask_add(mask, -1);
+    assert(joker_batch7_satellite_money(mask) == 2);
+    for (int i = 0; i < 12; i++)
+        mask = joker_batch7_planet_mask_add(mask, i);
+    assert(joker_batch7_satellite_money(mask) == 12);
+}
+
 int main(void)
 {
     test_xmult_counters();
     test_madness_campfire();
+    test_riff_raff_satellite();
     printf("joker_batch7: all tests passed\n");
     return 0;
 }

@@ -90,7 +90,7 @@ static const int JOKER_ID_TO_SPRITE_MAP[] = {
     59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73,
     74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88,
     89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99,
-    100, 101, 102,
+    100, 101, 102, 103, 104,
 };
 
 // Map of Spritesheet idx -> first Joker ID in sheet
@@ -105,7 +105,7 @@ static const int SPRITESHEET_IDX_TO_STARTING_JOKER_ID[] = {
     94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108,
     109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123,
     124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134,
-    135, 136, 137
+    135, 136, 137, 138, 139
 };
 
 // Lookup table of Joker Rarity strings. Used to display at the bottom of the description screen.
@@ -986,6 +986,20 @@ static void joker_hook_blind_selected(Joker* joker)
                 JOKER_TAROT_SPAWN_Y
             );
             break;
+        case RIFF_RAFF_JOKER_ID:
+            for (int n = joker_batch7_riff_raff_count(g_game_vars.joker_slots - jokers_get_used_slots());
+                 n > 0;
+                 n--)
+            {
+                if (!consumable_create_joker(
+                        COMMON_JOKER,
+                        RNG_SEQ_JOKER_RIFF_RAFF,
+                        JOKER_TAROT_SPAWN_X,
+                        JOKER_TAROT_SPAWN_Y
+                    ))
+                    break;
+            }
+            break;
         case MARBLE_JOKER_ID:
             if (deck_get_size() < MAX_DECK_SIZE)
             {
@@ -1133,6 +1147,11 @@ void joker_on_shop_reroll(void)
 void joker_on_pack_skipped(void)
 {
     joker_add_to_all(RED_CARD_JOKER_ID);
+}
+
+void joker_on_planet_used(int planet)
+{
+    g_game_vars.planets_used_mask = joker_batch7_planet_mask_add(g_game_vars.planets_used_mask, planet);
 }
 
 void joker_on_card_sold(void)

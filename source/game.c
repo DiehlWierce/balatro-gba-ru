@@ -234,6 +234,7 @@ void game_init()
     g_game_vars.nb_skipped_rounds = 0;
     g_game_vars.nb_unused_discards = 0;
     g_game_vars.tarots_used = 0;
+    g_game_vars.planets_used_mask = 0;
     g_game_vars.current_blind = BLIND_TYPE_SMALL;
     g_game_vars.blinds_states[0] = BLIND_STATE_CURRENT;
     g_game_vars.blinds_states[1] = BLIND_STATE_UPCOMING;
