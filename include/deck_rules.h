@@ -2,7 +2,8 @@
  * @file deck_rules.h
  *
  * @brief Pure rules of the Decks that change the starting cards, the score or the Blind size:
- *        Abandoned, Checkered, Erratic and Plasma.
+ *        Abandoned, Checkered, Erratic and Plasma, and the Anaglyph
+ *        Deck's Double Tag.
  *
  * Plain C without libtonc so it can be tested on the host (tests/deck_rules).
  */
@@ -30,6 +31,7 @@ enum DeckType
     DECK_TYPE_ZODIAC,
     DECK_TYPE_PLASMA,
     DECK_TYPE_ERRATIC,
+    DECK_TYPE_ANAGLYPH,
     DECK_TYPE_MAX
 };
 
@@ -167,6 +169,16 @@ static inline bool deck_rules_shop_is_spectral(
     uint32_t total =
         (uint32_t)(tarot_weight_x10 + planet_weight_x10 + DECK_GHOST_SPECTRAL_WEIGHT_X10);
     return r % total < (uint32_t)DECK_GHOST_SPECTRAL_WEIGHT_X10;
+}
+
+/**
+ * @brief Anaglyph Deck: a Double Tag after defeating a Boss Blind.
+ *
+ * @param boss_defeated true when the Blind that just ended was a Boss Blind
+ */
+static inline bool deck_rules_gives_double_tag(enum DeckType deck, bool boss_defeated)
+{
+    return deck == DECK_TYPE_ANAGLYPH && boss_defeated;
 }
 
 #endif // DECK_RULES_H

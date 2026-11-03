@@ -2,6 +2,7 @@
 
 #include "affine_background.h"
 #include "affine_background_gfx.h"
+#include "deck_types.h"
 #include "game.h"
 #include "game/round.h"
 #include "game_variables.h"
@@ -218,6 +219,8 @@ static void round_end_start(void)
         s_current_reward = 0;
         s_current_reward_start_time = TM_DISPLAY_REWARDS_CONT_WAIT;
         s_reward_y_offset = 1;
+
+        deck_on_round_won(g_game_vars.deck, g_game_vars.current_blind >= BLIND_TYPE_BOSS);
 
         s_blind_reward = round_end_blind_reward();
         s_reward_data[REWARD_TYPE_HAND].multiplier = g_game_vars.money_per_hand;

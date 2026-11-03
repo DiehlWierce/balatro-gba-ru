@@ -167,6 +167,21 @@ static void test_ghost_shop(void)
     assert(spectral == 20);
 }
 
+static void test_anaglyph(void)
+{
+    assert(DECK_TYPE_MAX == 15);
+    assert(DECK_TYPE_ANAGLYPH == 14);
+    // Double Tag only on the Anaglyph Deck and only after a Boss Blind
+    assert(deck_rules_gives_double_tag(DECK_TYPE_ANAGLYPH, true));
+    assert(!deck_rules_gives_double_tag(DECK_TYPE_ANAGLYPH, false));
+    for (enum DeckType deck = 0; deck < DECK_TYPE_ANAGLYPH; deck++)
+        assert(!deck_rules_gives_double_tag(deck, true));
+    // A standard 52-card Deck, no score or Blind change (checked by test_standard() as well)
+    assert(!deck_rules_balances_score(DECK_TYPE_ANAGLYPH));
+    assert(deck_rules_blind_scale(DECK_TYPE_ANAGLYPH) == 1);
+    assert(!deck_rules_shop_is_spectral(DECK_TYPE_ANAGLYPH, 40, 40, 0));
+}
+
 int main(void)
 {
     test_standard();
@@ -175,6 +190,7 @@ int main(void)
     test_erratic();
     test_plasma();
     test_ghost_shop();
+    test_anaglyph();
     printf("deck_rules: all tests passed\n");
     return 0;
 }

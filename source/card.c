@@ -1,6 +1,7 @@
 #include "card.h"
 
 #include "edition_gfx.h"
+#include "edition_rules.h"
 #include "game.h"
 #include "game_variables.h"
 #include "graphic_utils.h"
@@ -31,8 +32,10 @@ const static u16 CARD_SPRITE_LUT[NUM_SUITS][NUM_RANKS] = {
     {624, 640, 656, 672, 688, 704, 720, 736, 752, 768, 784, 800, 816}
 };
 // Deck sprites lookup table. Index is the deck Id. The value is the tile index.
+// The spritesheet has 14 backs. LIMITATION: the Anaglyph Deck has no back of its own and reuses the
+// Blue one (tile 16) until a 15th back is drawn in graphics/decks_face_down_gfx.png.
 const static u16 DECK_SPRITE_LUT[DECK_TYPE_MAX] = {
-    0, 16, 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192, 208
+    0, 16, 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192, 208, 16
 };
 
 // Playing cards in the Shop (Magic Trick): their sprites use the layers that the hand uses in a
@@ -40,7 +43,7 @@ const static u16 DECK_SPRITE_LUT[DECK_TYPE_MAX] = {
 #define SHOP_CARDS_MAX               MAX_SHOP_ITEMS
 #define SHOP_CARDS_FIRST_LAYER       (MAX_HAND_SIZE - SHOP_CARDS_MAX)
 #define SHOP_CARD_ENHANCEMENT_CHANCE 40 // %, Illusion, same as Standard Packs
-#define SHOP_CARD_SEAL_CHANCE        20 // %
+#define SHOP_CARD_EDITION_CHANCE     20 // %, Illusion: no seals, an edition instead
 
 static CardObject* s_shop_cards[SHOP_CARDS_MAX] = {NULL};
 
@@ -90,6 +93,8 @@ bool get_cards_more_readable(void)
 Card* card_new(u8 suit, u8 rank)
 {
     Card* card = POOL_GET(Card);
+    if (card == NULL)
+        return NULL;
 
     card->suit = suit;
     card->rank = rank;
@@ -100,6 +105,7 @@ Card* card_new(u8 suit, u8 rank)
     card->edition = EDITION_NONE;
     card->played_ante = 0;
     card->bonus_chips = 0;
+    card->reserved = 0;
 
     return card;
 }
@@ -606,8 +612,10 @@ Item* card_object_roll_new(enum RngSequence key)
     u8 suit = rng_get_u32(key) % NUM_SUITS;
     u8 rank = rng_get_u32(key) % NUM_RANKS;
     Card* card = card_new(suit, rank);
+    if (card == NULL)
+        return NULL;
 
-    // Illusion: the cards may have an enhancement and a seal
+    // Illusion: the cards may have an enhancement and an edition (never a seal)
     if (voucher_is_owned(VOUCHER_ILLUSION))
     {
         if (rng_get_u32(RNG_SEQ_SHOP_CARD_MODS) % 100 < SHOP_CARD_ENHANCEMENT_CHANCE)
@@ -615,11 +623,8 @@ Item* card_object_roll_new(enum RngSequence key)
             card->enhancement = CARD_ENHANCEMENT_BONUS +
                                 rng_get_u32(RNG_SEQ_SHOP_CARD_MODS) % (CARD_ENHANCEMENT_MAX - 1);
         }
-        if (rng_get_u32(RNG_SEQ_SHOP_CARD_MODS) % 100 < SHOP_CARD_SEAL_CHANCE)
-        {
-            card->seal = CARD_SEAL_GOLD +
-                         rng_get_u32(RNG_SEQ_SHOP_CARD_MODS) % (CARD_SEAL_MAX - 1);
-        }
+        if (rng_get_u32(RNG_SEQ_SHOP_CARD_MODS) % 100 < SHOP_CARD_EDITION_CHANCE)
+            card->edition = edition_wheel_edition(rng_get_u32(RNG_SEQ_SHOP_CARD_MODS));
     }
 
     CardObject* card_object = card_object_new(card);
