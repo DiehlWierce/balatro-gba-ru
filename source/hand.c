@@ -993,7 +993,11 @@ static ContainedHandTypes compute_contained_hand_types(void)
     // Royal Flush
     if (hand_types.STRAIGHT_FLUSH)
     {
-        if (ranks[TEN] && ranks[JACK] && ranks[QUEEN] && ranks[KING] && ranks[ACE])
+        // Four Fingers: A-K-Q-J of one suit is a Royal Flush too
+        bool four_card_royal = get_straight_and_flush_size() < 5 && ranks[JACK] && ranks[QUEEN] &&
+                               ranks[KING] && ranks[ACE];
+        if ((ranks[TEN] && ranks[JACK] && ranks[QUEEN] && ranks[KING] && ranks[ACE]) ||
+            four_card_royal)
         {
             hand_types.ROYAL_FLUSH = 1;
         }

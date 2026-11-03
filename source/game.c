@@ -157,10 +157,6 @@ static List s_expired_jokers_list;
 static Card* s_deck[MAX_DECK_SIZE] = {NULL};
 static int s_deck_top = -1;
 
-// Joker Special Variables
-static int s_shortcut_joker_count = 0;
-
-static int s_four_fingers_joker_count = 0;
 
 void deck_push(Card* card)
 {
@@ -183,7 +179,7 @@ void display_ante(void)
         ANTE_TEXT_RECT.left,
         ANTE_TEXT_RECT.top,
         TTE_YELLOW_PB,
-        g_game_vars.ante,
+        g_game_vars.ante > ANTE_LAST ? ANTE_LAST : g_game_vars.ante, // 13 after the last Boss
         TTE_WHITE_PB,
         g_game_vars.ante > MAX_ANTE ? ANTE_LAST : MAX_ANTE
     );
@@ -212,6 +208,7 @@ void game_init()
     g_game_vars.money = STARTING_MONEY;
     g_game_vars.hand_size = DEFAULT_HAND_SIZE;
     g_game_vars.ante = STARTING_ANTE;
+    g_game_vars.next_boss_blind = BLIND_TYPE_BIG; // The last Boss of the previous run is not used
     g_game_vars.win_pending = false;
     g_game_vars.round = STARTING_ROUND;
     // g_game_vars.deck is kept: the Run Setup screen shows the last chosen Deck
@@ -266,6 +263,15 @@ void game_reset()
     // show up on the next run.
     sprite_destroy(&g_game_vars.playing_blind_token);
     sprite_destroy(&g_game_vars.round_end_blind_token);
+
+    // Items still flying to the discard pile (their sprites and pool entries would leak). The
+    // expired Jokers are still in the owned list: they were destroyed above.
+    while (list_get_len(&s_discarded_items_list) > 0)
+    {
+        Item* item = list_get_at_idx(&s_discarded_items_list, 0);
+        list_remove_at_idx(&s_discarded_items_list, 0);
+        item_dispose(&item);
+    }
 
     list_clear(&s_owned_jokers_list);
     list_clear(&s_discarded_items_list);
@@ -511,14 +517,33 @@ List* get_expired_jokers_list(void)
     return &s_expired_jokers_list;
 }
 
+/**
+ * @brief Whether a working copy of this Joker is owned: not perished and not disabled by the Boss
+ */
+static bool is_joker_active(int joker_id)
+{
+    ListItr itr = list_itr_create(&s_owned_jokers_list);
+    JokerObject* joker;
+
+    while ((joker = list_itr_next(&itr)))
+    {
+        if (joker->joker->id == joker_id && !joker_is_perished(joker->joker) &&
+            !blind_effects_is_joker_disabled(joker))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool is_shortcut_joker_active(void)
 {
-    return s_shortcut_joker_count > 0;
+    return is_joker_active(SHORTCUT_JOKER_ID);
 }
 
 int get_straight_and_flush_size(void)
 {
-    return s_four_fingers_joker_count > 0 ? STRAIGHT_AND_FLUSH_SIZE_FOUR_FINGERS
+    return is_joker_active(FOUR_FINGERS_JOKER_ID) ? STRAIGHT_AND_FLUSH_SIZE_FOUR_FINGERS
                                           : STRAIGHT_AND_FLUSH_SIZE_DEFAULT;
 }
 
@@ -547,19 +572,6 @@ void add_joker(JokerObject* joker_object)
     list_push_back(&s_owned_jokers_list, joker_object);
     joker_object->ty = int2fx(HELD_JOKERS_POS.y);
 
-    // TODO: Extract to on_joker_added() callback
-    // In case the player gets multiple Four Fingers Jokers,
-    // only change size when the first one is added
-    if (joker_object->joker->id == FOUR_FINGERS_JOKER_ID)
-    {
-        s_four_fingers_joker_count++;
-    }
-
-    if (joker_object->joker->id == SHORTCUT_JOKER_ID)
-    {
-        s_shortcut_joker_count++;
-    }
-
     game_refresh_joker_rules();
 
     apply_joker_bonus_change(&bonus_before);
@@ -571,21 +583,16 @@ void remove_owned_joker(int owned_joker_idx)
     JokerObject* joker_object = list_get_at_idx(&s_owned_jokers_list, owned_joker_idx);
     JokerRunBonus bonus_before = game_get_joker_bonus();
     blind_effects_on_joker_removed(joker_object, false);
-    // In case the player gets multiple Four Fingers Jokers,
-    // and only reset the size when all of them have been removed
-    if (joker_object->joker->id == FOUR_FINGERS_JOKER_ID)
-    {
-        s_four_fingers_joker_count--;
-    }
-
-    if (joker_object->joker->id == SHORTCUT_JOKER_ID)
-    {
-        s_shortcut_joker_count--;
-    }
-
-    // TODO: Move to site of joker_destroy()?
-    joker_set_rollable(joker_object->joker->id, true);
     list_remove_at_idx(&s_owned_jokers_list, owned_joker_idx);
+
+    // Back into the Shop pool only when no copy is left (Ankh, Invisible Joker copies)
+    bool copy_left = false;
+    ListItr copies_itr = list_itr_create(&s_owned_jokers_list);
+    JokerObject* copy;
+    while ((copy = list_itr_next(&copies_itr)))
+        copy_left |= (copy->joker->id == joker_object->joker->id);
+    if (!copy_left)
+        joker_set_rollable(joker_object->joker->id, true);
     game_refresh_joker_rules();
 
     apply_joker_bonus_change(&bonus_before);
