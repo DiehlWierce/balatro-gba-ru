@@ -1,4 +1,4 @@
-# Run setup: show all 6 Decks (RIGHT/LEFT cycle them), then a seeded run with the Green Deck:
+# Run setup: show all 14 Decks (RIGHT/LEFT cycle them), then a seeded run with the Green Deck:
 # 4 hands, 3 discards, at the end of the round $2 per remaining hand, $1 per remaining discard
 # and no interest.
 
@@ -25,18 +25,48 @@ wait 20
 shot 05_deck_painted
 press RIGHT
 wait 20
-shot 06_deck_red_again
+shot 06_deck_magic
+press RIGHT
+wait 20
+shot 07_deck_nebula
+press RIGHT
+wait 20
+shot 08_deck_ghost
+press RIGHT
+wait 20
+shot 09_deck_abandoned
+press RIGHT
+wait 20
+shot 10_deck_checkered
+press RIGHT
+wait 20
+shot 11_deck_zodiac
+press RIGHT
+wait 20
+shot 12_deck_plasma
+press RIGHT
+wait 20
+shot 13_deck_erratic
+press RIGHT
+wait 20
+shot 14_deck_red_again
 press LEFT
 wait 20
-shot 07_deck_painted_left
+shot 15_deck_erratic_left
 
-# Back to Green: Painted -> Red -> Blue -> Yellow -> Green
-press RIGHT
-press RIGHT
-press RIGHT
-press RIGHT
+# Back to Green: Erratic -> ... -> Green is 10 steps left
+press LEFT 3
+press LEFT 3
+press LEFT 3
+press LEFT 3
+press LEFT 3
+press LEFT 3
+press LEFT 3
+press LEFT 3
+press LEFT 3
+press LEFT 3
 wait 20
-shot 08_green_chosen
+shot 16_green_chosen
 
 pokestr {sym:s_seed_str} GBARU1
 poke8 {sym:use_seed} 1
@@ -44,10 +74,10 @@ press DOWN
 wait 10
 press A
 wait 120
-shot 10_blind_select
+shot 20_blind_select
 press A
 wait 180
-shot 11_round
+shot 21_round
 peek32 {gv:hands_per_round}
 peek32 {gv:discards_per_round}
 peek32 {gv:interest_cap}
@@ -59,6 +89,6 @@ poke32 {gv:score} 100000
 press A
 press L
 wait 1100
-shot 12_round_end
+shot 22_round_end
 wait 300
-shot 13_round_end_rewards
+shot 23_round_end_rewards

@@ -1,0 +1,25 @@
+# Plasma Deck (the Small Blind needs 600 on the first Ante here: 300 x 2). Plays the Ace of Spades:
+# before scoring the High Card gives 16 chips x 1 mult, balanced to 8 x 8 = 64 points.
+# No -D needed: the Deck is poked in.
+
+wait 460
+press START
+wait 60
+press A
+wait 60
+pokestr {sym:s_seed_str} GBARU1
+poke8 {sym:use_seed} 1
+poke32 {gv:deck} 12
+press DOWN
+wait 10
+press A
+wait 120
+press A
+wait 180
+shot 01_round
+press A
+press L
+wait 150
+shot 02_scoring
+wait 210
+shot 03_scored

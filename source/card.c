@@ -31,7 +31,9 @@ const static u16 CARD_SPRITE_LUT[NUM_SUITS][NUM_RANKS] = {
     {624, 640, 656, 672, 688, 704, 720, 736, 752, 768, 784, 800, 816}
 };
 // Deck sprites lookup table. Index is the deck Id. The value is the tile index.
-const static u16 DECK_SPRITE_LUT[DECK_TYPE_MAX] = {0, 16, 32, 48, 64, 80};
+const static u16 DECK_SPRITE_LUT[DECK_TYPE_MAX] = {
+    0, 16, 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192, 208
+};
 
 // Playing cards in the Shop (Magic Trick): their sprites use the layers that the hand uses in a
 // round, from the end so that the cards of an opened Booster Pack (layers 0 to 4) don't clash

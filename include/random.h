@@ -89,6 +89,10 @@ enum RngSequence
     RNG_SEQ_SPECTRAL_ECTOPLASM,   // Joker that becomes Negative
     RNG_SEQ_SPECTRAL_HEX,         // Joker that becomes Polychrome
 
+    // Decks
+    RNG_SEQ_DECK_ERRATIC,         // Erratic Deck: rank and suit of each starting card
+    RNG_SEQ_SHOP_SPECTRAL,        // Ghost Deck: Spectral cards in the Shop (whether, and which)
+
     RNG_SEQ_MAX
 };
 

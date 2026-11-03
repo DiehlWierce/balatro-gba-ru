@@ -1,0 +1,35 @@
+# New Decks in a seeded run: usage run.py scenarios/decks_new.txt OUT -D deck=<DeckType number>
+#   Magic 6, Nebula 7, Ghost 8, Abandoned 9, Checkered 10, Zodiac 11, Plasma 12, Erratic 13
+# Blind Select (Plasma: the Small Blind needs 600 instead of 300), round start (deck size 40 for
+# Abandoned, consumables of Magic and Ghost, slots of Nebula) and the Shop after the first Blind
+# (Zodiac: 3 items in the top row, Ghost: Spectral cards).
+
+wait 460
+press START
+wait 60
+press A
+wait 60
+pokestr {sym:s_seed_str} GBARU1
+poke8 {sym:use_seed} 1
+poke32 {gv:deck} {def:deck}
+press DOWN
+wait 10
+press A
+wait 120
+shot 10_blind_select
+press A
+wait 180
+shot 11_round
+peek32 {gv:consumable_slots}
+peek32 {gv:shop_slots}
+peek32 {gv:owned_vouchers}
+
+# Win the round (score forced) and open the Shop
+poke32 {gv:score} 100000
+press A
+press L
+wait 1400
+shot 14_round_end
+press A
+wait 400
+shot 15_shop
